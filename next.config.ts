@@ -1,10 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // TypeScriptのエラーのみ無視する（これはVercelでも有効）
   typescript: {
-    // ⚠️ ビルド時の型チェックエラーを無視してデプロイを優先する
     ignoreBuildErrors: true,
   },
+  // eslintの設定は削除する（Vercelの設定画面で無視設定を入れるため、ここでは書かない）
 };
 
 export default nextConfig;
