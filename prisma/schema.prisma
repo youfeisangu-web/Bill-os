@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ユーザー (Clerk連携 + LINE対応)
+model UserProfile {
+  id               String      @id // Clerk ID
+  email            String
+  companyName      String?     // 屋号
+  representativeName String?    // 代表者名
+  address          String?     // 住所
+  invoiceRegNumber String?     // T番号
+  stampImageUrl    String?     // 印鑑画像
+  passwordEnabled  Boolean     @default(false)
+
+  // ★ LINE Messaging API用ID (将来用)
+  lineUserId       String?     @unique
+
+  // リレーション
+  bankAccounts     BankAccount[]
+  clients          Client[]
+  itemMasters      ItemMaster[]
+  quotes           Quote[]
+  invoices         Invoice[]
+  expenses         Expense[]
+
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+// 銀行口座 (複数登録・デフォルト設定可)
+model BankAccount {
+  id            String      @id @default(uuid())
+  userId        String
+  user          UserProfile @relation(fields: [userId], references: [id])
+  bankName      String
+  branchName    String
+  accountType   String   // 普通/当座
+  accountNumber String
+  accountHolder String
+  isDefault     Boolean  @default(false)
+  clients       Client[]
+}
+
+// 取引先
+model Client {
+  id                   String      @id @default(uuid())
+  userId               String
+  user                 UserProfile @relation(fields: [userId], references: [id])
+  name                 String
+  email                String?
+  address              String?
+  defaultBankAccountId String?
+  defaultBankAccount   BankAccount? @relation(fields: [defaultBankAccountId], references: [id])
+  invoices             Invoice[]
+  quotes               Quote[]
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+}
+
+// よく使う項目マスタ (スマホ入力支援)
+model ItemMaster {
+  id           String      @id @default(uuid())
+  userId       String
+  user         UserProfile @relation(fields: [userId], references: [id])
+  name         String
+  defaultPrice Int
+}
+
+// 見積書 (インタラクティブ機能・ログ付き)
+model Quote {
+  id             String      @id @default(uuid())
+  userId         String
+  user           UserProfile @relation(fields: [userId], references: [id])
+  clientId       String
+  client         Client      @relation(fields: [clientId], references: [id])
+  quoteNumber    String
+  status         String
+  issueDate      DateTime
+  validUntil     DateTime
+  subtotal       Int
+  taxAmount      Int
+  totalAmount    Int
+  initialAmount  Int?        // 交渉前の金額
+  password       String?
+  items          QuoteItem[]
+  logs           ActivityLog[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+// 見積明細 (オプション機能あり)
+model QuoteItem {
+  id          String  @id @default(uuid())
+  quoteId     String
+  quote       Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  name        String
+  quantity    Int
+  unitPrice   Int
+  taxRate     Int     @default(10)
+  isOptional  Boolean @default(false) // 相手が選べる項目
+  isSelected  Boolean @default(true)  // 選ばれているか
+}
+
+// 請求書 (シンプル・堅実)
+model Invoice {
+  id              String      @id // "INV-202601-001"
+  userId          String
+  user            UserProfile @relation(fields: [userId], references: [id])
+  clientId        String
+  client          Client      @relation(fields: [clientId], references: [id])
+  status          String
+  issueDate       DateTime
+  dueDate         DateTime
+  subtotal        Int
+  taxAmount       Int
+  withholdingTax  Int         @default(0)
+  totalAmount     Int
+  password        String?
+  items           InvoiceItem[]
+  parentInvoiceId String?     // 将来の分割請求用
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+// 請求明細
+model InvoiceItem {
+  id        String  @id @default(uuid())
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  name      String
+  quantity  Int
+  unitPrice Int
+  taxRate   Int     @default(10)
+}
+
+// 経費 (AI OCR用)
+model Expense {
+  id        String      @id @default(cuid())
+  userId    String
+  user      UserProfile @relation(fields: [userId], references: [id])
+  title     String
+  amount    Int
+  date      DateTime
+  category  String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+// 操作ログ
+model ActivityLog {
+  id        String   @id @default(uuid())
+  quoteId   String?
+  quote     Quote?   @relation(fields: [quoteId], references: [id])
+  action    String
+  message   String
+  createdAt DateTime @default(now())
+}

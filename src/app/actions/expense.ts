@@ -1,0 +1,46 @@
+"use server";
+
+import { auth } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
+import { prisma } from "@/lib/prisma";
+
+type SubmitResult = {
+  success: boolean;
+  message: string;
+};
+
+export async function createExpense(formData: FormData): Promise<SubmitResult> {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const title = formData.get("title") as string;
+    const amount = Number(formData.get("amount"));
+    const dateRaw = formData.get("date") as string;
+    const category = formData.get("category") as string;
+
+    if (!title || !amount || !dateRaw || !category) {
+      return { success: false, message: "すべての項目を入力してください。" };
+    }
+
+    const date = new Date(`${dateRaw}T00:00:00`);
+
+    await prisma.expense.create({
+      data: {
+        userId: userId,
+        title,
+        amount,
+        date,
+        category,
+      },
+    });
+
+    revalidatePath("/dashboard/expenses");
+    revalidatePath("/dashboard");
+    return { success: true, message: "経費を登録しました。" };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "保存に失敗しました。";
+    return { success: false, message };
+  }
+}
