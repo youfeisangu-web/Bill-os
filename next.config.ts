@@ -5,10 +5,6 @@ const nextConfig: NextConfig = {
     // ⚠️ ビルド時の型チェックエラーを無視してデプロイを優先する
     ignoreBuildErrors: true,
   },
-  eslint: {
-    // ⚠️ ビルド時のLintチェックエラーを無視する
-    ignoreDuringBuilds: true,
-  },
 };
 
 export default nextConfig;
