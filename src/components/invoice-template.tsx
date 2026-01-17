@@ -168,31 +168,6 @@ export const InvoiceTemplate = ({ data }: { data: DocumentData }) => {
           </div>
         </div>
       </div>
-
-      <style jsx global>{`
-        @media print {
-          body {
-            background-color: white !important;
-            padding: 0 !important;
-            margin: 0 !important;
-          }
-          aside, nav, button, .no-print {
-            display: none !important;
-          }
-          main {
-            padding: 0 !important;
-            margin: 0 !important;
-            width: 100% !important;
-          }
-          .print-content {
-            box-shadow: none !important;
-            border: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 100% !important;
-          }
-        }
-      `}</style>
     </div>
   );
 };
