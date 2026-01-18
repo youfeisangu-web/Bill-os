@@ -12,28 +12,18 @@
     --primary: 210 100% 50%;
     --primary-foreground: 0 0% 100%;
     
-    /* Light Mode - 白ベース */
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --input: 0 0% 100%;
-    --input-foreground: 222 47% 11%;
-    --border: 214 32% 91%;
-    --ring: 210 100% 50%;
-  }
-  
-  /* ダークモードを完全に無効化 - ライトモードと同じ色で上書き */
-  .dark {
+    /* Light Mode - 白ベース（強制） */
     --background: 0 0% 100%; /* 完全な白 */
-    --foreground: 222 47% 11%; /* slate-900 - 濃いグレー */
+    --foreground: 222.2 84% 4.9%; /* slate-900 - 濃いグレー */
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 222.2 84% 4.9%;
     --input: 0 0% 100%;
-    --input-foreground: 222 47% 11%;
+    --input-foreground: 222.2 84% 4.9%;
     --border: 214 32% 91%; /* slate-200 */
     --ring: 210 100% 50%;
   }
+  
+  /* .dark クラスを完全に削除 - ダークモードを無効化 */
   
   body {
     @apply bg-white text-slate-900 antialiased;

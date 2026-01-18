@@ -83,9 +83,9 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider localization={jaJP}>
-      <html lang="ja" suppressHydrationWarning>
+      <html lang="ja" className="light" style={{ colorScheme: 'light' }} suppressHydrationWarning>
         <body
-          className={`${inter.variable} ${notoSansJp.variable} font-sans`}
+          className={`${inter.variable} ${notoSansJp.variable} font-sans bg-white text-slate-900`}
         >
           <ThemeProvider attribute="class" forcedTheme="light" enableSystem={false}>
             {children}
