@@ -12,10 +12,10 @@ export default function Home() {
             Bill OS
           </h1>
           <p className="mb-2 text-xl font-medium text-slate-900">
-            請求書・見積書を、もっとスマートに。
+            企業の請求業務を統合管理するクラウドERP
           </p>
           <p className="text-base text-slate-600">
-            個人開発やフリーランスのための、シンプルな業務管理ツール。
+            インボイス制度・電子帳簿保存法に対応。承認フローの標準化と経理DXを実現。
           </p>
         </div>
 

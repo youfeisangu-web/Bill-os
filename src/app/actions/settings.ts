@@ -19,26 +19,50 @@ export async function updateSettings(formData: FormData): Promise<SubmitResult> 
     const email = formData.get("email") as string;
     const invoiceRegNumber = formData.get("invoiceRegNumber") as string;
     const address = formData.get("address") as string;
+    const phoneNumber = formData.get("phoneNumber") as string;
 
     const bankName = formData.get("bankName") as string;
-    const branchName = formData.get("branchName") as string;
-    const accountType = formData.get("accountType") as string;
-    const accountNumber = formData.get("accountNumber") as string;
-    const accountHolder = formData.get("accountHolder") as string;
+    const bankBranch = formData.get("bankBranch") as string;
+    const bankAccountType = formData.get("bankAccountType") as string;
+    const bankAccountNumber = formData.get("bankAccountNumber") as string;
+    const bankAccountHolder = formData.get("bankAccountHolder") as string;
 
-    // Update UserProfile
+    const defaultPaymentTerms = formData.get("defaultPaymentTerms");
+    const invoiceNumberPrefix = formData.get("invoiceNumberPrefix") as string;
+    const invoiceNumberStart = formData.get("invoiceNumberStart");
+    const taxRate = formData.get("taxRate");
+    const logoUrl = formData.get("logoUrl") as string;
+    const stampUrl = formData.get("stampUrl") as string;
+
+    // Update UserProfile (全フィールド)
     await prisma.userProfile.update({
       where: { id: userId },
       data: {
-        companyName,
-        representativeName,
+        companyName: companyName || null,
+        representativeName: representativeName || null,
         email,
-        invoiceRegNumber,
-        address,
+        invoiceRegNumber: invoiceRegNumber || null,
+        address: address || null,
+        phoneNumber: phoneNumber || null,
+        bankName: bankName || null,
+        bankBranch: bankBranch || null,
+        bankAccountType: bankAccountType || null,
+        bankAccountNumber: bankAccountNumber || null,
+        bankAccountHolder: bankAccountHolder || null,
+        defaultPaymentTerms: defaultPaymentTerms
+          ? parseInt(defaultPaymentTerms as string)
+          : 30,
+        invoiceNumberPrefix: invoiceNumberPrefix || "INV-",
+        invoiceNumberStart: invoiceNumberStart
+          ? parseInt(invoiceNumberStart as string)
+          : 1,
+        taxRate: taxRate ? parseInt(taxRate as string) : 10,
+        logoUrl: logoUrl || null,
+        stampUrl: stampUrl || null,
       },
     });
 
-    // Update Default BankAccount
+    // Update Default BankAccount (後方互換性のため保持)
     const defaultAccount = await prisma.bankAccount.findFirst({
       where: { userId: userId, isDefault: true },
     });
@@ -47,22 +71,22 @@ export async function updateSettings(formData: FormData): Promise<SubmitResult> 
       await prisma.bankAccount.update({
         where: { id: defaultAccount.id },
         data: {
-          bankName,
-          branchName,
-          accountType,
-          accountNumber,
-          accountHolder,
+          bankName: bankName || "",
+          branchName: bankBranch || "",
+          accountType: bankAccountType || "普通",
+          accountNumber: bankAccountNumber || "",
+          accountHolder: bankAccountHolder || "",
         },
       });
-    } else {
+    } else if (bankName || bankAccountNumber) {
       await prisma.bankAccount.create({
         data: {
           userId: userId,
-          bankName,
-          branchName,
-          accountType,
-          accountNumber,
-          accountHolder,
+          bankName: bankName || "",
+          branchName: bankBranch || "",
+          accountType: bankAccountType || "普通",
+          accountNumber: bankAccountNumber || "",
+          accountHolder: bankAccountHolder || "",
           isDefault: true,
         },
       });
@@ -74,6 +98,34 @@ export async function updateSettings(formData: FormData): Promise<SubmitResult> 
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "更新に失敗しました。";
+    return { success: false, message };
+  }
+}
+
+/**
+ * プロフィール画像（ロゴ・角印）を即座に更新するServer Action
+ */
+export async function updateProfileImage(
+  type: "logo" | "stamp",
+  url: string | null
+): Promise<SubmitResult> {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const updateData =
+      type === "logo" ? { logoUrl: url } : { stampUrl: url };
+
+    await prisma.userProfile.update({
+      where: { id: userId },
+      data: updateData,
+    });
+
+    revalidatePath("/dashboard/settings");
+    return { success: true, message: "画像を更新しました。" };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "画像の更新に失敗しました。";
     return { success: false, message };
   }
 }

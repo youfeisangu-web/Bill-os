@@ -9,28 +9,45 @@ datasource db {
 
 // ユーザー (Clerk連携 + LINE対応)
 model UserProfile {
-  id               String      @id // Clerk ID
-  email            String
-  companyName      String?     // 屋号
-  representativeName String?    // 代表者名
-  address          String?     // 住所
-  invoiceRegNumber String?     // T番号
-  stampImageUrl    String?     // 印鑑画像
-  passwordEnabled  Boolean     @default(false)
+  id                        String      @id // Clerk ID
+  email                     String
+  companyName               String?     // 屋号
+  representativeName        String?     // 代表者名
+  address                   String?     // 住所
+  phoneNumber               String?     // 電話番号
+  invoiceRegNumber          String?     // T番号（インボイス登録番号）
+  stampImageUrl             String?     // 印鑑画像（後方互換性のため保持）
+  logoUrl                   String?     // 会社ロゴ画像URL
+  stampUrl                  String?     // 角印画像URL
+  passwordEnabled           Boolean     @default(false)
+  role                      String      @default("USER") // USER or ADMIN
+
+  // 銀行口座情報（単一のデフォルト口座）
+  bankName                  String?
+  bankBranch                String?
+  bankAccountType           String?     // 普通/当座
+  bankAccountNumber         String?
+  bankAccountHolder         String?
+
+  // システム設定
+  defaultPaymentTerms       Int?        @default(30) // 支払い期限（日数）
+  invoiceNumberPrefix       String?     @default("INV-") // 請求書番号接頭辞
+  invoiceNumberStart        Int?        @default(1) // 開始番号
+  taxRate                   Int?        @default(10) // デフォルト税率（%）
 
   // ★ LINE Messaging API用ID (将来用)
-  lineUserId       String?     @unique
+  lineUserId                String?     @unique
 
   // リレーション
-  bankAccounts     BankAccount[]
-  clients          Client[]
-  itemMasters      ItemMaster[]
-  quotes           Quote[]
-  invoices         Invoice[]
-  expenses         Expense[]
+  bankAccounts              BankAccount[]
+  clients                   Client[]
+  itemMasters               ItemMaster[]
+  quotes                    Quote[]
+  invoices                  Invoice[]
+  expenses                  Expense[]
 
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
+  createdAt                 DateTime    @default(now())
+  updatedAt                 DateTime    @updatedAt
 }
 
 // 銀行口座 (複数登録・デフォルト設定可)

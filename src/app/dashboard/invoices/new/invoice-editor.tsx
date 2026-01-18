@@ -21,6 +21,7 @@ const formatCurrency = (value: number) =>
 export default function InvoiceEditor({ clients }: { clients: ClientOption[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [isNewClient, setIsNewClient] = useState(false);
   const [items, setItems] = useState<ItemRow[]>([
     { name: "", quantity: 1, unitPrice: 0 },
   ]);
@@ -92,25 +93,68 @@ export default function InvoiceEditor({ clients }: { clients: ClientOption[] }) 
       <section className="mx-auto w-full max-w-4xl rounded-[32px] border border-slate-200 bg-white p-8 shadow-lg">
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
-            <label className="text-xs uppercase tracking-[0.3em] text-slate-500">
-              取引先
-            </label>
-            <select
-              name="clientId"
-              required
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-            >
-              <option value="">選択してください</option>
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.name}
-                </option>
-              ))}
-            </select>
-            {clients.length === 0 && (
-              <p className="text-xs text-amber-600">
-                取引先が未登録です。先に取引先を登録してください。
-              </p>
+            <div className="flex items-center gap-4">
+              <label className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                取引先
+              </label>
+              <div className="flex gap-2 text-xs">
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="clientMode"
+                    checked={!isNewClient}
+                    onChange={() => setIsNewClient(false)}
+                    className="cursor-pointer"
+                  />
+                  <span>既存から選択</span>
+                </label>
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="clientMode"
+                    checked={isNewClient}
+                    onChange={() => setIsNewClient(true)}
+                    className="cursor-pointer"
+                  />
+                  <span>新規入力</span>
+                </label>
+              </div>
+            </div>
+            {!isNewClient ? (
+              <select
+                name="clientId"
+                required={!isNewClient}
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              >
+                <option value="">選択してください</option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <div className="space-y-3">
+                <input
+                  name="clientName"
+                  type="text"
+                  placeholder="取引先名（必須）"
+                  required={isNewClient}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                />
+                <input
+                  name="clientEmail"
+                  type="email"
+                  placeholder="メールアドレス（任意）"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                />
+                <input
+                  name="clientAddress"
+                  type="text"
+                  placeholder="住所（任意）"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                />
+              </div>
             )}
           </div>
           <div className="grid gap-4 sm:grid-cols-2">

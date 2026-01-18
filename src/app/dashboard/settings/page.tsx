@@ -45,9 +45,23 @@ export default async function SettingsPage() {
       email: user.email,
       invoiceRegNumber: user.invoiceRegNumber,
       address: user.address,
+      phoneNumber: user.phoneNumber,
+      logoUrl: user.logoUrl,
+      stampUrl: user.stampUrl,
     },
     bankAccount: user.bankAccounts[0] || null,
+    settings: {
+      defaultPaymentTerms: user.defaultPaymentTerms ?? 30,
+      invoiceNumberPrefix: user.invoiceNumberPrefix ?? "INV-",
+      invoiceNumberStart: user.invoiceNumberStart ?? 1,
+      taxRate: user.taxRate ?? 10,
+      bankName: user.bankName,
+      bankBranch: user.bankBranch,
+      bankAccountType: user.bankAccountType,
+      bankAccountNumber: user.bankAccountNumber,
+      bankAccountHolder: user.bankAccountHolder,
+    },
   };
 
-  return <SettingsForm initialData={initialData} />;
+  return <SettingsForm userId={userId} initialData={initialData} />;
 }

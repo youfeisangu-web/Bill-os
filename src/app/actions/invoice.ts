@@ -40,12 +40,34 @@ export async function createInvoice(formData: FormData): Promise<SubmitResult> {
     if (!userId) throw new Error("Unauthorized");
 
     const clientId = getValue(formData, "clientId");
+    const clientName = getValue(formData, "clientName");
+    const clientEmail = getValue(formData, "clientEmail");
+    const clientAddress = getValue(formData, "clientAddress");
     const issueDateRaw = getValue(formData, "issueDate");
     const dueDateRaw = getValue(formData, "dueDate");
     const itemsRaw = getValue(formData, "items");
 
-    if (!clientId || !issueDateRaw || !dueDateRaw || !itemsRaw) {
+    // 新規顧客の場合は clientName が必須
+    if (!clientId && !clientName) {
+      return { success: false, message: "取引先を選択するか、新規取引先名を入力してください。" };
+    }
+
+    if (!issueDateRaw || !dueDateRaw || !itemsRaw) {
       return { success: false, message: "必須項目を入力してください。" };
+    }
+
+    // 新規顧客の場合は自動的に顧客を作成
+    let finalClientId = clientId;
+    if (!clientId && clientName) {
+      const newClient = await prisma.client.create({
+        data: {
+          userId: userId,
+          name: clientName,
+          email: clientEmail || null,
+          address: clientAddress || null,
+        },
+      });
+      finalClientId = newClient.id;
     }
 
     const issueDate = parseDate(issueDateRaw);
@@ -96,7 +118,7 @@ export async function createInvoice(formData: FormData): Promise<SubmitResult> {
       data: {
         id: invoiceId,
         userId: userId,
-        clientId,
+        clientId: finalClientId,
         status: "未払い",
         issueDate,
         dueDate,
