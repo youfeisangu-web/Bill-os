@@ -14,33 +14,49 @@ export async function updateSettings(formData: FormData): Promise<SubmitResult> 
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
-    const companyName = formData.get("companyName") as string;
-    const representativeName = formData.get("representativeName") as string;
-    const email = formData.get("email") as string;
-    const invoiceRegNumber = formData.get("invoiceRegNumber") as string;
-    const address = formData.get("address") as string;
-    const phoneNumber = formData.get("phoneNumber") as string;
+    // 現在のユーザーデータを取得（emailが必須のため）
+    const currentUser = await prisma.userProfile.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
 
-    const bankName = formData.get("bankName") as string;
-    const bankBranch = formData.get("bankBranch") as string;
-    const bankAccountType = formData.get("bankAccountType") as string;
-    const bankAccountNumber = formData.get("bankAccountNumber") as string;
-    const bankAccountHolder = formData.get("bankAccountHolder") as string;
+    // フォームデータを取得し、null/undefinedを空文字またはデフォルト値に変換
+    const companyName = (formData.get("companyName") as string)?.trim() || "";
+    const representativeName = (formData.get("representativeName") as string)?.trim() || "";
+    const email = (formData.get("email") as string)?.trim() || currentUser?.email || "";
+    const invoiceRegNumber = (formData.get("invoiceRegNumber") as string)?.trim() || "";
+    const address = (formData.get("address") as string)?.trim() || "";
+    const phoneNumber = (formData.get("phoneNumber") as string)?.trim() || "";
 
-    const defaultPaymentTerms = formData.get("defaultPaymentTerms");
-    const invoiceNumberPrefix = formData.get("invoiceNumberPrefix") as string;
-    const invoiceNumberStart = formData.get("invoiceNumberStart");
-    const taxRate = formData.get("taxRate");
-    const logoUrl = formData.get("logoUrl") as string;
-    const stampUrl = formData.get("stampUrl") as string;
+    const bankName = (formData.get("bankName") as string)?.trim() || "";
+    const bankBranch = (formData.get("bankBranch") as string)?.trim() || "";
+    const bankAccountType = (formData.get("bankAccountType") as string)?.trim() || "普通";
+    const bankAccountNumber = (formData.get("bankAccountNumber") as string)?.trim() || "";
+    const bankAccountHolder = (formData.get("bankAccountHolder") as string)?.trim() || "";
 
-    // Update UserProfile (全フィールド)
+    const defaultPaymentTermsRaw = formData.get("defaultPaymentTerms");
+    const invoiceNumberPrefix = (formData.get("invoiceNumberPrefix") as string)?.trim() || "INV-";
+    const invoiceNumberStartRaw = formData.get("invoiceNumberStart");
+    const taxRateRaw = formData.get("taxRate");
+    const logoUrl = (formData.get("logoUrl") as string)?.trim() || "";
+    const stampUrl = (formData.get("stampUrl") as string)?.trim() || "";
+
+    // 数値フィールドのサニタイズ
+    const defaultPaymentTerms = defaultPaymentTermsRaw
+      ? parseInt(String(defaultPaymentTermsRaw))
+      : 30;
+    const invoiceNumberStart = invoiceNumberStartRaw
+      ? parseInt(String(invoiceNumberStartRaw))
+      : 1;
+    const taxRate = taxRateRaw ? parseInt(String(taxRateRaw)) : 10;
+
+    // Update UserProfile (全フィールド) - nullを許可するフィールドは空文字またはnullに変換
     await prisma.userProfile.update({
       where: { id: userId },
       data: {
         companyName: companyName || null,
         representativeName: representativeName || null,
-        email,
+        email: email || "dev@bill-os.local", // emailは必須の可能性があるためフォールバック
         invoiceRegNumber: invoiceRegNumber || null,
         address: address || null,
         phoneNumber: phoneNumber || null,
@@ -49,14 +65,10 @@ export async function updateSettings(formData: FormData): Promise<SubmitResult> 
         bankAccountType: bankAccountType || null,
         bankAccountNumber: bankAccountNumber || null,
         bankAccountHolder: bankAccountHolder || null,
-        defaultPaymentTerms: defaultPaymentTerms
-          ? parseInt(defaultPaymentTerms as string)
-          : 30,
+        defaultPaymentTerms,
         invoiceNumberPrefix: invoiceNumberPrefix || "INV-",
-        invoiceNumberStart: invoiceNumberStart
-          ? parseInt(invoiceNumberStart as string)
-          : 1,
-        taxRate: taxRate ? parseInt(taxRate as string) : 10,
+        invoiceNumberStart,
+        taxRate,
         logoUrl: logoUrl || null,
         stampUrl: stampUrl || null,
       },

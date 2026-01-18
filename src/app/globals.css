@@ -23,23 +23,23 @@
     --ring: 210 100% 50%;
   }
   
+  /* ダークモードを完全に無効化 - ライトモードと同じ色で上書き */
   .dark {
-    /* Dark Mode - slate-950/900ベース */
-    --background: 222 47% 4%; /* slate-950相当 */
-    --foreground: 210 40% 98%; /* slate-50相当 */
-    --card: 222 47% 8%; /* slate-900相当 */
-    --card-foreground: 210 40% 98%;
-    --input: 222 47% 11%; /* slate-800相当 */
-    --input-foreground: 210 40% 98%;
-    --border: 217 33% 17%; /* slate-700相当 */
+    --background: 0 0% 100%; /* 完全な白 */
+    --foreground: 222 47% 11%; /* slate-900 - 濃いグレー */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --input: 0 0% 100%;
+    --input-foreground: 222 47% 11%;
+    --border: 214 32% 91%; /* slate-200 */
     --ring: 210 100% 50%;
   }
   
   body {
-    @apply bg-white text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-50;
+    @apply bg-white text-slate-900 antialiased;
   }
   
-  /* 入力フォームのスタイル - ライトモードは純白、ダークモードは高コントラスト */
+  /* 入力フォームのスタイル - 常に白背景・黒文字 */
   input[type="text"],
   input[type="email"],
   input[type="tel"],
@@ -48,13 +48,12 @@
   textarea,
   select {
     @apply bg-white text-slate-900 border-slate-200;
-    @apply dark:bg-slate-800 dark:text-slate-50 dark:border-slate-700;
   }
   
-  /* プレースホルダーの色も明るく */
+  /* プレースホルダーの色 */
   input::placeholder,
   textarea::placeholder {
-    @apply text-slate-400 dark:text-slate-400;
+    @apply text-slate-400;
   }
 }
 
