@@ -12,41 +12,31 @@
     --primary: 210 100% 50%;
     --primary-foreground: 0 0% 100%;
     
-    /* Dark Mode Background - 青みがかったダークグレー */
+    /* Light Mode - 白ベース */
     --background: 0 0% 100%;
     --foreground: 222 47% 11%;
-    
-    /* Card & Input - ダークモード時の視認性向上 */
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --input: 0 0% 100%;
     --input-foreground: 222 47% 11%;
-    
-    /* Border */
     --border: 214 32% 91%;
     --ring: 210 100% 50%;
   }
   
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 0 0% 98%;
-    --card: 222 47% 15%;
-    --card-foreground: 0 0% 98%;
-    --input: 222 47% 18%;
-    --input-foreground: 0 0% 98%;
-    --border: 217 33% 17%;
+    /* Dark Mode - slate-950/900ベース */
+    --background: 222 47% 4%; /* slate-950相当 */
+    --foreground: 210 40% 98%; /* slate-50相当 */
+    --card: 222 47% 8%; /* slate-900相当 */
+    --card-foreground: 210 40% 98%;
+    --input: 222 47% 11%; /* slate-800相当 */
+    --input-foreground: 210 40% 98%;
+    --border: 217 33% 17%; /* slate-700相当 */
     --ring: 210 100% 50%;
   }
   
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
-  }
-  
-  .dark body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
+    @apply bg-white text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-50;
   }
   
   /* 入力フォームのスタイル */
@@ -57,14 +47,7 @@
   input[type="date"],
   textarea,
   select {
-    @apply bg-white dark:bg-[hsl(222,47%,18%)] text-slate-900 dark:text-slate-100;
-  }
-  
-  /* カードのスタイル */
-  .card,
-  [class*="rounded-3xl"],
-  [class*="rounded-2xl"] {
-    @apply dark:bg-[hsl(222,47%,15%)] dark:border-slate-700;
+    @apply bg-white text-slate-900 dark:bg-slate-800 dark:text-slate-50;
   }
 }
 
