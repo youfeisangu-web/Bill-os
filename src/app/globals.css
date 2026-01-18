@@ -7,8 +7,64 @@
 }
 
 @layer base {
+  :root {
+    /* Primary Color - 信頼感のある青 */
+    --primary: 210 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Dark Mode Background - 青みがかったダークグレー */
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    
+    /* Card & Input - ダークモード時の視認性向上 */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --input: 0 0% 100%;
+    --input-foreground: 222 47% 11%;
+    
+    /* Border */
+    --border: 214 32% 91%;
+    --ring: 210 100% 50%;
+  }
+  
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 0 0% 98%;
+    --card: 222 47% 15%;
+    --card-foreground: 0 0% 98%;
+    --input: 222 47% 18%;
+    --input-foreground: 0 0% 98%;
+    --border: 217 33% 17%;
+    --ring: 210 100% 50%;
+  }
+  
   body {
-    @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+    @apply bg-slate-50 text-slate-900 antialiased;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+  
+  .dark body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+  
+  /* 入力フォームのスタイル */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="date"],
+  textarea,
+  select {
+    @apply bg-white dark:bg-[hsl(222,47%,18%)] text-slate-900 dark:text-slate-100;
+  }
+  
+  /* カードのスタイル */
+  .card,
+  [class*="rounded-3xl"],
+  [class*="rounded-2xl"] {
+    @apply dark:bg-[hsl(222,47%,15%)] dark:border-slate-700;
   }
 }
 

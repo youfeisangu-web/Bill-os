@@ -5,6 +5,7 @@ import { updateSettings } from "@/app/actions/settings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ModeToggle } from "@/components/mode-toggle";
 import ImageUpload from "@/components/image-upload";
+import { Loader2 } from "lucide-react";
 
 type SettingsFormProps = {
   userId: string;
@@ -77,14 +78,15 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex items-center rounded-full bg-blue-600 px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
+          className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-blue-500 dark:hover:bg-blue-600"
         >
+          {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
           {isPending ? "保存中..." : "変更を保存"}
         </button>
       </div>
 
       <Tabs defaultValue="company" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 max-w-[800px] dark:bg-slate-800">
+        <TabsList className="grid w-full grid-cols-4 max-w-[800px] dark:bg-[hsl(222,47%,15%)]">
           <TabsTrigger value="company" className="dark:data-[state=active]:bg-slate-700">
             基本設定
           </TabsTrigger>
@@ -100,7 +102,7 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
         </TabsList>
 
         <TabsContent value="company" className="mt-6">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-4 dark:border-slate-700 dark:bg-slate-800">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-4 dark:border-slate-700 dark:bg-[hsl(222,47%,15%)]">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
               会社情報
             </h2>
@@ -112,7 +114,7 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
                 <input
                   name="companyName"
                   defaultValue={initialData.user.companyName || ""}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-[hsl(222,47%,18%)] dark:text-slate-100"
                 />
               </div>
               <div className="space-y-2">
@@ -122,7 +124,7 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
                 <input
                   name="representativeName"
                   defaultValue={initialData.user.representativeName || ""}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-[hsl(222,47%,18%)] dark:text-slate-100"
                 />
               </div>
             </div>
@@ -136,7 +138,7 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
                   name="email"
                   type="email"
                   defaultValue={initialData.user.email}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-[hsl(222,47%,18%)] dark:text-slate-100"
                 />
               </div>
               <div className="space-y-2">
@@ -148,7 +150,7 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
                   type="tel"
                   defaultValue={initialData.user.phoneNumber || ""}
                   placeholder="03-1234-5678"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-[hsl(222,47%,18%)] dark:text-slate-100"
                 />
               </div>
             </div>
@@ -162,7 +164,7 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
                   name="invoiceRegNumber"
                   defaultValue={initialData.user.invoiceRegNumber || ""}
                   placeholder="T1234567890123"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-[hsl(222,47%,18%)] dark:text-slate-100"
                 />
               </div>
             </div>
@@ -181,7 +183,7 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
         </TabsContent>
 
         <TabsContent value="bank" className="mt-6">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-4 dark:border-slate-700 dark:bg-slate-800">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-4 dark:border-slate-700 dark:bg-[hsl(222,47%,15%)]">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
               銀行口座・支払設定
             </h2>
@@ -193,7 +195,7 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
                 <input
                   name="bankName"
                   defaultValue={initialData.settings.bankName || initialData.bankAccount?.bankName || ""}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-[hsl(222,47%,18%)] dark:text-slate-100"
                 />
               </div>
               <div className="space-y-2">
@@ -203,7 +205,7 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
                 <input
                   name="bankBranch"
                   defaultValue={initialData.settings.bankBranch || initialData.bankAccount?.branchName || ""}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-[hsl(222,47%,18%)] dark:text-slate-100"
                 />
               </div>
             </div>
@@ -216,7 +218,7 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
                 <select
                   name="bankAccountType"
                   defaultValue={initialData.settings.bankAccountType || initialData.bankAccount?.accountType || "普通"}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-[hsl(222,47%,18%)] dark:text-slate-100"
                 >
                   <option value="普通">普通</option>
                   <option value="当座">当座</option>
@@ -229,7 +231,7 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
                 <input
                   name="bankAccountNumber"
                   defaultValue={initialData.settings.bankAccountNumber || initialData.bankAccount?.accountNumber || ""}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-[hsl(222,47%,18%)] dark:text-slate-100"
                 />
               </div>
             </div>
@@ -255,7 +257,7 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
                   type="number"
                   min={1}
                   defaultValue={initialData.settings.defaultPaymentTerms}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-[hsl(222,47%,18%)] dark:text-slate-100"
                 />
               </div>
               <div className="space-y-2">
@@ -268,7 +270,7 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
                   min={0}
                   max={100}
                   defaultValue={initialData.settings.taxRate}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-[hsl(222,47%,18%)] dark:text-slate-100"
                 />
               </div>
             </div>
@@ -307,7 +309,7 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
         </TabsContent>
 
         <TabsContent value="system" className="mt-6">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-4 dark:border-slate-700 dark:bg-slate-800">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-4 dark:border-slate-700 dark:bg-[hsl(222,47%,15%)]">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
               システム設定
             </h2>
@@ -320,7 +322,7 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
                   name="invoiceNumberPrefix"
                   defaultValue={initialData.settings.invoiceNumberPrefix}
                   placeholder="INV-"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-[hsl(222,47%,18%)] dark:text-slate-100"
                 />
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   例: INV-, BILL-, など
@@ -335,7 +337,7 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
                   type="number"
                   min={1}
                   defaultValue={initialData.settings.invoiceNumberStart}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-[hsl(222,47%,18%)] dark:text-slate-100"
                 />
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   請求書番号の開始番号
