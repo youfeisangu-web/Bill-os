@@ -87,7 +87,7 @@ export default function RootLayout({
         <body
           className={`${inter.variable} ${notoSansJp.variable} font-sans`}
         >
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
             {children}
           </ThemeProvider>
         </body>

@@ -6,7 +6,7 @@ import { ShieldCheck, BarChart3, Receipt, Building2, CheckCircle2, ArrowRight } 
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950">
+    <div className="flex min-h-screen flex-col bg-white dark:bg-slate-950">
       {/* Navigation Bar */}
       <nav className="border-b border-slate-200 bg-white/80 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/80">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
