@@ -50,27 +50,28 @@ export async function updateSettings(formData: FormData): Promise<SubmitResult> 
       : 1;
     const taxRate = taxRateRaw ? parseInt(String(taxRateRaw)) : 10;
 
-    // Update UserProfile (全フィールド) - nullを許可するフィールドは空文字またはnullに変換
+    // Update UserProfile (全フィールド) - null/undefinedを空文字に統一してPrismaエラーを防止
     await prisma.userProfile.update({
       where: { id: userId },
       data: {
-        companyName: companyName || null,
-        representativeName: representativeName || null,
-        email: email || "dev@bill-os.local", // emailは必須の可能性があるためフォールバック
-        invoiceRegNumber: invoiceRegNumber || null,
-        address: address || null,
-        phoneNumber: phoneNumber || null,
-        bankName: bankName || null,
-        bankBranch: bankBranch || null,
-        bankAccountType: bankAccountType || null,
-        bankAccountNumber: bankAccountNumber || null,
-        bankAccountHolder: bankAccountHolder || null,
+        // 全てのString?フィールドを空文字に統一（nullではなく""にすることでエラー回避）
+        companyName: companyName ?? "",
+        representativeName: representativeName ?? "",
+        email: email || "dev@bill-os.local", // emailは必須のためフォールバック必須
+        invoiceRegNumber: invoiceRegNumber ?? "",
+        address: address ?? "",
+        phoneNumber: phoneNumber ?? "",
+        bankName: bankName ?? "",
+        bankBranch: bankBranch ?? "",
+        bankAccountType: bankAccountType ?? "",
+        bankAccountNumber: bankAccountNumber ?? "",
+        bankAccountHolder: bankAccountHolder ?? "",
         defaultPaymentTerms,
-        invoiceNumberPrefix: invoiceNumberPrefix || "INV-",
+        invoiceNumberPrefix: invoiceNumberPrefix ?? "INV-",
         invoiceNumberStart,
         taxRate,
-        logoUrl: logoUrl || null,
-        stampUrl: stampUrl || null,
+        logoUrl: logoUrl ?? "",
+        stampUrl: stampUrl ?? "",
       },
     });
 
