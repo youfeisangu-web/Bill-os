@@ -15,12 +15,12 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4 dark:bg-slate-950">
-      <div className="w-full max-w-md space-y-6 rounded-3xl border border-slate-200 bg-white p-8 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4">
+      <div className="w-full max-w-md space-y-6 rounded-3xl border border-slate-200 bg-white p-8 shadow-lg">
         <div className="flex flex-col items-center space-y-4 text-center">
-          <div className="rounded-full bg-red-100 p-4 dark:bg-red-900/20">
+          <div className="rounded-full bg-red-100 p-4">
             <svg
-              className="h-8 w-8 text-red-600 dark:text-red-400"
+              className="h-8 w-8 text-red-600"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -34,16 +34,16 @@ export default function Error({
             </svg>
           </div>
           <div className="space-y-2">
-            <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+            <h1 className="text-2xl font-semibold text-slate-900">
               問題が発生しました
             </h1>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-sm text-slate-600">
               予期しないエラーが発生しました。ページを再読み込みして再度お試しください。
             </p>
           </div>
           {process.env.NODE_ENV === "development" && (
-            <div className="w-full rounded-lg bg-slate-100 p-4 text-left dark:bg-slate-900">
-              <p className="text-xs font-mono text-slate-600 dark:text-slate-400">
+            <div className="w-full rounded-lg bg-slate-100 p-4 text-left">
+              <p className="text-xs font-mono text-slate-600">
                 {error.message}
               </p>
             </div>
@@ -51,13 +51,13 @@ export default function Error({
           <div className="flex w-full gap-3 pt-4">
             <button
               onClick={reset}
-              className="flex-1 rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+              className="flex-1 rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
             >
               再読み込み
             </button>
             <button
               onClick={() => (window.location.href = "/dashboard")}
-              className="flex-1 rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-700"
+              className="flex-1 rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
             >
               ダッシュボードに戻る
             </button>

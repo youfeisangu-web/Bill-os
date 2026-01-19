@@ -34,23 +34,23 @@ export default async function QuotesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <header className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-1">
-          <p className="text-xs uppercase tracking-[0.4em] text-slate-400 dark:text-slate-500">
+          <p className="text-xs uppercase tracking-[0.4em] text-slate-400">
             見積書
           </p>
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">見積書一覧</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">見積書一覧</h1>
         </div>
-        <p className="text-sm text-slate-600 dark:text-slate-400">
+        <p className="text-sm text-slate-600">
           作成済みの見積書を一覧で管理できます。
         </p>
       </header>
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">見積書一覧</h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <h2 className="text-lg font-semibold text-slate-900">見積書一覧</h2>
+            <p className="text-sm text-slate-500">
               発行日・有効期限・金額・ステータスを確認できます。
             </p>
           </div>
@@ -62,9 +62,9 @@ export default async function QuotesPage() {
           </Link>
         </div>
 
-        <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800">
+        <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200">
           <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-[0.2em] text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+            <thead className="bg-slate-50 text-xs uppercase tracking-[0.2em] text-slate-500">
               <tr>
                 <th className="px-4 py-3">見積番号</th>
                 <th className="px-4 py-3">取引先名</th>
@@ -74,34 +74,34 @@ export default async function QuotesPage() {
                 <th className="px-4 py-3">ステータス</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+            <tbody className="divide-y divide-slate-200">
               {quotes.length === 0 ? (
                 <tr>
                   <td
                     colSpan={6}
-                    className="px-4 py-10 text-center text-sm text-slate-500 dark:text-slate-400"
+                    className="px-4 py-10 text-center text-sm text-slate-500"
                   >
                     まだ見積書が登録されていません。作成ボタンから追加してください。
                   </td>
                 </tr>
               ) : (
                 quotes.map((quote) => (
-                  <tr key={quote.id} className="text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                    <td className="px-4 py-4 font-medium text-blue-600 dark:text-blue-400">
+                  <tr key={quote.id} className="text-slate-700">
+                    <td className="px-4 py-4 font-medium text-blue-600">
                       <Link href={`/dashboard/quotes/${quote.id}`}>
                         {quote.quoteNumber}
                       </Link>
                     </td>
-                    <td className="px-4 py-4 dark:text-slate-400">{quote.client?.name ?? "-"}</td>
-                    <td className="px-4 py-4 dark:text-slate-400">{formatDate(quote.issueDate)}</td>
-                    <td className="px-4 py-4 dark:text-slate-400">{formatDate(quote.validUntil)}</td>
-                    <td className="px-4 py-4 dark:text-slate-400">
+                    <td className="px-4 py-4">{quote.client?.name ?? "-"}</td>
+                    <td className="px-4 py-4">{formatDate(quote.issueDate)}</td>
+                    <td className="px-4 py-4">{formatDate(quote.validUntil)}</td>
+                    <td className="px-4 py-4">
                       ¥{formatCurrency(quote.totalAmount)}
                     </td>
                     <td className="px-4 py-4">
                       <span
                         className={`font-medium ${
-                          statusTone[quote.status] ?? "text-slate-600 dark:text-slate-400"
+                          statusTone[quote.status] ?? "text-slate-600"
                         }`}
                       >
                         {quote.status}

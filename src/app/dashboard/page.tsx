@@ -110,14 +110,14 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col gap-8">
       <OnboardingSuccessAlert />
-      <header className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <header className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-1">
-          <p className="text-xs uppercase tracking-[0.4em] text-slate-400 dark:text-slate-500">
+          <p className="text-xs uppercase tracking-[0.4em] text-slate-400">
             概況
           </p>
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">ホーム</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">ホーム</h1>
         </div>
-        <p className="text-sm text-slate-600 dark:text-slate-400">
+        <p className="text-sm text-slate-600">
           登録された請求書データに基づいて数値を表示しています。
         </p>
       </header>
@@ -126,12 +126,12 @@ export default async function DashboardPage() {
         {kpis.map((kpi) => (
           <div
             key={kpi.label}
-            className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+            className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
           >
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
               {kpi.label}
             </p>
-            <p className="text-2xl font-semibold text-slate-900 dark:text-slate-50">
+            <p className="text-2xl font-semibold text-slate-900">
               {kpi.value}
             </p>
             <p className={`text-xs ${kpi.tone}`}>{kpi.delta}</p>
@@ -140,12 +140,12 @@ export default async function DashboardPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-        <div className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">売上グラフ</h2>
-            <span className="text-xs text-slate-400 dark:text-slate-500">過去6か月</span>
+            <h2 className="text-lg font-semibold text-slate-900">売上グラフ</h2>
+            <span className="text-xs text-slate-400">過去6か月</span>
           </div>
-          <div className="relative h-56 rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800">
+          <div className="relative h-56 rounded-2xl border border-slate-200 bg-slate-50">
             <div className="absolute inset-x-6 bottom-6 flex h-28 items-end gap-3">
               {normalizedHeights.map((height, idx) => (
                 <div
@@ -155,7 +155,7 @@ export default async function DashboardPage() {
                 />
               ))}
             </div>
-            <div className="absolute inset-x-6 top-6 flex items-center justify-between text-xs text-slate-400 dark:text-slate-500">
+            <div className="absolute inset-x-6 top-6 flex items-center justify-between text-xs text-slate-400">
               {monthLabels.map((label) => (
                 <span key={label}>{label}</span>
               ))}
@@ -163,30 +163,30 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">最近の請求書</h2>
+        <div className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-slate-900">最近の請求書</h2>
           <div className="flex flex-col gap-3 text-sm">
             {recentInvoices.length === 0 ? (
-              <p className="py-10 text-center text-slate-400 dark:text-slate-500">データがありません</p>
+              <p className="py-10 text-center text-slate-400">データがありません</p>
             ) : (
               recentInvoices.map((invoice) => (
                 <div
                   key={invoice.id}
-                  className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-800"
+                  className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
                 >
                   <div className="flex flex-col">
-                    <span className="text-xs text-slate-400 dark:text-slate-500">{invoice.id}</span>
-                    <span className="font-medium text-slate-900 dark:text-slate-50">
+                    <span className="text-xs text-slate-400">{invoice.id}</span>
+                    <span className="font-medium text-slate-900">
                       {invoice.client?.name}
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="block text-slate-900 dark:text-slate-50">
+                    <span className="block text-slate-900">
                       ¥{formatCurrency(invoice.totalAmount)}
                     </span>
                     <span
                       className={`text-xs ${
-                        statusTone[invoice.status] ?? "text-slate-500 dark:text-slate-400"
+                        statusTone[invoice.status] ?? "text-slate-500"
                       }`}
                     >
                       {invoice.status}
