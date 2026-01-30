@@ -78,6 +78,17 @@
   textarea::placeholder {
     @apply text-slate-400;
   }
+
+  /* 数値入力のスピナー（上下矢印）を非表示 → キーボード入力用 */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
 }
 
 @media print {
