@@ -36,16 +36,20 @@ export async function savePayment(tenantId: string, amount: number, dateStr: str
   revalidatePath('/reconcile');
 }
 
-/** 入金消し込み用：請求中金額（全入居者の家賃合計）と入居者数を返す */
+/** 入金消し込み用：請求金額（請求書発行済みの未払い・部分払いの合計）を返す */
 export async function getReconcileSummary() {
   const { userId } = await auth();
   if (!userId) throw new Error('認証が必要です');
 
-  const tenants = await prisma.tenant.findMany({
-    select: { amount: true },
+  const invoices = await prisma.invoice.findMany({
+    where: {
+      userId,
+      status: { in: ['未払い', '部分払い'] },
+    },
+    select: { totalAmount: true },
   });
-  const totalBilledAmount = tenants.reduce((sum, t) => sum + t.amount, 0);
-  return { totalBilledAmount, tenantCount: tenants.length };
+  const totalBilledAmount = invoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+  return { totalBilledAmount, invoiceCount: invoices.length };
 }
 
 // 特定の入居者の支払い履歴を取ってくる

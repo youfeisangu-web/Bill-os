@@ -91,11 +91,17 @@
   }
 }
 
+@page {
+  size: A4;
+  margin: 10mm;
+}
+
 @media print {
   body {
     background-color: white !important;
     padding: 0 !important;
     margin: 0 !important;
+    width: 210mm !important;
   }
   aside, nav, button, .no-print {
     display: none !important;
@@ -104,6 +110,7 @@
     padding: 0 !important;
     margin: 0 !important;
     width: 100% !important;
+    max-width: 210mm !important;
   }
   .print-content {
     box-shadow: none !important;
@@ -111,5 +118,8 @@
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
+    max-width: 210mm !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
   }
 }

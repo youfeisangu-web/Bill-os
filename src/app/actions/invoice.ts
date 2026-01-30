@@ -138,6 +138,7 @@ export async function createInvoice(formData: FormData): Promise<SubmitResult> {
     });
 
     revalidatePath("/dashboard/invoices");
+    revalidatePath("/reconcile");
     redirect("/dashboard/invoices");
   } catch (error) {
     if (error instanceof Error && error.message === "NEXT_REDIRECT") {
@@ -217,6 +218,7 @@ export async function convertQuoteToInvoice(
 
     revalidatePath("/dashboard/invoices");
     revalidatePath("/dashboard/quotes");
+    revalidatePath("/reconcile");
     redirect(`/dashboard/invoices/${newInvoice.id}`);
   } catch (error) {
     if (error instanceof Error && error.message === "NEXT_REDIRECT") {
@@ -303,6 +305,7 @@ export async function convertQuotesToInvoices(
 
     revalidatePath("/dashboard/invoices");
     revalidatePath("/dashboard/quotes");
+    revalidatePath("/reconcile");
     return {
       success: true,
       message: `${convertedCount}件の見積書を請求書に変換しました。`,

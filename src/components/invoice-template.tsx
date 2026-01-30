@@ -48,7 +48,7 @@ const formatDate = (date: Date) =>
 
 export const InvoiceTemplate = ({ data }: { data: DocumentData }) => {
   return (
-    <div className="bg-white p-[20mm] shadow-lg print:m-0 print:p-[15mm] print:shadow-none mx-auto w-[210mm] min-h-[297mm] text-slate-800 font-sans leading-relaxed">
+    <div className="bg-white p-[20mm] shadow-lg print:m-0 print:p-[12mm] print:shadow-none mx-auto w-[210mm] max-w-[210mm] min-h-[297mm] text-slate-800 font-sans leading-relaxed box-border print:overflow-hidden print:break-inside-avoid">
       {/* Header */}
       <div className="flex justify-between items-start mb-12">
         <div>
@@ -77,8 +77,8 @@ export const InvoiceTemplate = ({ data }: { data: DocumentData }) => {
             <p className="text-xs text-slate-500 mt-1">{data.user.email}</p>
           </div>
 
-          {/* Dummy Seal */}
-          <div className="absolute -right-2 top-10 opacity-60 pointer-events-none">
+          {/* Dummy Seal（印刷で切れないよう内側に配置） */}
+          <div className="absolute right-0 top-10 opacity-60 pointer-events-none">
             <div className="w-14 h-14 border-2 border-rose-500 rounded-full flex items-center justify-center text-rose-500 font-bold rotate-12 select-none text-[10px]">
               <div className="text-center">
                 <p className="leading-none border-b border-rose-500 pb-0.5 mb-0.5">Bill OS</p>

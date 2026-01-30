@@ -6,7 +6,7 @@ import { savePayment, getReconcileSummary } from "@/app/actions/payment";
 import type { ReconcileResult } from "@/types/reconcile";
 import { Upload } from "lucide-react";
 
-type Summary = { totalBilledAmount: number; tenantCount: number };
+type Summary = { totalBilledAmount: number; invoiceCount: number };
 
 export default function ReconcileClient({
   initialSummary,
@@ -131,22 +131,22 @@ export default function ReconcileClient({
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      {/* 請求中金額 */}
+      {/* 請求金額（請求書発行済みの未回収） */}
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-sm font-medium uppercase tracking-wider text-slate-500">
-          請求中金額
+          請求金額（未回収）
         </h2>
         <p className="mt-2 text-3xl font-bold text-slate-900">
           ¥{summary.totalBilledAmount.toLocaleString()}
         </p>
         <p className="mt-1 text-sm text-slate-500">
-          入居者 {summary.tenantCount}名 の家賃合計（月額）
+          請求書発行済みの未払い・部分払い 計{summary.invoiceCount}件
         </p>
         <Link
-          href="/dashboard/tenants"
+          href="/dashboard/invoices"
           className="mt-3 inline-block text-sm text-blue-600 hover:underline"
         >
-          入居者管理はこちら →
+          請求書一覧はこちら →
         </Link>
       </section>
 
