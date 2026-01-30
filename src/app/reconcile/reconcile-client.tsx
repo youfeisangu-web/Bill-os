@@ -55,12 +55,15 @@ export default function ReconcileClient({
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
+      e.stopPropagation();
       setIsDragging(false);
       const f = e.dataTransfer.files?.[0];
-      if (f && (f.name.endsWith(".csv") || f.type === "text/csv" || f.type === "application/vnd.ms-excel")) {
+      if (!f) return;
+      const isCsv = f.name.toLowerCase().endsWith(".csv") || f.type === "text/csv" || f.type === "application/vnd.ms-excel" || f.type === "application/csv";
+      if (isCsv) {
         parseFile(f);
       } else {
-        alert("CSVファイルのみ読み込めます");
+        alert("CSVファイルのみ読み込めます（.csv のファイルをドロップしてください）");
       }
     },
     [parseFile],
@@ -68,12 +71,16 @@ export default function ReconcileClient({
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "copy";
     setIsDragging(true);
   }, []);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(false);
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragging(false);
+    }
   }, []);
 
   const handleFileInput = useCallback(
@@ -159,32 +166,37 @@ export default function ReconcileClient({
           銀行の入金明細CSVをドロップするか、選択して読み込みます。内容を確認してから「消し込みを実行」で入金を登録してください。
         </p>
         <div
+          role="button"
+          tabIndex={0}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
-          className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed py-12 px-6 transition-colors ${
+          onClick={() => document.getElementById("reconcile-file")?.click()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              document.getElementById("reconcile-file")?.click();
+            }
+          }}
+          className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed py-12 px-6 transition-colors cursor-pointer select-none ${
             isDragging
               ? "border-blue-500 bg-blue-50"
               : "border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-slate-100"
           }`}
         >
           <input
-            type="file"
-            accept=".csv,text/csv,application/vnd.ms-excel"
-            onChange={handleFileInput}
-            className="hidden"
             id="reconcile-file"
+            type="file"
+            accept=".csv,text/csv,application/vnd.ms-excel,application/csv"
+            onChange={handleFileInput}
+            className="sr-only"
+            aria-label="CSVファイルを選択"
           />
-          <label
-            htmlFor="reconcile-file"
-            className="flex cursor-pointer flex-col items-center gap-2 text-slate-600"
-          >
-            <Upload className="h-10 w-10 text-slate-400" />
-            <span className="font-medium">
-              {file ? file.name : "CSVをドロップまたはクリックして選択"}
-            </span>
-            <span className="text-xs text-slate-500">CSVのみ（Shift_JIS対応）</span>
-          </label>
+          <Upload className="h-10 w-10 text-slate-400 pointer-events-none" />
+          <span className="font-medium text-slate-600 pointer-events-none">
+            {file ? file.name : "CSVをドロップまたはクリックして選択"}
+          </span>
+          <span className="text-xs text-slate-500 pointer-events-none">CSVのみ（Shift_JIS対応）</span>
         </div>
         {loading && (
           <p className="mt-4 text-center text-sm text-slate-500">読み込み・解析中...</p>
