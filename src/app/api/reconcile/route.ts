@@ -9,6 +9,11 @@ import type { ReconcileResult, ReconcileStatus } from '@/types/reconcile';
 
 type ColumnMap = { dateCol: number; amountCol: number; nameCol: number };
 
+/** 名義・フリガナの比較用に正規化（スペース・括弧除去、半角英数はそのまま） */
+function normalizeNameForMatch(s: string): string {
+    return s.replace(/[\s　]|[（）()]|カ\)/g, '').trim();
+}
+
 const agencies = [
     { name: 'リコーリース', checkString: 'ﾘｺ-ﾘ-ｽ', expectedAmount: 850000 },
 ];
@@ -136,28 +141,43 @@ export async function POST(req: NextRequest) {
                     message = `金額不一致 (予定:${agencyMatch.expectedAmount})`;
                 }
             } 
-            // B. 個人消込（AIマッチング）
+            // B. 個人消込（取引先マッチング）
             else {
-                // 金額が一致する入居者を候補として抽出
-                const candidates = tenants.filter((tenant: { amount: number }) => tenant.amount === amount);
+                const cleanName = normalizeNameForMatch(rawName);
+                // まず金額が一致する取引先を候補に
+                let candidates = tenants.filter((t: { amount: number }) => t.amount === amount);
                 if (candidates.length > 0) {
-                    // 名前をクリーンアップ（カタカナ、スペース、括弧を除去）
-                    const cleanName = rawName.replace(/カ\）|[\s　]|[（）()]/g, "");
-                    // 候補のフリガナを取得（nameKanaを使用）
-                    const targetNames = candidates.map((c: { nameKana: string }) => c.nameKana);
+                    const targetNames = candidates.map((c: { nameKana: string }) => normalizeNameForMatch(c.nameKana));
                     const match = stringSimilarity.findBestMatch(cleanName, targetNames);
-                    
-                    if (match.bestMatch.rating >= 0.6) {
+                    const rating = match.bestMatch.rating;
+                    const idx = match.bestMatchIndex;
+                    if (rating >= 0.5) {
                         status = '完了';
-                        message = `消込成功: ${candidates[match.bestMatchIndex].name}`;
-                        matchData = {
-                            tenantId: candidates[match.bestMatchIndex].id,
-                            name: candidates[match.bestMatchIndex].name,
-                            amount: candidates[match.bestMatchIndex].amount,
-                        };
+                        message = `消込成功: ${candidates[idx].name}`;
+                        matchData = { tenantId: candidates[idx].id, name: candidates[idx].name, amount: candidates[idx].amount };
+                    } else if (rating >= 0.35) {
+                        status = '確認';
+                        message = `候補: ${candidates[idx].name}（名前の表記が異なります）`;
+                        matchData = { tenantId: candidates[idx].id, name: candidates[idx].name, amount: candidates[idx].amount };
                     } else {
                         status = '確認';
-                        message = `候補あり・名前不一致`;
+                        message = `金額一致の取引先あり・名前不一致`;
+                    }
+                } else {
+                    // 金額一致なし → 名前だけで検索（取引先が1人なら採用）
+                    if (tenants.length > 0) {
+                        const targetNames = tenants.map((t: { nameKana: string }) => normalizeNameForMatch(t.nameKana));
+                        const match = stringSimilarity.findBestMatch(cleanName, targetNames);
+                        if (match.bestMatch.rating >= 0.65) {
+                            const idx = match.bestMatchIndex;
+                            status = '確認';
+                            message = `候補: ${tenants[idx].name}（金額が異なります ¥${tenants[idx].amount.toLocaleString()}）`;
+                            matchData = { tenantId: tenants[idx].id, name: tenants[idx].name, amount: tenants[idx].amount };
+                        } else {
+                            message = `この金額(¥${amount.toLocaleString()})の取引先が登録されていません`;
+                        }
+                    } else {
+                        message = '取引先が1件も登録されていません。ダッシュボードで取引先を登録してください';
                     }
                 }
             }

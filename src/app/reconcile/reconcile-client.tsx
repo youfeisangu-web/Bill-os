@@ -114,12 +114,12 @@ export default function ReconcileClient({
   }, [file, loading, runReconcile]);
 
   const completableRows = results.filter(
-    (r) => r.status === "完了" && r.tenantId && r.date,
+    (r) => (r.status === "完了" || r.status === "確認") && r.tenantId && r.date,
   );
 
   const handleExecute = async () => {
     if (completableRows.length === 0) {
-      alert("消し込みできる行がありません（判定が「完了」の行のみ登録されます）");
+      alert("消し込みできる行がありません（「完了」または「確認」で取引先が決まっている行を登録できます）");
       return;
     }
     setConfirming(true);
@@ -301,7 +301,7 @@ export default function ReconcileClient({
               </p>
               {results.length > 0 && completableRows.length === 0 && !executed && (
                 <p className="mt-1 text-xs text-amber-700">
-                  判定が「完了」の行のみ登録されます。取引先（入居者）に同じ金額・フリガナの登録があるか確認してください。
+                  「完了」「確認」の行が0件です。取引先に同じ金額・フリガナで登録があるか、またはダッシュボードで取引先を登録してください。
                 </p>
               )}
             </div>
@@ -320,7 +320,7 @@ export default function ReconcileClient({
                 disabled={loading || confirming || completableRows.length === 0 || executed}
                 className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? "登録中..." : executed ? "登録済み" : "消し込みを実行"}
+                {loading ? "登録中..." : executed ? "登録済み" : `消し込みを実行（${completableRows.length}件）`}
               </button>
             </div>
           </div>
