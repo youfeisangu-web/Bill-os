@@ -34,18 +34,29 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'ファイルサイズが大きすぎます（10MB以下）' }, { status: 400 });
         }
 
-        // ファイルタイプチェック（CSVのみ許可）
-        if (!file.name.endsWith('.csv') && file.type !== 'text/csv' && file.type !== 'application/vnd.ms-excel') {
-            return NextResponse.json({ error: 'CSVファイルのみアップロード可能です' }, { status: 400 });
+        // ファイルタイプチェック（拡張子 .csv または CSV 系 MIME）
+        const name = (file.name || '').toLowerCase();
+        const type = (file.type || '').toLowerCase();
+        const isCsv = name.endsWith('.csv') || type === 'text/csv' || type === 'application/vnd.ms-excel' || type === 'application/csv';
+        if (!isCsv) {
+            return NextResponse.json({ error: 'CSVファイル（.csv）のみアップロード可能です' }, { status: 400 });
         }
 
         // 2. データベースから全ての入居者データを取得
         const tenants = await prisma.tenant.findMany();
 
-        // 3. ファイルの中身を読み込む（Shift_JIS対応）
+        // 3. ファイルの中身を読み込む（UTF-8 BOM / UTF-8 / Shift_JIS 対応）
         const buffer = Buffer.from(await file.arrayBuffer());
-        const text = iconv.decode(buffer, 'Shift_JIS'); // ここで変換！
-        
+        let text: string;
+        if (buffer.length >= 3 && buffer[0] === 0xef && buffer[1] === 0xbb && buffer[2] === 0xbf) {
+            text = buffer.toString('utf-8');
+        } else {
+            text = buffer.toString('utf-8');
+            if (text.includes('\uFFFD')) {
+                text = iconv.decode(buffer, 'Shift_JIS');
+            }
+        }
+
         // 4. CSVをパース
         const parsed = Papa.parse(text, { header: false, skipEmptyLines: true });
         const bankData = parsed.data as string[][];

@@ -30,10 +30,13 @@ export default function ReconcileClient({
     }
   }, []);
 
+  const [parseError, setParseError] = useState<string | null>(null);
+
   const parseFile = useCallback(async (f: File) => {
     setFile(f);
     setResults([]);
     setExecuted(false);
+    setParseError(null);
     setLoading(true);
     try {
       const formData = new FormData();
@@ -41,12 +44,22 @@ export default function ReconcileClient({
       const res = await fetch("/api/reconcile", { method: "POST", body: formData });
       const json = await res.json();
       if (json.success) {
-        setResults(json.data ?? []);
+        const rows = json.data ?? [];
+        setResults(rows);
+        if (rows.length === 0) {
+          setParseError(
+            "CSVは読み込めましたが、有効な行が1行もありません。銀行CSVの形式をご確認ください（1列目:日付、3列目:金額、4列目:入金名義 の並び。4列以上あること）。",
+          );
+        }
       } else {
-        alert("エラー: " + (json.error ?? "ファイルの読み込みに失敗しました"));
+        const msg = json.error ?? "ファイルの読み込みに失敗しました";
+        setParseError(msg);
+        alert("エラー: " + msg);
       }
     } catch (e) {
-      alert("通信エラーが発生しました");
+      const msg = "通信エラーが発生しました";
+      setParseError(msg);
+      alert(msg);
     } finally {
       setLoading(false);
     }
@@ -134,6 +147,7 @@ export default function ReconcileClient({
     setFile(null);
     setResults([]);
     setExecuted(false);
+    setParseError(null);
   };
 
   return (
@@ -164,6 +178,9 @@ export default function ReconcileClient({
         </h2>
         <p className="text-sm text-slate-600 mb-4">
           銀行の入金明細CSVをドロップするか、選択して読み込みます。内容を確認してから「消し込みを実行」で入金を登録してください。
+        </p>
+        <p className="text-xs text-slate-500 mb-4 rounded-lg bg-slate-100 p-3">
+          <strong>CSVの形式：</strong> 1列目＝日付、3列目＝金額、4列目＝入金名義 の並びで4列以上あること。Shift_JIS または UTF-8。入金名義・金額は取引先（入居者）のフリガナ・家賃と一致すると自動で「完了」になります。
         </p>
         <div
           role="button"
@@ -200,6 +217,11 @@ export default function ReconcileClient({
         </div>
         {loading && (
           <p className="mt-4 text-center text-sm text-slate-500">読み込み・解析中...</p>
+        )}
+        {parseError && (
+          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            {parseError}
+          </div>
         )}
       </section>
 
@@ -251,10 +273,17 @@ export default function ReconcileClient({
             </table>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 bg-slate-50 px-6 py-4">
-            <p className="text-sm text-slate-600">
-              {completableRows.length}件を登録できます
-              {executed && "（登録済み）"}
-            </p>
+            <div>
+              <p className="text-sm text-slate-600">
+                {completableRows.length}件を登録できます
+                {executed && "（登録済み）"}
+              </p>
+              {results.length > 0 && completableRows.length === 0 && !executed && (
+                <p className="mt-1 text-xs text-amber-700">
+                  判定が「完了」の行のみ登録されます。取引先（入居者）に同じ金額・フリガナの登録があるか確認してください。
+                </p>
+              )}
+            </div>
             <div className="flex gap-2">
               <button
                 type="button"
