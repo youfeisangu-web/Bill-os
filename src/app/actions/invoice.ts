@@ -219,6 +219,71 @@ export async function updateInvoiceStatus(
   }
 }
 
+/** モーダル表示用に請求書の表示データを取得（日付はISO文字列で返す） */
+export async function getInvoiceByIdForDisplay(invoiceId: string) {
+  try {
+    const { userId } = await auth();
+    if (!userId) return null;
+
+    const invoice = await prisma.invoice.findUnique({
+      where: { id: invoiceId, userId },
+      include: {
+        client: true,
+        items: true,
+        user: {
+          include: {
+            bankAccounts: {
+              where: { isDefault: true },
+              take: 1,
+            },
+          },
+        },
+      },
+    });
+
+    if (!invoice) return null;
+
+    const bankAccount = invoice.user.bankAccounts[0] || null;
+
+    return {
+      id: invoice.id,
+      type: "請求書" as const,
+      number: invoice.id,
+      issueDate: invoice.issueDate.toISOString(),
+      dueDate: invoice.dueDate.toISOString(),
+      subtotal: invoice.subtotal,
+      taxAmount: invoice.taxAmount,
+      totalAmount: invoice.totalAmount,
+      client: {
+        name: invoice.client.name,
+        address: invoice.client.address,
+      },
+      user: {
+        companyName: invoice.user.companyName,
+        invoiceRegNumber: invoice.user.invoiceRegNumber,
+        email: invoice.user.email,
+      },
+      bankAccount: bankAccount
+        ? {
+            bankName: bankAccount.bankName,
+            branchName: bankAccount.branchName,
+            accountType: bankAccount.accountType,
+            accountNumber: bankAccount.accountNumber,
+            accountHolder: bankAccount.accountHolder,
+          }
+        : null,
+      items: invoice.items.map((item) => ({
+        name: item.name,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        taxRate: item.taxRate,
+      })),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function convertQuoteToInvoice(
   quoteId: string,
 ): Promise<SubmitResult> {

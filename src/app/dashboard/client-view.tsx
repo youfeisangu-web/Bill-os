@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   TrendingUp,
   AlertTriangle,
@@ -15,8 +15,16 @@ import {
   DollarSign,
   Calendar,
   Plus,
+  X,
 } from "lucide-react";
 import { readBankBookImage } from "@/app/actions/ocr";
+import { getInvoiceByIdForDisplay } from "@/app/actions/invoice";
+import { InvoiceTemplate } from "@/components/invoice-template";
+import {
+  Dialog,
+  DialogContent,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 type TenantGroup = {
   id: string;
@@ -60,6 +68,12 @@ type InvoiceStats = {
   unpaidAmount: number;
 };
 
+type InvoiceSummary = {
+  id: string;
+  totalAmount: number;
+  client: { name: string };
+};
+
 type DashboardClientViewProps = {
   groups: TenantGroup[];
   tenants: Tenant[];
@@ -76,6 +90,8 @@ type DashboardClientViewProps = {
   unpaidCount: number;
   monthlyData: MonthlyData[];
   invoiceStats: InvoiceStats;
+  paidInvoices: InvoiceSummary[];
+  unpaidInvoices: InvoiceSummary[];
 };
 
 export default function DashboardClientView({
@@ -94,9 +110,33 @@ export default function DashboardClientView({
   unpaidCount,
   monthlyData,
   invoiceStats,
+  paidInvoices,
+  unpaidInvoices,
 }: DashboardClientViewProps) {
   const [isProcessingOCR, setIsProcessingOCR] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
+  const [invoiceDetail, setInvoiceDetail] = useState<Awaited<ReturnType<typeof getInvoiceByIdForDisplay>> | null>(null);
+  const [invoiceDetailLoading, setInvoiceDetailLoading] = useState(false);
+
+  useEffect(() => {
+    if (!selectedInvoiceId) {
+      setInvoiceDetail(null);
+      return;
+    }
+    let cancelled = false;
+    setInvoiceDetailLoading(true);
+    setInvoiceDetail(null);
+    getInvoiceByIdForDisplay(selectedInvoiceId).then((data) => {
+      if (!cancelled) {
+        setInvoiceDetail(data);
+        setInvoiceDetailLoading(false);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedInvoiceId]);
 
   const handleOCRButtonClick = () => {
     fileInputRef.current?.click();
@@ -245,10 +285,7 @@ export default function DashboardClientView({
 
         {/* 請求書の状況（支払済・未払い） */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <Link
-            href="/dashboard/invoices"
-            className="bg-billio-card rounded-xl shadow-sm border border-gray-200 p-6 hover:border-billio-green/50 transition-colors block"
-          >
+          <div className="bg-billio-card rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-billio-green/20 to-billio-blue/20 flex items-center justify-center">
                 <Receipt className="w-6 h-6 text-billio-green" />
@@ -257,15 +294,32 @@ export default function DashboardClientView({
             <p className="text-xs uppercase tracking-wider text-billio-text-muted mb-2">
               請求書　支払済
             </p>
-            <p className="text-2xl font-bold text-billio-text mb-1">
+            <p className="text-2xl font-bold text-billio-text mb-3">
               {invoiceStats.paidCount}件　¥{invoiceStats.paidAmount.toLocaleString()}
             </p>
-            <p className="text-xs text-billio-text-muted">一覧を見る →</p>
-          </Link>
-          <Link
-            href="/dashboard/invoices"
-            className="bg-billio-card rounded-xl shadow-sm border border-gray-200 p-6 hover:border-orange-300 transition-colors block"
-          >
+            <ul className="space-y-2 mb-3 max-h-32 overflow-y-auto">
+              {paidInvoices.length === 0 ? (
+                <li className="text-sm text-billio-text-muted">該当なし</li>
+              ) : (
+                paidInvoices.map((inv) => (
+                  <li key={inv.id}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedInvoiceId(inv.id)}
+                      className="w-full text-left text-sm py-1.5 px-2 rounded-lg hover:bg-billio-green/10 text-billio-text flex justify-between items-center gap-2"
+                    >
+                      <span className="truncate">{inv.client.name}</span>
+                      <span className="font-medium shrink-0">¥{inv.totalAmount.toLocaleString()}</span>
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+            <Link href="/dashboard/invoices" className="text-xs text-billio-text-muted hover:underline">
+              一覧を見る →
+            </Link>
+          </div>
+          <div className="bg-billio-card rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center">
                 <FileText className="w-6 h-6 text-orange-600" />
@@ -274,12 +328,65 @@ export default function DashboardClientView({
             <p className="text-xs uppercase tracking-wider text-billio-text-muted mb-2">
               請求書　未払い
             </p>
-            <p className="text-2xl font-bold text-orange-600 mb-1">
+            <p className="text-2xl font-bold text-orange-600 mb-3">
               {invoiceStats.unpaidCount}件　¥{invoiceStats.unpaidAmount.toLocaleString()}
             </p>
-            <p className="text-xs text-billio-text-muted">一覧を見る →</p>
-          </Link>
+            <ul className="space-y-2 mb-3 max-h-32 overflow-y-auto">
+              {unpaidInvoices.length === 0 ? (
+                <li className="text-sm text-billio-text-muted">該当なし</li>
+              ) : (
+                unpaidInvoices.map((inv) => (
+                  <li key={inv.id}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedInvoiceId(inv.id)}
+                      className="w-full text-left text-sm py-1.5 px-2 rounded-lg hover:bg-orange-100/50 text-billio-text flex justify-between items-center gap-2"
+                    >
+                      <span className="truncate">{inv.client.name}</span>
+                      <span className="font-medium shrink-0">¥{inv.totalAmount.toLocaleString()}</span>
+                    </button>
+                  </li>
+                ))
+              )}
+            </ul>
+            <Link href="/dashboard/invoices" className="text-xs text-billio-text-muted hover:underline">
+              一覧を見る →
+            </Link>
+          </div>
         </div>
+
+        {/* 請求書プレビューモーダル（ページ遷移せず表示・×で閉じる） */}
+        <Dialog open={selectedInvoiceId !== null} onOpenChange={(open) => !open && setSelectedInvoiceId(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+            <div className="flex items-center justify-end p-2 border-b border-slate-200 shrink-0">
+              <DialogClose asChild>
+                <button
+                  type="button"
+                  aria-label="閉じる"
+                  className="p-2 rounded-lg hover:bg-slate-100 text-slate-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </DialogClose>
+            </div>
+            <div className="overflow-auto flex-1 p-4 bg-slate-100">
+              {invoiceDetailLoading && (
+                <div className="flex items-center justify-center min-h-[200px]">
+                  <Loader2 className="w-8 h-8 animate-spin text-billio-blue" />
+                </div>
+              )}
+              {!invoiceDetailLoading && invoiceDetail && (
+                <InvoiceTemplate
+                  data={{
+                    ...invoiceDetail,
+                    issueDate: new Date(invoiceDetail.issueDate),
+                    dueDate: new Date(invoiceDetail.dueDate),
+                  }}
+                />
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* メイングラフ */}
         <div className="bg-billio-card rounded-xl shadow-sm border border-gray-200 p-6 mb-6">

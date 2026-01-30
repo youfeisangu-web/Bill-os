@@ -27,7 +27,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   const tenantWhere = selectedGroupId ? { groupId: selectedGroupId } : undefined;
 
   // 並列で一括取得（待ち時間を短縮）
-  const [groups, tenants, currentMonthPaymentsRaw, nextMonthPayments, currentMonthExpenses, unpaidCount, quotesForGraph, paymentsForGraph, expensesForGraph, invoicesForGraph, invoiceStats] = await Promise.all([
+  const [groups, tenants, currentMonthPaymentsRaw, nextMonthPayments, currentMonthExpenses, unpaidCount, quotesForGraph, paymentsForGraph, expensesForGraph, invoicesForGraph, invoiceStats, paidInvoices, unpaidInvoices] = await Promise.all([
     getTenantGroups(),
     getTenantsByGroup(selectedGroupId),
     prisma.payment.findMany({
@@ -105,6 +105,16 @@ export default async function DashboardPage({ searchParams }: Props) {
         unpaidAmount: unpaid._sum.totalAmount ?? 0,
       };
     })(),
+    prisma.invoice.findMany({
+      where: { userId, status: "支払済" },
+      select: { id: true, totalAmount: true, client: { select: { name: true } } },
+      orderBy: { issueDate: "desc" },
+    }),
+    prisma.invoice.findMany({
+      where: { userId, status: { in: ["未払い", "部分払い"] } },
+      select: { id: true, totalAmount: true, client: { select: { name: true } } },
+      orderBy: { issueDate: "desc" },
+    }),
   ]);
 
   // Date型をシリアライズ可能な形式に変換
@@ -186,6 +196,8 @@ export default async function DashboardPage({ searchParams }: Props) {
       unpaidCount={unpaidCount}
       monthlyData={monthlyData}
       invoiceStats={invoiceStats}
+      paidInvoices={paidInvoices}
+      unpaidInvoices={unpaidInvoices}
     />
   );
 }
