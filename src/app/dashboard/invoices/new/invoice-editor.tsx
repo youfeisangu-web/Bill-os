@@ -46,14 +46,16 @@ export default function InvoiceEditor({ clients }: { clients: ClientOption[] }) 
         if (key === "name") {
           return { ...item, name: value };
         }
-        const numberValue = Number(value);
-        return { ...item, [key]: Number.isNaN(numberValue) ? 0 : numberValue };
+        const normalized = normalizeToHalfWidthNumeric(value);
+        const match = normalized.match(/^\d*\.?\d*/);
+        const cleaned = value === "" ? "" : match ? match[0] : "";
+        return { ...item, [key]: cleaned };
       }),
     );
   };
 
   const handleAddRow = () => {
-    setItems((prev) => [...prev, { name: "", quantity: 1, unitPrice: 0 }]);
+    setItems((prev) => [...prev, { name: "", quantity: "1", unitPrice: "0" }]);
   };
 
   const handleRemoveRow = (index: number) => {
@@ -212,21 +214,29 @@ export default function InvoiceEditor({ clients }: { clients: ClientOption[] }) 
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 />
                 <input
-                  type="number"
-                  min={1}
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="数量"
                   value={item.quantity}
                   onChange={(event) => updateItem(index, "quantity", event.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 />
                 <input
-                  type="number"
-                  min={0}
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="金額"
                   value={item.unitPrice}
                   onChange={(event) => updateItem(index, "unitPrice", event.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 />
                 <div className="flex items-center justify-between gap-2 text-sm text-slate-600">
-                  <span>¥{formatCurrency(item.quantity * item.unitPrice)}</span>
+                  <span>
+                    ¥
+                    {formatCurrency(
+                      (parseFloat(item.quantity) || 0) *
+                        (parseFloat(item.unitPrice) || 0),
+                    )}
+                  </span>
                   <button
                     type="button"
                     onClick={() => handleRemoveRow(index)}
