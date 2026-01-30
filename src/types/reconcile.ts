@@ -10,6 +10,9 @@ export type ReconcileResult = {
   rawName: string;
   status: ReconcileStatus;
   message: string;
+  /** 請求書ベースの消し込みでマッチした請求書ID */
+  invoiceId: string | null;
+  /** @deprecated 取引先ベースは廃止。請求書ベースのみ使用 */
   tenantId: string | null;
 };
 

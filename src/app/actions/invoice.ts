@@ -150,6 +150,34 @@ export async function createInvoice(formData: FormData): Promise<SubmitResult> {
   }
 }
 
+/** 入金消し込み：請求書を支払済にする */
+export async function markInvoicePaid(invoiceId: string): Promise<SubmitResult> {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const invoice = await prisma.invoice.findFirst({
+      where: { id: invoiceId, userId },
+    });
+    if (!invoice) {
+      return { success: false, message: "請求書が見つかりません。" };
+    }
+
+    await prisma.invoice.update({
+      where: { id: invoiceId },
+      data: { status: "支払済" },
+    });
+
+    revalidatePath("/dashboard/invoices");
+    revalidatePath("/reconcile");
+    return { success: true, message: "支払済に更新しました。" };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "更新に失敗しました。";
+    return { success: false, message };
+  }
+}
+
 export async function convertQuoteToInvoice(
   quoteId: string,
 ): Promise<SubmitResult> {

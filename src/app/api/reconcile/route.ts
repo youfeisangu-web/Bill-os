@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import iconv from 'iconv-lite';
+import jaconv from 'jaconv';
 import Papa from 'papaparse';
 import stringSimilarity from 'string-similarity';
 import { prisma } from '@/lib/prisma';
@@ -9,9 +10,52 @@ import type { ReconcileResult, ReconcileStatus } from '@/types/reconcile';
 
 type ColumnMap = { dateCol: number; amountCol: number; nameCol: number };
 
-/** 名義・フリガナの比較用に正規化（スペース・括弧除去、半角英数はそのまま） */
+/** 名義・フリガナの比較用に正規化（スペース・括弧除去、半角カナ→全角） */
 function normalizeNameForMatch(s: string): string {
-    return s.replace(/[\s　]|[（）()]|カ\)/g, '').trim();
+    const trimmed = s.replace(/[\s　]|[（）()]|カ\)/g, '').trim();
+    try {
+        return jaconv.toZenKana(trimmed);
+    } catch {
+        return trimmed;
+    }
+}
+
+/** 漢字が含まれるか（CJK統合漢字の範囲） */
+function hasKanji(s: string): boolean {
+    return /[\u4e00-\u9fff\u3400-\u4dbf]/.test(s);
+}
+
+/** 名義リストを入金照合用カナに揃える（漢字ならOpenAIでカタカナ化） */
+async function getNamesForMatch(
+    names: string[],
+    openaiKey: string | undefined,
+): Promise<string[]> {
+    const normalized = names.map((n) => normalizeNameForMatch(n));
+    const needConversion = names.filter((n) => hasKanji(n));
+    if (needConversion.length === 0 || !openaiKey) return normalized;
+
+    try {
+        const res = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: [
+                {
+                    role: 'user',
+                    content: `以下の日本語の名前を、全角カタカナに変換してください。会社名・人名です。変換結果だけを、1行に1件で、この順番のまま出力してください。\n\n${needConversion.join('\n')}`,
+                },
+            ],
+            max_tokens: 500,
+        });
+        const content = res.choices[0]?.message?.content?.trim() || '';
+        const lines = content.split(/\n/).map((l) => normalizeNameForMatch(l.trim()));
+        let lineIdx = 0;
+        return names.map((n, i) => {
+            if (hasKanji(n)) return lines[lineIdx++] ?? normalized[i];
+            return normalized[i];
+        });
+    } catch (e) {
+        console.warn('OpenAI katakana conversion failed, using original:', e);
+        return normalized;
+    }
 }
 
 const agencies = [
@@ -50,8 +94,13 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'CSVファイル（.csv）のみアップロード可能です' }, { status: 400 });
         }
 
-        // 2. データベースから全ての入居者データを取得
-        const tenants = await prisma.tenant.findMany();
+        // 2. 未払い・部分払いの請求書を取得（取引先名で照合するため）
+        const invoices = await prisma.invoice.findMany({
+            where: { userId, status: { in: ['未払い', '部分払い'] } },
+            select: { id: true, totalAmount: true, client: { select: { name: true } } },
+        });
+        const clientNames = invoices.map((inv) => inv.client.name);
+        const invoiceMatchNames = await getNamesForMatch(clientNames, process.env.OPENAI_API_KEY);
 
         // 3. ファイルの中身を読み込む（UTF-8 BOM / UTF-8 / Shift_JIS 対応）
         const buffer = Buffer.from(await file.arrayBuffer());
@@ -128,9 +177,9 @@ export async function POST(req: NextRequest) {
 
             let status: ReconcileStatus = '未完了';
             let message = '一致なし';
-            let matchData: { tenantId: string; name: string; amount: number } | null = null;
+            let matchedInvoiceId: string | null = null;
 
-            // A. 口座振替チェック
+            // A. 口座振替チェック（特例）
             const agencyMatch = agencies.find(a => rawName.includes(a.checkString));
             if (agencyMatch) {
                 if (amount === agencyMatch.expectedAmount) {
@@ -140,44 +189,46 @@ export async function POST(req: NextRequest) {
                     status = 'エラー';
                     message = `金額不一致 (予定:${agencyMatch.expectedAmount})`;
                 }
-            } 
-            // B. 個人消込（取引先マッチング）
+            }
+            // B. 請求書マッチング（入金名義・金額と未払い請求書を照合）
             else {
                 const cleanName = normalizeNameForMatch(rawName);
-                // まず金額が一致する取引先を候補に
-                let candidates = tenants.filter((t: { amount: number }) => t.amount === amount);
+                const candidates = invoices.filter((inv) => inv.totalAmount === amount);
                 if (candidates.length > 0) {
-                    const targetNames = candidates.map((c: { nameKana: string }) => normalizeNameForMatch(c.nameKana));
-                    const match = stringSimilarity.findBestMatch(cleanName, targetNames);
+                    const candidateMatchNames = candidates.map((c) => {
+                        const idx = invoices.findIndex((inv) => inv.id === c.id);
+                        return idx >= 0 ? invoiceMatchNames[idx] : normalizeNameForMatch(c.client.name);
+                    });
+                    const match = stringSimilarity.findBestMatch(cleanName, candidateMatchNames);
                     const rating = match.bestMatch.rating;
                     const idx = match.bestMatchIndex;
+                    const inv = candidates[idx];
                     if (rating >= 0.5) {
                         status = '完了';
-                        message = `消込成功: ${candidates[idx].name}`;
-                        matchData = { tenantId: candidates[idx].id, name: candidates[idx].name, amount: candidates[idx].amount };
+                        message = `消込成功: ${inv.client.name}（請求書）`;
+                        matchedInvoiceId = inv.id;
                     } else if (rating >= 0.35) {
                         status = '確認';
-                        message = `候補: ${candidates[idx].name}（名前の表記が異なります）`;
-                        matchData = { tenantId: candidates[idx].id, name: candidates[idx].name, amount: candidates[idx].amount };
+                        message = `候補: ${inv.client.name}（請求書・名前の表記が異なります）`;
+                        matchedInvoiceId = inv.id;
                     } else {
                         status = '確認';
-                        message = `金額一致の取引先あり・名前不一致`;
+                        message = `金額一致の請求書あり・名前不一致`;
                     }
                 } else {
-                    // 金額一致なし → 名前だけで検索（取引先が1人なら採用）
-                    if (tenants.length > 0) {
-                        const targetNames = tenants.map((t: { nameKana: string }) => normalizeNameForMatch(t.nameKana));
-                        const match = stringSimilarity.findBestMatch(cleanName, targetNames);
+                    if (invoices.length > 0) {
+                        const match = stringSimilarity.findBestMatch(cleanName, invoiceMatchNames);
                         if (match.bestMatch.rating >= 0.65) {
                             const idx = match.bestMatchIndex;
+                            const inv = invoices[idx];
                             status = '確認';
-                            message = `候補: ${tenants[idx].name}（金額が異なります ¥${tenants[idx].amount.toLocaleString()}）`;
-                            matchData = { tenantId: tenants[idx].id, name: tenants[idx].name, amount: tenants[idx].amount };
+                            message = `候補: ${inv.client.name}（請求書・金額が異なります ¥${inv.totalAmount.toLocaleString()}）`;
+                            matchedInvoiceId = inv.id;
                         } else {
-                            message = `この金額(¥${amount.toLocaleString()})の取引先が登録されていません`;
+                            message = `この金額(¥${amount.toLocaleString()})の未払い請求書がありません`;
                         }
                     } else {
-                        message = '取引先が1件も登録されていません。ダッシュボードで取引先を登録してください';
+                        message = '未払い・部分払いの請求書が1件もありません';
                     }
                 }
             }
@@ -188,15 +239,15 @@ export async function POST(req: NextRequest) {
                 rawName,
                 status,
                 message,
-                tenantId: matchData?.tenantId || null,
+                invoiceId: matchedInvoiceId,
+                tenantId: null,
             });
         }
 
-        // 6. 結果を画面に返す（取引先件数で原因が分かるように）
         return NextResponse.json({
             success: true,
             data: results,
-            meta: { tenantCount: tenants.length },
+            meta: { unpaidInvoiceCount: invoices.length },
         });
 
     } catch (error) {
