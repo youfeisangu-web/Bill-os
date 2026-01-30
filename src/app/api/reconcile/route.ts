@@ -192,7 +192,7 @@ export async function POST(req: NextRequest) {
                     message = `金額不一致 (予定:${agencyMatch.expectedAmount})`;
                 }
             }
-            // B. 請求書マッチング（入金名義・金額と未払い請求書を照合）
+            // B. 請求書マッチング（金額は完全一致のみ・名前はあってそうな候補を表示）
             else {
                 const cleanName = normalizeNameForMatch(rawName);
                 const candidates = invoices.filter((inv) => inv.totalAmount === amount);
@@ -205,36 +205,24 @@ export async function POST(req: NextRequest) {
                     const rating = match.bestMatch.rating;
                     const idx = match.bestMatchIndex;
                     const inv = candidates[idx];
+                    // 金額は完全一致の請求書のうち、名前が一番あってそうなものを常に表示
+                    matchedInvoiceId = inv.id;
+                    matchedInvoiceNumber = inv.id;
+                    matchedClientName = inv.client.name;
                     if (rating >= 0.5) {
                         status = '完了';
                         message = `消込成功: ${inv.client.name}（請求書）`;
-                        matchedInvoiceId = inv.id;
-                        matchedInvoiceNumber = inv.id;
-                        matchedClientName = inv.client.name;
                     } else if (rating >= 0.35) {
                         status = '確認';
                         message = `候補: ${inv.client.name}（請求書・名前の表記が異なります）`;
-                        matchedInvoiceId = inv.id;
-                        matchedInvoiceNumber = inv.id;
-                        matchedClientName = inv.client.name;
                     } else {
                         status = '確認';
-                        message = `金額一致の請求書あり・名前不一致`;
+                        message = `候補: ${inv.client.name}（金額一致・名前が異なります）`;
                     }
                 } else {
+                    // 金額が完全に同じ請求書がない → 候補は出さない（金額は完全一致のみ）
                     if (invoices.length > 0) {
-                        const match = stringSimilarity.findBestMatch(cleanName, invoiceMatchNames);
-                        if (match.bestMatch.rating >= 0.65) {
-                            const idx = match.bestMatchIndex;
-                            const inv = invoices[idx];
-                            status = '確認';
-                            message = `候補: ${inv.client.name}（請求書・金額が異なります ¥${inv.totalAmount.toLocaleString()}）`;
-                            matchedInvoiceId = inv.id;
-                            matchedInvoiceNumber = inv.id;
-                            matchedClientName = inv.client.name;
-                        } else {
-                            message = `この金額(¥${amount.toLocaleString()})の未払い請求書がありません`;
-                        }
+                        message = `この金額(¥${amount.toLocaleString()})の未払い請求書がありません`;
                     } else {
                         message = '未払い・部分払いの請求書が1件もありません';
                     }

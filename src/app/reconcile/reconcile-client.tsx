@@ -199,7 +199,7 @@ export default function ReconcileClient({
           銀行の入金明細CSVをドロップするか、選択して読み込みます。内容を確認してから「消し込みを実行」でマッチした請求書を支払済にします。
         </p>
         <p className="text-xs text-slate-500 mb-4 rounded-lg bg-slate-100 p-3">
-          <strong>手順：</strong> CSVを選択したら「消し込み開始」を押して解析します。入金名義・金額と未払い請求書（取引先名・請求金額）を照合し、マッチした請求書を支払済にします。取引先名は漢字のみでもOKです。
+          <strong>手順：</strong> CSVを選択したら「消し込み開始」を押して解析します。<strong>金額は完全に同じ</strong>未払い請求書と照合し、<strong>名前は完全でなくてもあってそうな候補</strong>を表示します。確認後に「消し込みを実行」で支払済にします。
         </p>
         <div
           role="button"
@@ -298,9 +298,9 @@ export default function ReconcileClient({
             </div>
           )}
           <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
-            <h2 className="text-lg font-semibold text-slate-900">消込結果（確認）</h2>
+            <h2 className="text-lg font-semibold text-slate-900">入金確認・消込結果</h2>
             <p className="text-sm text-slate-600 mt-1">
-              以下の内容で問題なければ「消し込みを実行」を押して、マッチした請求書を支払済にします。
+              金額が一致した請求書のうち、名前が近い候補を表示しています。問題なければ「消し込みを実行」で支払済にします。
             </p>
           </div>
           <div className="overflow-x-auto">
