@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ユーザー (Clerk連携 + LINE対応)
@@ -76,6 +77,7 @@ model Client {
   defaultBankAccount   BankAccount? @relation(fields: [defaultBankAccountId], references: [id])
   invoices             Invoice[]
   quotes               Quote[]
+  recurringTemplates   RecurringTemplate[]
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
 }
@@ -141,6 +143,8 @@ model Invoice {
   password        String?
   items           InvoiceItem[]
   parentInvoiceId String?     // 将来の分割請求用
+  recurringTemplateId String? // どの定期請求テンプレートから生成されたか
+  recurringTemplate   RecurringTemplate? @relation(fields: [recurringTemplateId], references: [id], onDelete: SetNull)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 }
@@ -177,4 +181,89 @@ model ActivityLog {
   action    String
   message   String
   createdAt DateTime @default(now())
+}
+
+// フォルダ（物件・クラスなど）
+model TenantGroup {
+  id        String   @id @default(uuid())
+  name      String   // フォルダ名（例：ハイツ山田、英語クラス）
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // このフォルダに入っている人たち
+  tenants   Tenant[]
+}
+
+// 入居者（家賃管理用）
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String   // 契約者名
+  nameKana  String   // フリガナ
+  amount    Int      // 家賃金額
+  groupId   String?  // どのフォルダに入っているか（オプショナル）
+  group     TenantGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payments          Payment[]
+  paymentStatuses   PaymentStatus[]
+  recurringTemplates RecurringTemplate[]
+}
+
+model Payment {
+  id              String   @id @default(uuid())
+  tenantId        String   // 誰の支払いか（Tenantテーブルと紐付け）
+  amount          Int      // 支払われた金額
+  date            DateTime // 支払日（入金日）
+  note            String?  // 備考（「1月分家賃」など）
+  paymentStatusId String?  // 月次入金台帳との紐付け（オプショナル）
+  createdAt       DateTime @default(now())
+
+  tenant          Tenant   @relation(fields: [tenantId], references: [id])
+  paymentStatus   PaymentStatus? @relation(fields: [paymentStatusId], references: [id], onDelete: SetNull)
+}
+
+// 月次入金台帳（Ledger）
+model PaymentStatus {
+  id          String   @id @default(uuid())
+  tenantId    String   // どの取引先か
+  targetMonth String   // "2026-01" 形式（YYYY-MM）
+  status      String   // "PAID" / "UNPAID" / "PARTIAL"
+  expectedAmount Int   // その月の請求予定額（Tenant.amountと同じ）
+  paidAmount  Int      @default(0) // 実際に支払われた金額
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  payments    Payment[] // この月次ステータスに関連する支払い履歴
+}
+
+// 定期請求テンプレート
+model RecurringTemplate {
+  id                String   @id @default(uuid())
+  tenantId          String   // どの入居者向けか
+  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  clientId           String?  // 自動紐付けされたClient（nullable、自動作成）
+  client             Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  
+  // スケジュール設定
+  interval           String   @default("MONTHLY") // MONTHLY, WEEKLY, YEARLY
+  creationDay        Int      // 作成日（毎月何日、1-31）
+  sendDay            Int?     // 送信日（毎月何日、nullable、将来のメール送信用）
+  
+  // 有効期限・状態
+  isActive           Boolean  @default(true) // 有効/無効
+  startDate          DateTime // 開始日
+  endDate            DateTime? // 終了日（nullable、無期限の場合はnull）
+  nextExecutionDate  DateTime // 次回実行日
+  
+  // 請求内容
+  items              String   // JSON形式の明細（[{name, quantity, unitPrice, taxRate}]）
+  note               String?  // 備考
+  
+  // 生成された請求書の履歴
+  generatedInvoices  Invoice[]
+  
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 }

@@ -28,8 +28,17 @@ export default function ImageUpload({
     if (!file) return;
 
     // ファイルタイプの検証
-    if (!file.type.startsWith("image/")) {
-      window.alert("画像ファイルを選択してください。");
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      window.alert("画像ファイル（JPEG、PNG、GIF、WebP）を選択してください。");
+      return;
+    }
+
+    // ファイル拡張子の検証（MIMEタイプだけでは不十分な場合に備えて）
+    const allowedExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+    const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf("."));
+    if (!allowedExtensions.includes(fileExtension)) {
+      window.alert("画像ファイル（JPEG、PNG、GIF、WebP）を選択してください。");
       return;
     }
 
@@ -39,13 +48,22 @@ export default function ImageUpload({
       return;
     }
 
+    // ファイル名の検証（パストラバーサル攻撃対策）
+    if (file.name.includes("..") || file.name.includes("/") || file.name.includes("\\")) {
+      window.alert("無効なファイル名です。");
+      return;
+    }
+
     setUploading(true);
 
     try {
-      // ファイル名を生成: company-assets/${userId}/${timestamp}-${filename}
+      // ファイル名を生成: company-assets/${userId}/${timestamp}-${sanitizedFilename}
       const timestamp = Date.now();
-      const fileName = `${userId}/${timestamp}-${file.name}`;
-      const filePath = `${bucket}/${fileName}`;
+      // ファイル名をサニタイズ（危険な文字を除去）
+      const sanitizedFilename = file.name
+        .replace(/[^a-zA-Z0-9._-]/g, "_")
+        .substring(0, 100); // ファイル名の長さ制限
+      const fileName = `${userId}/${timestamp}-${sanitizedFilename}`;
 
       // Supabase Storageにアップロード
       const { error: uploadError } = await supabase.storage

@@ -1,4 +1,5 @@
 import DashboardSidebar from "@/components/dashboard-sidebar";
+import NavigationLoader from "@/components/navigation-loader";
 
 export default function DashboardLayout({
   children,
@@ -6,13 +7,10 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-white text-slate-900">
-      <div className="flex min-h-screen">
-        <DashboardSidebar />
-        <main className="flex-1 px-6 py-8">
-          <div className="mx-auto w-full max-w-6xl">{children}</div>
-        </main>
-      </div>
+    <div className="flex h-screen bg-slate-50">
+      <DashboardSidebar />
+      <div className="flex-1 overflow-y-auto">{children}</div>
+      <NavigationLoader />
     </div>
   );
 }

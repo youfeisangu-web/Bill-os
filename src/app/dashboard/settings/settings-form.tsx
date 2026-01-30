@@ -3,7 +3,6 @@
 import { useTransition, useState } from "react";
 import { updateSettings } from "@/app/actions/settings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ModeToggle } from "@/components/mode-toggle";
 import ImageUpload from "@/components/image-upload";
 import { Loader2 } from "lucide-react";
 
@@ -343,13 +342,6 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
                   請求書番号の開始番号
                 </p>
               </div>
-            </div>
-
-            <div className="pt-4 border-t border-slate-200">
-              <label className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                外観
-              </label>
-              <ModeToggle />
             </div>
           </div>
         </TabsContent>

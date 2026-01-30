@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import NewClientDialog from "./new-client-dialog";
+import EditClientDialog from "./edit-client-dialog";
+import DeleteClientButton from "./delete-client-button";
 
 const formatDate = (date: Date) =>
   new Intl.DateTimeFormat("ja-JP", { dateStyle: "medium" }).format(date);
@@ -52,13 +54,14 @@ export default async function ClientsPage() {
                 <th className="px-4 py-3">メールアドレス</th>
                 <th className="px-4 py-3">住所</th>
                 <th className="px-4 py-3">登録日</th>
+                <th className="px-4 py-3">操作</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
               {clients.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="px-4 py-10 text-center text-sm text-slate-500"
                   >
                     まだ取引先が登録されていません。新規作成から追加してください。
@@ -74,6 +77,12 @@ export default async function ClientsPage() {
                     <td className="px-4 py-4">{client.address ?? "-"}</td>
                     <td className="px-4 py-4">
                       {formatDate(client.createdAt)}
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-2">
+                        <EditClientDialog client={client} />
+                        <DeleteClientButton clientId={client.id} clientName={client.name} />
+                      </div>
                     </td>
                   </tr>
                 ))

@@ -4,6 +4,39 @@
   --font-sans: var(--font-inter), var(--font-noto-sans-jp), ui-sans-serif,
     system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans",
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  
+  /* Billio Custom Colors */
+  --color-billio-blue-light: #60a5fa;
+  --color-billio-blue: #3b82f6;
+  --color-billio-blue-dark: #2563eb;
+  --color-billio-green-light: #4ade80;
+  --color-billio-green: #22c55e;
+  --color-billio-green-dark: #16a34a;
+  --color-billio-bg: #f8fafc;
+  --color-billio-card: #ffffff;
+  --color-billio-text: #1e293b;
+  --color-billio-text-muted: #64748b;
+}
+
+/* Tailwind 4用のカスタムカラークラス */
+@layer utilities {
+  .bg-billio-bg { background-color: var(--color-billio-bg); }
+  .bg-billio-card { background-color: var(--color-billio-card); }
+  .text-billio-text { color: var(--color-billio-text); }
+  .text-billio-text-muted { color: var(--color-billio-text-muted); }
+  .bg-billio-blue { background-color: var(--color-billio-blue); }
+  .bg-billio-blue-light { background-color: var(--color-billio-blue-light); }
+  .bg-billio-blue-dark { background-color: var(--color-billio-blue-dark); }
+  .bg-billio-green { background-color: var(--color-billio-green); }
+  .bg-billio-green-light { background-color: var(--color-billio-green-light); }
+  .bg-billio-green-dark { background-color: var(--color-billio-green-dark); }
+  .text-billio-blue { color: var(--color-billio-blue); }
+  .text-billio-green { color: var(--color-billio-green); }
+  .border-billio-blue { border-color: var(--color-billio-blue); }
+  .from-billio-blue { --tw-gradient-from: var(--color-billio-blue); }
+  .to-billio-green { --tw-gradient-to: var(--color-billio-green); }
+  .from-billio-blue-dark { --tw-gradient-from: var(--color-billio-blue-dark); }
+  .to-billio-green-dark { --tw-gradient-to: var(--color-billio-green-dark); }
 }
 
 @layer base {
@@ -26,7 +59,7 @@
   /* .dark クラスを完全に削除 - ダークモードを無効化 */
   
   body {
-    @apply bg-white text-slate-900 antialiased;
+    @apply bg-billio-bg text-billio-text antialiased;
   }
   
   /* 入力フォームのスタイル - 常に白背景・黒文字 */

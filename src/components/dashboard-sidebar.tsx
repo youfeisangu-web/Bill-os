@@ -2,61 +2,153 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  CreditCard,
-  FilePlus,
-  FileText,
-  LayoutDashboard,
-  Settings,
-  Users,
-} from "lucide-react";
+import { Folder, FolderOpen, Plus, Sparkles, LayoutDashboard, BookOpen, FileText, ClipboardList, Users, DollarSign, Calendar, Settings } from "lucide-react";
+import { getTenantGroups } from "@/app/actions/tenant-group";
+import { useEffect, useState } from "react";
 
-const navItems = [
-  { label: "ホーム", href: "/dashboard", icon: LayoutDashboard },
-  { label: "取引先", href: "/dashboard/clients", icon: Users },
-  { label: "見積書", href: "/dashboard/quotes", icon: FilePlus },
-  { label: "請求書", href: "/dashboard/invoices", icon: FileText },
-  { label: "経費", href: "/dashboard/expenses", icon: CreditCard },
-  { label: "設定", href: "/dashboard/settings", icon: Settings },
-];
+type TenantGroup = {
+  id: string;
+  name: string;
+  tenants: { id: string }[];
+};
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
+  const [groups, setGroups] = useState<TenantGroup[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // URLパラメータからgroupIdを取得
+    const params = new URLSearchParams(window.location.search);
+    const groupId = params.get("groupId");
+    setSelectedGroupId(groupId);
+
+    // フォルダ一覧を取得
+    getTenantGroups().then(setGroups);
+  }, []);
 
   return (
-    <aside className="hidden w-64 flex-col border-r border-slate-200 bg-white px-4 py-6 dark:border-slate-800 dark:bg-slate-950 lg:flex">
-      <div className="px-3">
-        <p className="text-xs uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">
-          Bill OS
-        </p>
-        <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-slate-50">
-          ダッシュボード
-        </p>
+    <aside className="w-64 flex flex-col border-r border-gray-200 bg-billio-card shadow-sm px-4 py-6">
+      {/* ロゴ部分 */}
+      <div className="px-3 mb-8">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-billio-blue to-billio-green flex items-center justify-center">
+            <Sparkles className="h-5 w-5 text-white" />
+          </div>
+          <span className="text-xl font-bold text-billio-text">Billio</span>
+        </div>
+        <p className="text-xs text-billio-text-muted">請求管理システム</p>
       </div>
 
-      <nav className="mt-8 flex flex-1 flex-col gap-2 text-sm text-slate-600 dark:text-slate-400">
-        {navItems.map((item) => {
-          const isActive =
-            pathname === item.href ||
-            (item.href !== "/dashboard" && pathname.startsWith(item.href));
-          const Icon = item.icon;
+      {/* メインメニュー */}
+      <nav className="flex-1 overflow-y-auto">
+        <div className="mb-4 space-y-1">
+          <Link
+            href="/dashboard"
+            className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-all ${
+              pathname === "/dashboard"
+                ? "bg-gradient-to-r from-billio-blue/10 to-billio-green/10 text-billio-blue border-l-4 border-billio-blue font-medium"
+                : "hover:bg-gray-50 text-billio-text-muted"
+            }`}
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            <span>ホーム</span>
+          </Link>
+          <Link
+            href="/dashboard/invoices"
+            className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-all ${
+              pathname?.startsWith("/dashboard/invoices")
+                ? "bg-gradient-to-r from-billio-blue/10 to-billio-green/10 text-billio-blue border-l-4 border-billio-blue font-medium"
+                : "hover:bg-gray-50 text-billio-text-muted"
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            <span>請求書</span>
+          </Link>
+          <Link
+            href="/dashboard/quotes"
+            className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-all ${
+              pathname?.startsWith("/dashboard/quotes")
+                ? "bg-gradient-to-r from-billio-blue/10 to-billio-green/10 text-billio-blue border-l-4 border-billio-blue font-medium"
+                : "hover:bg-gray-50 text-billio-text-muted"
+            }`}
+          >
+            <ClipboardList className="w-4 h-4" />
+            <span>見積書</span>
+          </Link>
+          <Link
+            href="/dashboard/ledger"
+            className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-all ${
+              pathname === "/dashboard/ledger"
+                ? "bg-gradient-to-r from-billio-blue/10 to-billio-green/10 text-billio-blue border-l-4 border-billio-blue font-medium"
+                : "hover:bg-gray-50 text-billio-text-muted"
+            }`}
+          >
+            <BookOpen className="w-4 h-4" />
+            <span>月次入金台帳</span>
+          </Link>
+          <Link
+            href="/reconcile"
+            className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-all ${
+              pathname === "/reconcile"
+                ? "bg-gradient-to-r from-billio-blue/10 to-billio-green/10 text-billio-blue border-l-4 border-billio-blue font-medium"
+                : "hover:bg-gray-50 text-billio-text-muted"
+            }`}
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>入金消込</span>
+          </Link>
+          <Link
+            href="/dashboard/clients"
+            className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-all ${
+              pathname?.startsWith("/dashboard/clients")
+                ? "bg-gradient-to-r from-billio-blue/10 to-billio-green/10 text-billio-blue border-l-4 border-billio-blue font-medium"
+                : "hover:bg-gray-50 text-billio-text-muted"
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            <span>取引先</span>
+          </Link>
+          <Link
+            href="/dashboard/tenants"
+            className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-all ${
+              pathname?.startsWith("/dashboard/tenants")
+                ? "bg-gradient-to-r from-billio-blue/10 to-billio-green/10 text-billio-blue border-l-4 border-billio-blue font-medium"
+                : "hover:bg-gray-50 text-billio-text-muted"
+            }`}
+          >
+            <DollarSign className="w-4 h-4" />
+            <span>月額管理</span>
+          </Link>
+          <Link
+            href="/dashboard/recurring"
+            className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-all ${
+              pathname?.startsWith("/dashboard/recurring")
+                ? "bg-gradient-to-r from-billio-blue/10 to-billio-green/10 text-billio-blue border-l-4 border-billio-blue font-medium"
+                : "hover:bg-gray-50 text-billio-text-muted"
+            }`}
+          >
+            <Calendar className="w-4 h-4" />
+            <span>定期請求</span>
+          </Link>
+        </div>
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2 transition ${
-                isActive
-                  ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
-                  : "hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-900 dark:hover:text-slate-50"
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
+        {/* 設定（下部） */}
+        <div className="mt-auto pt-4 border-t border-gray-200">
+          <Link
+            href="/dashboard/settings"
+            className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-all ${
+              pathname?.startsWith("/dashboard/settings")
+                ? "bg-gradient-to-r from-billio-blue/10 to-billio-green/10 text-billio-blue border-l-4 border-billio-blue font-medium"
+                : "hover:bg-gray-50 text-billio-text-muted"
+            }`}
+          >
+            <Settings className="w-4 h-4" />
+            <span>設定</span>
+          </Link>
+        </div>
       </nav>
+
     </aside>
   );
 }
