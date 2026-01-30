@@ -3,10 +3,11 @@
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { savePayment, getReconcileSummary } from "@/app/actions/payment";
+import { importClientsAsTenants } from "@/app/actions/tenant";
 import type { ReconcileResult } from "@/types/reconcile";
 import { Upload } from "lucide-react";
 
-type Summary = { totalBilledAmount: number; invoiceCount: number };
+type Summary = { totalBilledAmount: number; invoiceCount: number; tenantCount: number };
 
 export default function ReconcileClient({
   initialSummary,
@@ -31,6 +32,8 @@ export default function ReconcileClient({
   }, []);
 
   const [parseError, setParseError] = useState<string | null>(null);
+  const [lastMeta, setLastMeta] = useState<{ tenantCount: number } | null>(null);
+  const [importing, setImporting] = useState(false);
 
   const runReconcile = useCallback(async (f: File) => {
     setResults([]);
@@ -45,6 +48,7 @@ export default function ReconcileClient({
       if (json.success) {
         const rows = json.data ?? [];
         setResults(rows);
+        setLastMeta(json.meta ?? null);
         if (rows.length === 0) {
           setParseError(
             "CSVは読み込めましたが、有効な行が1行もありません。銀行CSVの形式をご確認ください（1列目:日付、3列目:金額、4列目:入金名義 の並び。4列以上あること）。",
@@ -156,11 +160,28 @@ export default function ReconcileClient({
     setResults([]);
     setExecuted(false);
     setParseError(null);
+    setLastMeta(null);
+  };
+
+  const handleImportClients = async () => {
+    setImporting(true);
+    try {
+      const result = await importClientsAsTenants();
+      if (result.success) {
+        alert(result.message);
+        const s = await getReconcileSummary();
+        setSummary(s);
+      } else {
+        alert(result.message);
+      }
+    } finally {
+      setImporting(false);
+    }
   };
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      {/* 請求金額（請求書発行済みの未回収） */}
+      {/* 請求金額・取引先件数 */}
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-sm font-medium uppercase tracking-wider text-slate-500">
           請求金額（未回収）
@@ -171,6 +192,28 @@ export default function ReconcileClient({
         <p className="mt-1 text-sm text-slate-500">
           請求書発行済みの未払い・部分払い 計{summary.invoiceCount}件
         </p>
+        <p className="mt-2 text-sm text-slate-600">
+          <strong>入金消し込み用の取引先:</strong> {summary.tenantCount}件
+        </p>
+        {summary.tenantCount === 0 && (
+          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            <p className="font-medium">1件もマッチしない原因</p>
+            <p className="mt-1">
+              入金名義・金額は「取引先（入居者）」と照合しています。取引先が0件のためマッチしません。
+            </p>
+            <button
+              type="button"
+              onClick={handleImportClients}
+              disabled={importing}
+              className="mt-3 rounded-full bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
+            >
+              {importing ? "取り込み中..." : "請求書の取引先を取り込む"}
+            </button>
+            <p className="mt-2 text-xs">
+              取り込み後、ダッシュボードの「入居者」で金額を編集すると入金とマッチしやすくなります。
+            </p>
+          </div>
+        )}
         <Link
           href="/dashboard/invoices"
           className="mt-3 inline-block text-sm text-blue-600 hover:underline"
@@ -242,6 +285,27 @@ export default function ReconcileClient({
         {parseError && (
           <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
             {parseError}
+          </div>
+        )}
+        {results.length > 0 && (lastMeta?.tenantCount ?? summary.tenantCount) === 0 && (
+          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            <p className="font-medium">取引先が0件のため、1件もマッチしませんでした。</p>
+            <button
+              type="button"
+              onClick={handleImportClients}
+              disabled={importing}
+              className="mt-3 rounded-full bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
+            >
+              {importing ? "取り込み中..." : "請求書の取引先を取り込む"}
+            </button>
+          </div>
+        )}
+        {results.length > 0 && completableRows.length === 0 && (lastMeta?.tenantCount ?? summary.tenantCount) > 0 && !executed && (
+          <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+            <p className="font-medium">取引先はありますが、CSVの名義・金額と一致しませんでした。</p>
+            <p className="mt-1 text-xs">
+              取引先の「フリガナ」と「金額」が入金明細に近いか確認してください。ダッシュボードの「入居者」で編集できます。
+            </p>
           </div>
         )}
       </section>

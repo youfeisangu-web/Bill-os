@@ -192,8 +192,12 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        // 6. 結果を画面に返す
-        return NextResponse.json({ success: true, data: results });
+        // 6. 結果を画面に返す（取引先件数で原因が分かるように）
+        return NextResponse.json({
+            success: true,
+            data: results,
+            meta: { tenantCount: tenants.length },
+        });
 
     } catch (error) {
         console.error(error);

@@ -157,3 +157,50 @@ export async function getTenantsByGroup(groupId: string | null) {
     return [];
   }
 }
+
+/** 請求書の取引先（Client）を入金消し込み用の取引先（Tenant）に取り込む。同名がなければ作成。 */
+export async function importClientsAsTenants(): Promise<
+  { success: boolean; message: string; importedCount?: number }
+> {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    const clients = await prisma.client.findMany({
+      where: { userId },
+      select: { id: true, name: true },
+    });
+    if (clients.length === 0) {
+      return { success: false, message: "請求書の取引先が1件もありません。" };
+    }
+
+    let imported = 0;
+    for (const client of clients) {
+      const existing = await prisma.tenant.findFirst({
+        where: { name: client.name },
+      });
+      if (!existing) {
+        await prisma.tenant.create({
+          data: {
+            name: client.name,
+            nameKana: client.name,
+            amount: 0,
+          },
+        });
+        imported += 1;
+      }
+    }
+
+    revalidatePath("/reconcile");
+    revalidatePath("/dashboard/tenants");
+    return {
+      success: true,
+      message: `${imported}件の取引先を入金消し込み用に取り込みました。金額は0のため、ダッシュボードの「入居者」で金額を編集するとマッチしやすくなります。`,
+      importedCount: imported,
+    };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "取り込みに失敗しました。";
+    return { success: false, message };
+  }
+}
