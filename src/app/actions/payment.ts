@@ -33,6 +33,19 @@ export async function savePayment(tenantId: string, amount: number, dateStr: str
 
   revalidatePath('/dashboard'); // ダッシュボードを更新
   revalidatePath('/dashboard/ledger'); // 月次入金台帳も更新
+  revalidatePath('/reconcile');
+}
+
+/** 入金消し込み用：請求中金額（全入居者の家賃合計）と入居者数を返す */
+export async function getReconcileSummary() {
+  const { userId } = await auth();
+  if (!userId) throw new Error('認証が必要です');
+
+  const tenants = await prisma.tenant.findMany({
+    select: { amount: true },
+  });
+  const totalBilledAmount = tenants.reduce((sum, t) => sum + t.amount, 0);
+  return { totalBilledAmount, tenantCount: tenants.length };
 }
 
 // 特定の入居者の支払い履歴を取ってくる
