@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createInvoice } from "@/app/actions/invoice";
+import { normalizeToHalfWidthNumeric } from "@/lib/utils";
 
 type ClientOption = {
   id: string;
@@ -11,8 +12,8 @@ type ClientOption = {
 
 type ItemRow = {
   name: string;
-  quantity: number;
-  unitPrice: number;
+  quantity: string;
+  unitPrice: string;
 };
 
 const formatCurrency = (value: number) =>
@@ -23,12 +24,14 @@ export default function InvoiceEditor({ clients }: { clients: ClientOption[] }) 
   const [isPending, startTransition] = useTransition();
   const [isNewClient, setIsNewClient] = useState(false);
   const [items, setItems] = useState<ItemRow[]>([
-    { name: "", quantity: 1, unitPrice: 0 },
+    { name: "", quantity: "1", unitPrice: "0" },
   ]);
 
   const totals = useMemo(() => {
     const subtotal = items.reduce(
-      (sum, item) => sum + item.quantity * item.unitPrice,
+      (sum, item) =>
+        sum +
+        (parseFloat(item.quantity) || 0) * (parseFloat(item.unitPrice) || 0),
       0,
     );
     const taxAmount = Math.round(subtotal * 0.1);
