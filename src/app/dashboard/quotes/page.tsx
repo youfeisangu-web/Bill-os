@@ -51,7 +51,7 @@ export default async function QuotesPage() {
           <div>
             <h2 className="text-lg font-semibold text-slate-900">見積書一覧</h2>
             <p className="text-sm text-slate-500">
-              発行日・有効期限・金額・ステータスを確認できます。
+              発行日・支払い期限・金額・ステータスを確認できます。
             </p>
           </div>
           <Link
@@ -69,7 +69,7 @@ export default async function QuotesPage() {
                 <th className="px-4 py-3">見積番号</th>
                 <th className="px-4 py-3">取引先名</th>
                 <th className="px-4 py-3">発行日</th>
-                <th className="px-4 py-3">有効期限</th>
+                <th className="px-4 py-3">支払い期限</th>
                 <th className="px-4 py-3">金額 (円)</th>
                 <th className="px-4 py-3">ステータス</th>
               </tr>

@@ -161,10 +161,10 @@ export const InvoiceTemplate = ({ data }: { data: DocumentData }) => {
           <div className="space-y-1">
             <p className="font-bold border-b border-slate-300 pb-1 mb-2">【備考】</p>
             <div className="whitespace-pre-wrap text-slate-600 text-xs">
-              {data.remarks || (data.type === "見積書" ? "有効期限：発行から30日間" : "お振込手数料は貴社にてご負担願います。")}
+              {data.remarks || (data.type === "見積書" ? "上記金額は支払い期限までにお振込ください。" : "お振込手数料は貴社にてご負担願います。")}
             </div>
             {data.dueDate && <p className="mt-4 font-medium text-rose-600">お支払期限：{formatDate(data.dueDate)}</p>}
-            {data.validUntil && <p className="mt-4 font-medium">有効期限：{formatDate(data.validUntil)}</p>}
+            {data.validUntil && <p className="mt-4 font-medium text-rose-600">お支払期限：{formatDate(data.validUntil)}</p>}
           </div>
         </div>
       </div>

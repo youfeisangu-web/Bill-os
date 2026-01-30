@@ -19,6 +19,19 @@ type ItemRow = {
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("ja-JP").format(value);
 
+/** 今日の日付を YYYY-MM-DD で返す */
+function todayString() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** 翌月末の日付を YYYY-MM-DD で返す */
+function endOfNextMonthString() {
+  const d = new Date();
+  const end = new Date(d.getFullYear(), d.getMonth() + 2, 0);
+  return `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}`;
+}
+
 export default function InvoiceEditor({ clients }: { clients: ClientOption[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -26,6 +39,8 @@ export default function InvoiceEditor({ clients }: { clients: ClientOption[] }) 
   const [items, setItems] = useState<ItemRow[]>([
     { name: "", quantity: "1", unitPrice: "0" },
   ]);
+  const defaultIssueDate = useMemo(() => todayString(), []);
+  const defaultDueDate = useMemo(() => endOfNextMonthString(), []);
 
   const totals = useMemo(() => {
     const subtotal = items.reduce(
@@ -171,17 +186,19 @@ export default function InvoiceEditor({ clients }: { clients: ClientOption[] }) 
                 name="issueDate"
                 type="date"
                 required
+                defaultValue={defaultIssueDate}
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
               />
             </div>
             <div className="space-y-2">
               <label className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                支払期限
+                支払い期限
               </label>
               <input
                 name="dueDate"
                 type="date"
                 required
+                defaultValue={defaultDueDate}
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
               />
             </div>
