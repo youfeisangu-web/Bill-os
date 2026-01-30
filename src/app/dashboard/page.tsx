@@ -27,7 +27,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   const tenantWhere = selectedGroupId ? { groupId: selectedGroupId } : undefined;
 
   // 並列で一括取得（待ち時間を短縮）
-  const [groups, tenants, currentMonthPaymentsRaw, nextMonthPayments, currentMonthExpenses, unpaidCount, quotesForGraph, paymentsForGraph, expensesForGraph] = await Promise.all([
+  const [groups, tenants, currentMonthPaymentsRaw, nextMonthPayments, currentMonthExpenses, unpaidCount, quotesForGraph, paymentsForGraph, expensesForGraph, invoicesForGraph, invoiceStats] = await Promise.all([
     getTenantGroups(),
     getTenantsByGroup(selectedGroupId),
     prisma.payment.findMany({
@@ -78,6 +78,33 @@ export default async function DashboardPage({ searchParams }: Props) {
         date: { gte: sixMonthsAgo, lte: lastDayOfCurrent },
       },
     }),
+    prisma.invoice.findMany({
+      where: {
+        userId,
+        issueDate: { gte: sixMonthsAgo, lte: lastDayOfCurrent },
+      },
+      select: { issueDate: true, totalAmount: true, status: true },
+    }),
+    (async () => {
+      const [paid, unpaid] = await Promise.all([
+        prisma.invoice.aggregate({
+          where: { userId, status: "支払済" },
+          _count: true,
+          _sum: { totalAmount: true },
+        }),
+        prisma.invoice.aggregate({
+          where: { userId, status: { in: ["未払い", "部分払い"] } },
+          _count: true,
+          _sum: { totalAmount: true },
+        }),
+      ]);
+      return {
+        paidCount: paid._count,
+        paidAmount: paid._sum.totalAmount ?? 0,
+        unpaidCount: unpaid._count,
+        unpaidAmount: unpaid._sum.totalAmount ?? 0,
+      };
+    })(),
   ]);
 
   // Date型をシリアライズ可能な形式に変換
@@ -112,7 +139,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   // 現在の日付文字列
   const currentMonthYear = `${now.getFullYear()}年${now.getMonth() + 1}月`;
 
-  // 過去6ヶ月分のデータを集計（一括取得済みのデータを月別に集計）
+  // 過去6ヶ月分のデータを集計（請求書・見積・入金・経費）
   const monthlyData = [];
   for (let i = 5; i >= 0; i--) {
     const targetDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -120,6 +147,9 @@ export default async function DashboardPage({ searchParams }: Props) {
     const monthStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
     const monthEnd = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
 
+    const invoiceAmount = invoicesForGraph
+      .filter((inv) => inv.issueDate >= monthStart && inv.issueDate <= monthEnd)
+      .reduce((sum, inv) => sum + inv.totalAmount, 0);
     const quoteAmount = quotesForGraph
       .filter((q) => q.issueDate >= monthStart && q.issueDate <= monthEnd)
       .reduce((sum, q) => sum + q.totalAmount, 0);
@@ -132,7 +162,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
     monthlyData.push({
       month: targetMonth,
-      invoiceAmount: monthlyARR,
+      invoiceAmount: invoiceAmount || monthlyARR,
       quoteAmount,
       paidAmount,
       expenseAmount,
@@ -155,6 +185,7 @@ export default async function DashboardPage({ searchParams }: Props) {
       totalExpenses={totalExpenses}
       unpaidCount={unpaidCount}
       monthlyData={monthlyData}
+      invoiceStats={invoiceStats}
     />
   );
 }

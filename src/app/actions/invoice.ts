@@ -170,7 +170,48 @@ export async function markInvoicePaid(invoiceId: string): Promise<SubmitResult> 
 
     revalidatePath("/dashboard/invoices");
     revalidatePath("/reconcile");
+    revalidatePath("/dashboard");
     return { success: true, message: "支払済に更新しました。" };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "更新に失敗しました。";
+    return { success: false, message };
+  }
+}
+
+const VALID_INVOICE_STATUSES = ["未払い", "支払済", "部分払い"] as const;
+
+/** 請求書のステータスを変更する（編集画面用） */
+export async function updateInvoiceStatus(
+  invoiceId: string,
+  status: string,
+): Promise<SubmitResult> {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    if (!VALID_INVOICE_STATUSES.includes(status as (typeof VALID_INVOICE_STATUSES)[number])) {
+      return { success: false, message: "無効なステータスです。" };
+    }
+
+    const invoice = await prisma.invoice.findFirst({
+      where: { id: invoiceId, userId },
+    });
+    if (!invoice) {
+      return { success: false, message: "請求書が見つかりません。" };
+    }
+
+    await prisma.invoice.update({
+      where: { id: invoiceId },
+      data: { status },
+    });
+
+    revalidatePath("/dashboard/invoices");
+    revalidatePath(`/dashboard/invoices/${invoiceId}`);
+    revalidatePath(`/dashboard/invoices/${invoiceId}/edit`);
+    revalidatePath("/reconcile");
+    revalidatePath("/dashboard");
+    return { success: true, message: "ステータスを更新しました。" };
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "更新に失敗しました。";

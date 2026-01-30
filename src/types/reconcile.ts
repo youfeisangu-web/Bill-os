@@ -12,7 +12,11 @@ export type ReconcileResult = {
   message: string;
   /** 請求書ベースの消し込みでマッチした請求書ID */
   invoiceId: string | null;
-  /** @deprecated 取引先ベースは廃止。請求書ベースのみ使用 */
+  /** マッチした請求書番号（表示・リンク用） */
+  invoiceNumber?: string | null;
+  /** マッチした取引先名（表示用） */
+  clientName?: string | null;
+  /** @deprecated 取引先ベースは廃止 */
   tenantId: string | null;
 };
 

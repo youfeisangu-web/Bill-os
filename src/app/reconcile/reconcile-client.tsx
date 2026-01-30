@@ -5,7 +5,7 @@ import Link from "next/link";
 import { getReconcileSummary } from "@/app/actions/payment";
 import { markInvoicePaid } from "@/app/actions/invoice";
 import type { ReconcileResult } from "@/types/reconcile";
-import { Upload } from "lucide-react";
+import { Upload, CheckCircle2, ExternalLink } from "lucide-react";
 
 type Summary = { totalBilledAmount: number; invoiceCount: number };
 
@@ -20,6 +20,7 @@ export default function ReconcileClient({
   const [loading, setLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [executed, setExecuted] = useState(false);
+  const [executedInvoiceIds, setExecutedInvoiceIds] = useState<Set<string>>(new Set());
   const [isDragging, setIsDragging] = useState(false);
 
   const loadSummary = useCallback(async () => {
@@ -133,18 +134,19 @@ export default function ReconcileClient({
     if (!ok) return;
 
     setLoading(true);
-    let done = 0;
+    const doneIds = new Set<string>();
     try {
       for (const row of completableRows) {
         if (row.invoiceId) {
           const result = await markInvoicePaid(row.invoiceId);
-          if (result.success) done += 1;
+          if (result.success) doneIds.add(row.invoiceId);
           else alert(result.message);
         }
       }
       setExecuted(true);
+      setExecutedInvoiceIds(doneIds);
       await loadSummary();
-      alert(`${done}件の請求書を支払済にしました。`);
+      alert(`${doneIds.size}件の請求書を支払済にしました。`);
     } catch (err) {
       alert(
         "更新に失敗しました: " +
@@ -159,9 +161,12 @@ export default function ReconcileClient({
     setFile(null);
     setResults([]);
     setExecuted(false);
+    setExecutedInvoiceIds(new Set());
     setParseError(null);
     setLastMeta(null);
   };
+
+  const paidRows = results.filter((r) => r.invoiceId && executedInvoiceIds.has(r.invoiceId));
 
 
   return (
@@ -267,6 +272,31 @@ export default function ReconcileClient({
       {/* 消込結果と確認 */}
       {results.length > 0 && (
         <section className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          {executed && paidRows.length > 0 && (
+            <div className="border-b border-emerald-200 bg-emerald-50 px-6 py-4">
+              <h2 className="text-lg font-semibold text-emerald-900 flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                消し込み結果：{paidRows.length}件を支払済にしました
+              </h2>
+              <ul className="mt-3 space-y-2 text-sm text-emerald-800">
+                {paidRows.map((row, i) => (
+                  <li key={i} className="flex flex-wrap items-center gap-2">
+                    {row.invoiceId ? (
+                      <Link
+                        href={`/dashboard/invoices/${row.invoiceId}`}
+                        className="font-medium text-emerald-700 hover:underline inline-flex items-center gap-1"
+                      >
+                        {row.invoiceNumber ?? row.invoiceId}
+                        <ExternalLink className="h-3.5 w-3" />
+                      </Link>
+                    ) : null}
+                    <span>{row.clientName && ` ${row.clientName}`}</span>
+                    <span className="text-emerald-600">¥{row.amount.toLocaleString()}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div className="border-b border-slate-200 bg-slate-50 px-6 py-4">
             <h2 className="text-lg font-semibold text-slate-900">消込結果（確認）</h2>
             <p className="text-sm text-slate-600 mt-1">
@@ -281,41 +311,72 @@ export default function ReconcileClient({
                   <th className="px-4 py-3 font-medium">入金名義 (CSV)</th>
                   <th className="px-4 py-3 font-medium">金額</th>
                   <th className="px-4 py-3 font-medium">判定</th>
+                  <th className="px-4 py-3 font-medium">請求書</th>
                   <th className="px-4 py-3 font-medium">コメント</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {results.map((row, i) => (
-                  <tr key={i} className="bg-white">
-                    <td className="px-4 py-3 text-slate-700">{row.date}</td>
-                    <td className="px-4 py-3 font-mono text-slate-800">{row.rawName}</td>
-                    <td className="px-4 py-3 text-slate-800">
-                      ¥{row.amount.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          row.status === "完了"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : row.status === "エラー"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-amber-100 text-amber-800"
-                        }`}
-                      >
-                        {row.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">{row.message}</td>
-                  </tr>
-                ))}
+                {results.map((row, i) => {
+                  const isPaid = row.invoiceId && executedInvoiceIds.has(row.invoiceId);
+                  return (
+                    <tr
+                      key={i}
+                      className={
+                        isPaid
+                          ? "bg-emerald-50/50 border-l-4 border-l-emerald-500"
+                          : "bg-white"
+                      }
+                    >
+                      <td className="px-4 py-3 text-slate-700">{row.date}</td>
+                      <td className="px-4 py-3 font-mono text-slate-800">{row.rawName}</td>
+                      <td className="px-4 py-3 text-slate-800">
+                        ¥{row.amount.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            isPaid
+                              ? "bg-emerald-200 text-emerald-900"
+                              : row.status === "完了"
+                                ? "bg-emerald-100 text-emerald-800"
+                                : row.status === "エラー"
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-amber-100 text-amber-800"
+                          }`}
+                        >
+                          {isPaid && <CheckCircle2 className="h-3.5 w-3.5" />}
+                          {isPaid ? "支払済" : row.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {row.invoiceId ? (
+                          <Link
+                            href={`/dashboard/invoices/${row.invoiceId}`}
+                            className="text-blue-600 hover:underline inline-flex items-center gap-1 font-medium"
+                          >
+                            {row.invoiceNumber ?? row.invoiceId}
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </Link>
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
+                        {row.clientName && (
+                          <span className="block text-xs text-slate-500 mt-0.5">{row.clientName}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-slate-600">{row.message}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 bg-slate-50 px-6 py-4">
             <div>
               <p className="text-sm text-slate-600">
-                {completableRows.length}件を登録できます
-                {executed && "（登録済み）"}
+                {executed
+                  ? `${paidRows.length}件を支払済にしました`
+                  : `${completableRows.length}件を支払済にできます`}
               </p>
               {results.length > 0 && completableRows.length === 0 && !executed && (
                 <p className="mt-1 text-xs text-amber-700">

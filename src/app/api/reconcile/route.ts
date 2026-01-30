@@ -178,6 +178,8 @@ export async function POST(req: NextRequest) {
             let status: ReconcileStatus = '未完了';
             let message = '一致なし';
             let matchedInvoiceId: string | null = null;
+            let matchedInvoiceNumber: string | null = null;
+            let matchedClientName: string | null = null;
 
             // A. 口座振替チェック（特例）
             const agencyMatch = agencies.find(a => rawName.includes(a.checkString));
@@ -207,10 +209,14 @@ export async function POST(req: NextRequest) {
                         status = '完了';
                         message = `消込成功: ${inv.client.name}（請求書）`;
                         matchedInvoiceId = inv.id;
+                        matchedInvoiceNumber = inv.id;
+                        matchedClientName = inv.client.name;
                     } else if (rating >= 0.35) {
                         status = '確認';
                         message = `候補: ${inv.client.name}（請求書・名前の表記が異なります）`;
                         matchedInvoiceId = inv.id;
+                        matchedInvoiceNumber = inv.id;
+                        matchedClientName = inv.client.name;
                     } else {
                         status = '確認';
                         message = `金額一致の請求書あり・名前不一致`;
@@ -224,6 +230,8 @@ export async function POST(req: NextRequest) {
                             status = '確認';
                             message = `候補: ${inv.client.name}（請求書・金額が異なります ¥${inv.totalAmount.toLocaleString()}）`;
                             matchedInvoiceId = inv.id;
+                            matchedInvoiceNumber = inv.id;
+                            matchedClientName = inv.client.name;
                         } else {
                             message = `この金額(¥${amount.toLocaleString()})の未払い請求書がありません`;
                         }
@@ -240,6 +248,8 @@ export async function POST(req: NextRequest) {
                 status,
                 message,
                 invoiceId: matchedInvoiceId,
+                invoiceNumber: matchedInvoiceNumber,
+                clientName: matchedClientName,
                 tenantId: null,
             });
         }

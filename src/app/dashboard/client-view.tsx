@@ -53,6 +53,13 @@ type MonthlyData = {
   expenseAmount: number;
 };
 
+type InvoiceStats = {
+  paidCount: number;
+  paidAmount: number;
+  unpaidCount: number;
+  unpaidAmount: number;
+};
+
 type DashboardClientViewProps = {
   groups: TenantGroup[];
   tenants: Tenant[];
@@ -68,6 +75,7 @@ type DashboardClientViewProps = {
   totalExpenses: number;
   unpaidCount: number;
   monthlyData: MonthlyData[];
+  invoiceStats: InvoiceStats;
 };
 
 export default function DashboardClientView({
@@ -85,6 +93,7 @@ export default function DashboardClientView({
   totalExpenses,
   unpaidCount,
   monthlyData,
+  invoiceStats,
 }: DashboardClientViewProps) {
   const [isProcessingOCR, setIsProcessingOCR] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -232,6 +241,44 @@ export default function DashboardClientView({
             </p>
             <p className="text-xs text-billio-text-muted">{currentMonthYear}</p>
           </div>
+        </div>
+
+        {/* 請求書の状況（支払済・未払い） */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <Link
+            href="/dashboard/invoices"
+            className="bg-billio-card rounded-xl shadow-sm border border-gray-200 p-6 hover:border-billio-green/50 transition-colors block"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-billio-green/20 to-billio-blue/20 flex items-center justify-center">
+                <Receipt className="w-6 h-6 text-billio-green" />
+              </div>
+            </div>
+            <p className="text-xs uppercase tracking-wider text-billio-text-muted mb-2">
+              請求書　支払済
+            </p>
+            <p className="text-2xl font-bold text-billio-text mb-1">
+              {invoiceStats.paidCount}件　¥{invoiceStats.paidAmount.toLocaleString()}
+            </p>
+            <p className="text-xs text-billio-text-muted">一覧を見る →</p>
+          </Link>
+          <Link
+            href="/dashboard/invoices"
+            className="bg-billio-card rounded-xl shadow-sm border border-gray-200 p-6 hover:border-orange-300 transition-colors block"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center">
+                <FileText className="w-6 h-6 text-orange-600" />
+              </div>
+            </div>
+            <p className="text-xs uppercase tracking-wider text-billio-text-muted mb-2">
+              請求書　未払い
+            </p>
+            <p className="text-2xl font-bold text-orange-600 mb-1">
+              {invoiceStats.unpaidCount}件　¥{invoiceStats.unpaidAmount.toLocaleString()}
+            </p>
+            <p className="text-xs text-billio-text-muted">一覧を見る →</p>
+          </Link>
         </div>
 
         {/* メイングラフ */}
