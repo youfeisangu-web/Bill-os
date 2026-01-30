@@ -4,7 +4,10 @@ import iconv from 'iconv-lite';
 import Papa from 'papaparse';
 import stringSimilarity from 'string-similarity';
 import { prisma } from '@/lib/prisma';
+import { openai } from '@/lib/openai';
 import type { ReconcileResult, ReconcileStatus } from '@/types/reconcile';
+
+type ColumnMap = { dateCol: number; amountCol: number; nameCol: number };
 
 const agencies = [
     { name: 'リコーリース', checkString: 'ﾘｺ-ﾘ-ｽ', expectedAmount: 850000 },
@@ -63,24 +66,60 @@ export async function POST(req: NextRequest) {
 
         const results: ReconcileResult[] = [];
 
-        // 5. あの「最強ロジック」を実行！
-        // CSV行数の上限（DoS攻撃対策）
+        // 5. 列のマッピング（OpenAIで自動検出 or デフォルト）
         const MAX_ROWS = 10000;
         if (bankData.length > MAX_ROWS) {
             return NextResponse.json({ error: `CSVファイルの行数が多すぎます（${MAX_ROWS}行以下）` }, { status: 400 });
         }
 
-        for (const row of bankData) {
-            // 行の長さチェック
-            if (!Array.isArray(row) || row.length < 4) continue;
+        let colMap: ColumnMap = { dateCol: 0, amountCol: 2, nameCol: 3 };
+        const apiKey = process.env.OPENAI_API_KEY;
+        const sampleRows = bankData.slice(0, 5).map((r) => (Array.isArray(r) ? r : []));
+        if (apiKey && sampleRows.length > 0 && sampleRows.some((r) => r.length >= 3)) {
+            try {
+                const res = await openai.chat.completions.create({
+                    model: 'gpt-4o-mini',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: `以下の銀行入金CSVのサンプル行です。列は0始まりのインデックスで、「取引日」「入金額（数値）」「入金名義（振込人名）」がそれぞれ何列目か判定し、JSONのみで返してください。形式: {"dateCol":0,"amountCol":2,"nameCol":3}\n\nサンプル:\n${JSON.stringify(sampleRows)}`,
+                        },
+                    ],
+                    max_tokens: 100,
+                });
+                const content = res.choices[0]?.message?.content?.trim() || '';
+                const jsonMatch = content.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    const parsed = JSON.parse(jsonMatch[0]) as ColumnMap;
+                    if (
+                        typeof parsed.dateCol === 'number' &&
+                        typeof parsed.amountCol === 'number' &&
+                        typeof parsed.nameCol === 'number' &&
+                        parsed.dateCol >= 0 &&
+                        parsed.amountCol >= 0 &&
+                        parsed.nameCol >= 0
+                    ) {
+                        colMap = parsed;
+                    }
+                }
+            } catch (e) {
+                console.warn('OpenAI column detection failed, using default:', e);
+            }
+        }
 
-            const amount = parseInt(row[2]);
-            const rawName = row[3]?.trim() || '';
+        for (const row of bankData) {
+            if (!Array.isArray(row)) continue;
+            const maxCol = Math.max(colMap.dateCol, colMap.amountCol, colMap.nameCol);
+            if (row.length <= maxCol) continue;
+
+            const dateVal = row[colMap.dateCol]?.trim() || '';
+            const amount = parseInt(String(row[colMap.amountCol]).replace(/[,，]/g, ''), 10);
+            const rawName = (row[colMap.nameCol]?.trim() || '').slice(0, 200);
 
             // 名前の長さ制限
             if (rawName.length > 200) continue;
 
-            if (!amount || !rawName) continue;
+            if (!dateVal || !rawName || !amount || isNaN(amount)) continue;
 
             let status: ReconcileStatus = '未完了';
             let message = '一致なし';
@@ -123,14 +162,13 @@ export async function POST(req: NextRequest) {
                 }
             }
 
-            // 結果をリストに追加
             results.push({
-                date: row[0],
+                date: dateVal,
                 amount,
                 rawName,
                 status,
                 message,
-                tenantId: matchData?.tenantId || null, // マッチした場合のみtenantIdを含める
+                tenantId: matchData?.tenantId || null,
             });
         }
 

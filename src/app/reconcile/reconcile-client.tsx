@@ -32,8 +32,7 @@ export default function ReconcileClient({
 
   const [parseError, setParseError] = useState<string | null>(null);
 
-  const parseFile = useCallback(async (f: File) => {
-    setFile(f);
+  const runReconcile = useCallback(async (f: File) => {
     setResults([]);
     setExecuted(false);
     setParseError(null);
@@ -74,12 +73,13 @@ export default function ReconcileClient({
       if (!f) return;
       const isCsv = f.name.toLowerCase().endsWith(".csv") || f.type === "text/csv" || f.type === "application/vnd.ms-excel" || f.type === "application/csv";
       if (isCsv) {
-        parseFile(f);
+        setFile(f);
+        setParseError(null);
       } else {
         alert("CSVファイルのみ読み込めます（.csv のファイルをドロップしてください）");
       }
     },
-    [parseFile],
+    [],
   );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -99,11 +99,19 @@ export default function ReconcileClient({
   const handleFileInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const f = e.target.files?.[0];
-      if (f) parseFile(f);
+      if (f) {
+        setFile(f);
+        setParseError(null);
+      }
       e.target.value = "";
     },
-    [parseFile],
+    [],
   );
+
+  const handleStartReconcile = useCallback(() => {
+    if (!file || loading) return;
+    runReconcile(file);
+  }, [file, loading, runReconcile]);
 
   const completableRows = results.filter(
     (r) => r.status === "完了" && r.tenantId && r.date,
@@ -180,7 +188,7 @@ export default function ReconcileClient({
           銀行の入金明細CSVをドロップするか、選択して読み込みます。内容を確認してから「消し込みを実行」で入金を登録してください。
         </p>
         <p className="text-xs text-slate-500 mb-4 rounded-lg bg-slate-100 p-3">
-          <strong>CSVの形式：</strong> 1列目＝日付、3列目＝金額、4列目＝入金名義 の並びで4列以上あること。Shift_JIS または UTF-8。入金名義・金額は取引先（入居者）のフリガナ・家賃と一致すると自動で「完了」になります。
+          <strong>手順：</strong> CSVを選択したら「消し込み開始」を押して解析します。OpenAI が有効な場合は列（日付・金額・名義）を自動検出します。取引先のフリガナ・家賃と一致すると「完了」になります。
         </p>
         <div
           role="button"
@@ -213,10 +221,23 @@ export default function ReconcileClient({
           <span className="font-medium text-slate-600 pointer-events-none">
             {file ? file.name : "CSVをドロップまたはクリックして選択"}
           </span>
-          <span className="text-xs text-slate-500 pointer-events-none">CSVのみ（Shift_JIS対応）</span>
+          <span className="text-xs text-slate-500 pointer-events-none">CSVのみ（Shift_JIS / UTF-8）</span>
         </div>
+        {file && (
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <span className="text-sm text-slate-600">選択中: {file.name}</span>
+            <button
+              type="button"
+              onClick={handleStartReconcile}
+              disabled={loading}
+              className="inline-flex items-center rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? "解析中です…" : "消し込み開始"}
+            </button>
+          </div>
+        )}
         {loading && (
-          <p className="mt-4 text-center text-sm text-slate-500">読み込み・解析中...</p>
+          <p className="mt-3 text-center text-sm text-slate-500">入金明細を解析しています。しばらくお待ちください。</p>
         )}
         {parseError && (
           <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
