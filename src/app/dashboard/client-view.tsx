@@ -13,7 +13,6 @@ import {
   Loader2,
   Receipt,
   DollarSign,
-  Calendar,
   Plus,
   X,
 } from "lucide-react";
@@ -85,7 +84,6 @@ type DashboardClientViewProps = {
   unpaidAmount: number;
   paidPercentage: number;
   clientCount: number;
-  nextMonthExpected: number;
   totalExpenses: number;
   unpaidCount: number;
   monthlyData: MonthlyData[];
@@ -105,7 +103,6 @@ export default function DashboardClientView({
   unpaidAmount,
   paidPercentage,
   clientCount,
-  nextMonthExpected,
   totalExpenses,
   unpaidCount,
   monthlyData,
@@ -212,8 +209,8 @@ export default function DashboardClientView({
           </div>
         )}
 
-        {/* KPIカード（4枚構成） */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        {/* KPIカード（3枚構成） */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
           {/* 今月の売上（入金済） */}
           <div className="bg-billio-card rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
@@ -248,22 +245,6 @@ export default function DashboardClientView({
                 ? `${Math.round((unpaidAmount / monthlyARR) * 100)}% 未回収`
                 : "データなし"}
             </p>
-          </div>
-
-          {/* 来月の入金予定 */}
-          <div className="bg-billio-card rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-billio-blue/20 to-billio-green/20 flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-billio-blue" />
-              </div>
-            </div>
-            <p className="text-xs uppercase tracking-wider text-billio-text-muted mb-2">
-              来月の入金予定
-            </p>
-            <p className="text-3xl font-bold text-billio-text mb-1">
-              ¥{nextMonthExpected.toLocaleString()}
-            </p>
-            <p className="text-xs text-billio-text-muted">確定分</p>
           </div>
 
           {/* 経費合計 */}

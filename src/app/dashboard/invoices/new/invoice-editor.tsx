@@ -1,9 +1,18 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createInvoice } from "@/app/actions/invoice";
 import { normalizeToHalfWidthNumeric } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type ClientOption = {
   id: string;
@@ -32,6 +41,67 @@ function endOfNextMonthString() {
   return `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}`;
 }
 
+/** 日付を YYYY-MM-DD で返す */
+function toDateString(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** 頻度・請求日から直近の次回作成日を計算 */
+function getNextOccurrenceDate(
+  frequency: string,
+  billingDay: string,
+): string {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+
+  if (frequency === "毎週") {
+    const d = new Date(now);
+    d.setDate(d.getDate() + 7);
+    return toDateString(d);
+  }
+  if (frequency === "毎年") {
+    const d = new Date(now);
+    d.setFullYear(d.getFullYear() + 1);
+    return toDateString(d);
+  }
+
+  // 毎月
+  const isEndOfMonth = billingDay === "月末";
+  const dayNum = isEndOfMonth
+    ? 31
+    : parseInt(billingDay.replace("日", ""), 10);
+
+  const thisMonthLast = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const targetDay = isEndOfMonth
+    ? thisMonthLast.getDate()
+    : Math.min(dayNum, thisMonthLast.getDate());
+  let next = new Date(now.getFullYear(), now.getMonth(), targetDay);
+
+  if (next <= now) {
+    const nextMonthLast = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+    const nextTargetDay = isEndOfMonth
+      ? nextMonthLast.getDate()
+      : Math.min(dayNum, nextMonthLast.getDate());
+    next = new Date(now.getFullYear(), now.getMonth() + 1, nextTargetDay);
+  }
+  return toDateString(next);
+}
+
+const RECURRING_FREQUENCIES = [
+  { value: "毎月", label: "毎月" },
+  { value: "毎週", label: "毎週" },
+  { value: "毎年", label: "毎年" },
+] as const;
+
+const BILLING_DAYS = [
+  { value: "月末", label: "月末" },
+  { value: "25日", label: "25日" },
+  { value: "20日", label: "20日" },
+  { value: "15日", label: "15日" },
+  { value: "10日", label: "10日" },
+  { value: "5日", label: "5日" },
+] as const;
+
 export default function InvoiceEditor({ clients }: { clients: ClientOption[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -41,6 +111,19 @@ export default function InvoiceEditor({ clients }: { clients: ClientOption[] }) 
   ]);
   const defaultIssueDate = useMemo(() => todayString(), []);
   const defaultDueDate = useMemo(() => endOfNextMonthString(), []);
+
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [frequency, setFrequency] = useState<string>("毎月");
+  const [billingDay, setBillingDay] = useState<string>("月末");
+  const [nextDate, setNextDate] = useState<string>(() =>
+    getNextOccurrenceDate("毎月", "月末"),
+  );
+
+  useEffect(() => {
+    if (isRecurring) {
+      setNextDate(getNextOccurrenceDate(frequency, billingDay));
+    }
+  }, [frequency, billingDay, isRecurring]);
 
   const totals = useMemo(() => {
     const subtotal = items.reduce(
@@ -280,6 +363,88 @@ export default function InvoiceEditor({ clients }: { clients: ClientOption[] }) 
               <span>合計</span>
               <span className="text-xl">¥{formatCurrency(totals.totalAmount)}</span>
             </div>
+          </div>
+
+          {/* 定期請求設定（金額の下・目立つ位置） */}
+          <div className="mt-8 rounded-2xl border-2 border-slate-200 bg-slate-50/50 p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="recurring"
+                  checked={isRecurring}
+                  onCheckedChange={setIsRecurring}
+                />
+                <Label
+                  htmlFor="recurring"
+                  className="cursor-pointer text-base font-semibold text-slate-900"
+                >
+                  定期請求にする
+                </Label>
+              </div>
+            </div>
+
+            {isRecurring && (
+              <div className="mt-6 space-y-4 border-t border-slate-200 pt-6">
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="space-y-2">
+                    <Label className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                      頻度
+                    </Label>
+                    <Select
+                      value={frequency}
+                      onValueChange={(v) => setFrequency(v)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="頻度を選択" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {RECURRING_FREQUENCIES.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                      請求日
+                    </Label>
+                    <Select
+                      value={billingDay}
+                      onValueChange={(v) => setBillingDay(v)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="請求日を選択" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {BILLING_DAYS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="nextDate"
+                      className="text-xs uppercase tracking-[0.2em] text-slate-500"
+                    >
+                      次回作成日
+                    </Label>
+                    <input
+                      id="nextDate"
+                      name="recurringNextDate"
+                      type="date"
+                      value={nextDate}
+                      onChange={(e) => setNextDate(e.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>

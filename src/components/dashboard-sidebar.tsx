@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Folder, FolderOpen, Plus, Sparkles, LayoutDashboard, BookOpen, FileText, ClipboardList, Users, DollarSign, Calendar, Settings } from "lucide-react";
+import { Folder, FolderOpen, Plus, Sparkles, LayoutDashboard, FileText, ClipboardList, Users, DollarSign, Calendar, Settings } from "lucide-react";
 import { getTenantGroups } from "@/app/actions/tenant-group";
 import { useEffect, useState } from "react";
 
@@ -75,17 +75,6 @@ export default function DashboardSidebar() {
           >
             <ClipboardList className="w-4 h-4" />
             <span>見積書</span>
-          </Link>
-          <Link
-            href="/dashboard/ledger"
-            className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-all ${
-              pathname === "/dashboard/ledger"
-                ? "bg-gradient-to-r from-billio-blue/10 to-billio-green/10 text-billio-blue border-l-4 border-billio-blue font-medium"
-                : "hover:bg-gray-50 text-billio-text-muted"
-            }`}
-          >
-            <BookOpen className="w-4 h-4" />
-            <span>月次入金台帳</span>
           </Link>
           <Link
             href="/reconcile"

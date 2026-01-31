@@ -27,7 +27,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   const tenantWhere = selectedGroupId ? { groupId: selectedGroupId } : undefined;
 
   // 並列で一括取得（待ち時間を短縮）
-  const [groups, tenants, currentMonthPaymentsRaw, nextMonthPayments, currentMonthExpenses, unpaidCount, quotesForGraph, paymentsForGraph, expensesForGraph, invoicesForGraph, invoiceStats, paidInvoices, unpaidInvoices] = await Promise.all([
+  const [groups, tenants, currentMonthPaymentsRaw, currentMonthExpenses, unpaidCount, quotesForGraph, paymentsForGraph, expensesForGraph, invoicesForGraph, invoiceStats, paidInvoices, unpaidInvoices] = await Promise.all([
     getTenantGroups(),
     getTenantsByGroup(selectedGroupId),
     prisma.payment.findMany({
@@ -38,14 +38,6 @@ export default async function DashboardPage({ searchParams }: Props) {
       include: { tenant: true },
       orderBy: { date: "desc" },
       take: 10,
-    }),
-    prisma.paymentStatus.findMany({
-      where: {
-        targetMonth: `${now.getFullYear()}-${String(now.getMonth() + 2).padStart(2, "0")}`,
-        tenant: tenantWhere,
-        status: { in: ["PAID", "PARTIAL"] },
-      },
-      include: { tenant: true },
     }),
     prisma.expense.findMany({
       where: {
@@ -134,12 +126,6 @@ export default async function DashboardPage({ searchParams }: Props) {
     monthlyARR > 0 ? Math.round((totalPaid / monthlyARR) * 100) : 0;
   const clientCount = tenants.length;
 
-  // 来月の入金予定額を計算
-  const nextMonthExpected = nextMonthPayments.reduce(
-    (sum, ps) => sum + ps.paidAmount,
-    0
-  );
-
   // 今月の経費合計を計算
   const totalExpenses = currentMonthExpenses.reduce(
     (sum, expense) => sum + expense.amount,
@@ -191,7 +177,6 @@ export default async function DashboardPage({ searchParams }: Props) {
       unpaidAmount={unpaidAmount}
       paidPercentage={paidPercentage}
       clientCount={clientCount}
-      nextMonthExpected={nextMonthExpected}
       totalExpenses={totalExpenses}
       unpaidCount={unpaidCount}
       monthlyData={monthlyData}

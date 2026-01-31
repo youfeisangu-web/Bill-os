@@ -4,43 +4,30 @@ import { auth } from "@clerk/nextjs/server";
 import { InvoiceTemplate } from "@/components/invoice-template";
 import DocumentActionBar from "@/components/document-action-bar";
 
-export default async function InvoiceDetailPage({
+export default async function InvoiceDeliveryPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { userId } = await auth();
-  if (!userId) {
-    redirect("/");
-  }
+  if (!userId) redirect("/");
 
   const { id } = await params;
 
   const invoice = await prisma.invoice.findUnique({
-    where: { id, userId: userId },
+    where: { id, userId },
     include: {
       client: true,
       items: true,
-      user: {
-        include: {
-          bankAccounts: {
-            where: { isDefault: true },
-            take: 1,
-          },
-        },
-      },
+      user: true,
     },
   });
 
-  if (!invoice) {
-    notFound();
-  }
-
-  const bankAccount = invoice.user.bankAccounts[0] || null;
+  if (!invoice) notFound();
 
   const data = {
     id: invoice.id,
-    type: "請求書" as const,
+    type: "納品書" as const,
     number: invoice.id,
     issueDate: invoice.issueDate,
     dueDate: invoice.dueDate,
@@ -56,15 +43,7 @@ export default async function InvoiceDetailPage({
       invoiceRegNumber: invoice.user.invoiceRegNumber,
       email: invoice.user.email,
     },
-    bankAccount: bankAccount
-      ? {
-          bankName: bankAccount.bankName,
-          branchName: bankAccount.branchName,
-          accountType: bankAccount.accountType,
-          accountNumber: bankAccount.accountNumber,
-          accountHolder: bankAccount.accountHolder,
-        }
-      : null,
+    bankAccount: null,
     items: invoice.items.map((item) => ({
       name: item.name,
       quantity: item.quantity,
@@ -76,10 +55,10 @@ export default async function InvoiceDetailPage({
   return (
     <div className="flex flex-col">
       <DocumentActionBar
-        backUrl="/dashboard/invoices"
-        editUrl={`/dashboard/invoices/${invoice.id}/edit`}
-        receiptUrl={`/dashboard/invoices/${invoice.id}/receipt`}
-        deliveryUrl={`/dashboard/invoices/${invoice.id}/delivery`}
+        backUrl={`/dashboard/invoices/${id}`}
+        editUrl={`/dashboard/invoices/${id}/edit`}
+        receiptUrl={`/dashboard/invoices/${id}/receipt`}
+        deliveryUrl={null}
       />
       <div className="print-content">
         <InvoiceTemplate data={data} />

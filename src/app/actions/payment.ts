@@ -31,8 +31,7 @@ export async function savePayment(tenantId: string, amount: number, dateStr: str
     throw new Error(result.message);
   }
 
-  revalidatePath('/dashboard'); // ダッシュボードを更新
-  revalidatePath('/dashboard/ledger'); // 月次入金台帳も更新
+  revalidatePath('/dashboard');
   revalidatePath('/reconcile');
 }
 
