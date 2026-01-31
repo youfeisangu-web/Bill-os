@@ -94,10 +94,11 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'CSVファイル（.csv）のみアップロード可能です' }, { status: 400 });
         }
 
-        // 2. 未払い・部分払いの請求書を取得（取引先名で照合するため）
+        // 2. 未払い・部分払いの請求書を取得（取引先名で照合・発行日でFIFO）
         const invoices = await prisma.invoice.findMany({
             where: { userId, status: { in: ['未払い', '部分払い'] } },
-            select: { id: true, totalAmount: true, client: { select: { name: true } } },
+            select: { id: true, totalAmount: true, issueDate: true, client: { select: { name: true } } },
+            orderBy: { issueDate: 'asc' },
         });
         const clientNames = invoices.map((inv) => inv.client.name);
         const invoiceMatchNames = await getNamesForMatch(clientNames, process.env.OPENAI_API_KEY);
@@ -119,6 +120,7 @@ export async function POST(req: NextRequest) {
         const bankData = parsed.data as string[][];
 
         const results: ReconcileResult[] = [];
+        const allocatedInvoiceIds = new Set<string>();
 
         // 5. 列のマッピング（OpenAIで自動検出 or デフォルト）
         const MAX_ROWS = 10000;
@@ -192,10 +194,12 @@ export async function POST(req: NextRequest) {
                     message = `金額不一致 (予定:${agencyMatch.expectedAmount})`;
                 }
             }
-            // B. 請求書マッチング（金額は完全一致のみ・名前はあってそうな候補を表示）
+            // B. 請求書マッチング（金額は完全一致のみ・名前はあってそうな候補を表示・同じ会社同額はFIFO）
             else {
                 const cleanName = normalizeNameForMatch(rawName);
-                const candidates = invoices.filter((inv) => inv.totalAmount === amount);
+                const candidates = invoices
+                    .filter((inv) => inv.totalAmount === amount && !allocatedInvoiceIds.has(inv.id))
+                    .slice();
                 if (candidates.length > 0) {
                     const candidateMatchNames = candidates.map((c) => {
                         const idx = invoices.findIndex((inv) => inv.id === c.id);
@@ -209,6 +213,7 @@ export async function POST(req: NextRequest) {
                     matchedInvoiceId = inv.id;
                     matchedInvoiceNumber = inv.id;
                     matchedClientName = inv.client.name;
+                    allocatedInvoiceIds.add(inv.id);
                     if (rating >= 0.5) {
                         status = '完了';
                         message = `消込成功: ${inv.client.name}（請求書）`;

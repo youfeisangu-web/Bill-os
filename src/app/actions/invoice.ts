@@ -219,6 +219,39 @@ export async function updateInvoiceStatus(
   }
 }
 
+/** 請求書のステータスを一括変更 */
+export async function updateInvoiceStatusBulk(
+  invoiceIds: string[],
+  status: string,
+): Promise<SubmitResult> {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized");
+
+    if (!VALID_INVOICE_STATUSES.includes(status as (typeof VALID_INVOICE_STATUSES)[number])) {
+      return { success: false, message: "無効なステータスです。" };
+    }
+
+    if (invoiceIds.length === 0) {
+      return { success: false, message: "請求書を選択してください。" };
+    }
+
+    const { count } = await prisma.invoice.updateMany({
+      where: { id: { in: invoiceIds }, userId },
+      data: { status },
+    });
+
+    revalidatePath("/dashboard/invoices");
+    revalidatePath("/reconcile");
+    revalidatePath("/dashboard");
+    return { success: true, message: `${count}件の請求書を「${status}」に更新しました。` };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "更新に失敗しました。";
+    return { success: false, message };
+  }
+}
+
 /** モーダル表示用に請求書の表示データを取得（日付はISO文字列で返す） */
 export async function getInvoiceByIdForDisplay(invoiceId: string) {
   try {
