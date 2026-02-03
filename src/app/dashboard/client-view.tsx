@@ -136,7 +136,17 @@ export default function DashboardClientView({
   };
 
   const handleFile = (file: File | null) => {
-    if (!file || !file.type.startsWith("image/")) return;
+    if (!file) return;
+    const fileName = file.name.toLowerCase();
+    const fileType = file.type.toLowerCase();
+    const isImage = fileType.startsWith("image/") || fileName.match(/\.(jpg|jpeg|png|gif|webp)$/);
+    const isPdf = fileType === "application/pdf" || fileName.endsWith(".pdf");
+    
+    if (!isImage && !isPdf) {
+      alert("画像ファイル（JPEG、PNG、GIF、WebP）またはPDFファイルを選択してください");
+      return;
+    }
+    
     setOcrFile(file);
     setShowOcrChoice(true);
   };
@@ -210,7 +220,7 @@ export default function DashboardClientView({
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept=".pdf,application/pdf,image/*"
                   className="hidden"
                   onChange={handleFileInput}
                 />

@@ -319,16 +319,30 @@ export type ReceiptOCRResult = {
   message?: string;
 };
 
-const RECEIPT_OCR_PROMPT = `この画像は領収書またはレシートです。以下の情報を抽出し、JSON形式のみで返してください（Markdown記法は不要）。
-- title: 店名または内容（例: 〇〇商事、会議費）
-- amount: 合計金額（数値のみ）
-- date: 発行日・日付（YYYY-MM-DD形式）
-- category: 経費カテゴリ。次のいずれか1つ: ${EXPENSE_CATEGORIES.join("、")}
+const RECEIPT_OCR_PROMPT = `この画像/PDFは領収書、レシート、他社請求書、経費の明細書などです。以下の情報をすべて抽出し、JSON形式のみで返してください（Markdown記法は不要）。
 
-例: { "title": "〇〇文具店", "amount": 5500, "date": "2025-02-01", "category": "消耗品" }`;
+必須項目:
+- title: 店名・会社名・内容（例: 〇〇商事、会議費、サーバー代、広告費など）
+- amount: 合計金額（数値のみ、カンマは除去）
+- date: 発行日・日付（YYYY-MM-DD形式。日付が見つからない場合は現在の日付を使用）
+- category: 経費カテゴリ。次のいずれか1つを選択: ${EXPENSE_CATEGORIES.join("、")}
+
+カテゴリの判定基準:
+- 通信費: インターネット、電話、サーバー、クラウドサービスなど
+- 外注費: 外部委託、デザイン、開発、コンサルティングなど
+- 消耗品: 文房具、オフィス用品、備品など
+- 旅費交通費: 交通費、宿泊費、出張費など
+- 地代家賃: オフィス賃貸料、駐車場代など
+- 広告宣伝費: 広告費、マーケティング費用など
+- その他: 上記に該当しないもの
+
+例: { "title": "〇〇文具店", "amount": 5500, "date": "2025-02-01", "category": "消耗品" }
+例: { "title": "AWS クラウドサービス", "amount": 12000, "date": "2025-02-01", "category": "通信費" }
+例: { "title": "株式会社デザイン事務所", "amount": 50000, "date": "2025-02-01", "category": "外注費" }`;
 
 /**
- * 領収書・レシート画像をOCRで読み取り、経費登録用のデータを抽出する
+ * 領収書・レシート・他社請求書をOCRで読み取り、経費登録用のデータを抽出する
+ * CSV、画像、PDFに対応
  */
 export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRResult> {
   try {
@@ -339,24 +353,36 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
     if (!geminiKey) return { success: false, message: "Gemini APIキーが設定されていません" };
 
     const file = formData.get("file") as File | null;
-    if (!file) return { success: false, message: "画像ファイルが指定されていません" };
+    if (!file) return { success: false, message: "ファイルが指定されていません" };
 
-    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
-    if (!allowedTypes.includes(file.type))
-      return { success: false, message: "画像ファイル（JPEG、PNG、GIF、WebP）を選択してください" };
+    // ファイルタイプの検証（画像、PDF）
+    const fileName = file.name.toLowerCase();
+    const fileType = file.type.toLowerCase();
+    const allowedImageTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+    const isImage = allowedImageTypes.includes(fileType) || fileName.match(/\.(jpg|jpeg|png|gif|webp)$/);
+    const isPdf = fileType === "application/pdf" || fileName.endsWith(".pdf");
+    
+    if (!isImage && !isPdf) {
+      return { 
+        success: false, 
+        message: "画像ファイル（JPEG、PNG、GIF、WebP）またはPDFファイルを選択してください" 
+      };
+    }
 
-    const MAX_SIZE = 10 * 1024 * 1024;
-    if (file.size > MAX_SIZE) return { success: false, message: "ファイルサイズは10MB以下にしてください" };
+    const MAX_SIZE = 20 * 1024 * 1024; // 20MB
+    if (file.size > MAX_SIZE) {
+      return { success: false, message: "ファイルサイズは20MB以下にしてください" };
+    }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const base64Image = buffer.toString("base64");
-    const mimeType = file.type || "image/jpeg";
+    const base64Data = buffer.toString("base64");
+    const mimeType = isPdf ? "application/pdf" : (fileType || "image/jpeg");
 
     const responseText = await generateContentWithImage(
       RECEIPT_OCR_PROMPT,
-      base64Image,
+      base64Data,
       mimeType,
-      { maxTokens: 500, temperature: 0.1 }
+      { maxTokens: 1000, temperature: 0.1 }
     );
     if (!responseText) return { success: false, message: "AIからの応答がありませんでした" };
 
@@ -374,14 +400,23 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
     const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
     const title = typeof parsed.title === "string" ? parsed.title.trim() : "";
     const amount = Number(parsed.amount) || 0;
-    const date = typeof parsed.date === "string" ? parsed.date : "";
+    let date = typeof parsed.date === "string" ? parsed.date : "";
     let category = typeof parsed.category === "string" ? parsed.category.trim() : "";
 
-    if (!title || !amount || amount <= 0)
+    if (!title || !amount || amount <= 0) {
       return { success: false, message: "件名または金額が抽出できませんでした" };
+    }
+
+    // 日付が空の場合は現在の日付を使用
+    if (!date) {
+      const today = new Date();
+      date = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    }
 
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(date)) return { success: false, message: "日付の形式が正しくありません（YYYY-MM-DD）" };
+    if (!dateRegex.test(date)) {
+      return { success: false, message: "日付の形式が正しくありません（YYYY-MM-DD）" };
+    }
 
     if (!EXPENSE_CATEGORIES.includes(category)) category = "その他";
 
