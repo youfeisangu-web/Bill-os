@@ -11,19 +11,38 @@ export default function ImportDocumentButton() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleClick = () => {
-    inputRef.current?.click();
+    if (inputRef.current) {
+      // ファイル選択ダイアログを開く前に、accept属性を確実に設定
+      inputRef.current.setAttribute("accept", ".pdf,application/pdf,image/*");
+      inputRef.current.click();
+    }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log("ファイルが選択されていません");
+      return;
+    }
     
     // デバッグ情報
     console.log("選択されたファイル:", {
       name: file.name,
-      type: file.type,
+      type: file.type || "不明",
       size: file.size,
+      lastModified: new Date(file.lastModified).toISOString(),
     });
+    
+    // ファイル名による検証
+    const fileName = file.name.toLowerCase();
+    const isPdf = fileName.endsWith(".pdf") || file.type === "application/pdf";
+    const isImage = fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i) || file.type?.startsWith("image/");
+    
+    if (!isPdf && !isImage) {
+      alert(`このファイル形式はサポートされていません。\n選択されたファイル: ${file.name}\nファイルタイプ: ${file.type || "不明"}\n\nPDFまたは画像ファイル（JPEG、PNG、GIF、WebP）を選択してください。`);
+      e.target.value = "";
+      return;
+    }
     
     e.target.value = "";
 
@@ -51,6 +70,7 @@ export default function ImportDocumentButton() {
       <input
         ref={inputRef}
         type="file"
+        accept=".pdf,application/pdf,image/*"
         className="hidden"
         onChange={handleFileChange}
       />
