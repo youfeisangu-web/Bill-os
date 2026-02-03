@@ -51,7 +51,6 @@ export default function ImportDocumentButton() {
       <input
         ref={inputRef}
         type="file"
-        accept=".pdf,application/pdf,image/jpeg,image/jpg,image/png,image/gif,image/webp"
         className="hidden"
         onChange={handleFileChange}
       />
