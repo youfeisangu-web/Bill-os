@@ -51,7 +51,7 @@ export default function ReconcileClient({
         setLastMeta(json.meta ?? null);
         if (rows.length === 0) {
           setParseError(
-            "CSVは読み込めましたが、有効な行が1行もありません。銀行CSVの形式をご確認ください（1列目:日付、3列目:金額、4列目:入金名義 の並び。4列以上あること）。",
+            "ファイルは読み込めましたが、有効な入金明細が1件も抽出できませんでした。ファイルの形式をご確認ください。",
           );
         }
       } else {
@@ -75,12 +75,17 @@ export default function ReconcileClient({
       setIsDragging(false);
       const f = e.dataTransfer.files?.[0];
       if (!f) return;
-      const isCsv = f.name.toLowerCase().endsWith(".csv") || f.type === "text/csv" || f.type === "application/vnd.ms-excel" || f.type === "application/csv";
-      if (isCsv) {
+      const fileName = f.name.toLowerCase();
+      const fileType = f.type.toLowerCase();
+      const isCsv = fileName.endsWith(".csv") || fileType === "text/csv" || fileType === "application/vnd.ms-excel" || fileType === "application/csv";
+      const isImage = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'].includes(fileType) || fileName.match(/\.(jpg|jpeg|png|gif|webp)$/);
+      const isPdf = fileType === "application/pdf" || fileName.endsWith(".pdf");
+      
+      if (isCsv || isImage || isPdf) {
         setFile(f);
         setParseError(null);
       } else {
-        alert("CSVファイルのみ読み込めます（.csv のファイルをドロップしてください）");
+        alert("CSV、画像（JPEG、PNG、GIF、WebP）、またはPDFファイルを選択してください");
       }
     },
     [],
@@ -193,13 +198,15 @@ export default function ReconcileClient({
       {/* ファイルドロップ */}
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-900 mb-4">
-          入金消し込み（CSV読み込み）
+          入金消し込み（CSV・画像・PDF読み込み）
         </h2>
         <p className="text-sm text-slate-600 mb-4">
-          銀行の入金明細CSVをドロップするか、選択して読み込みます。内容を確認してから「消し込みを実行」でマッチした請求書を支払済にします。
+          銀行の入金明細（CSV、通帳の写真、入金通知書のPDFなど）をドロップするか、選択して読み込みます。AIが自動で入金情報を抽出し、内容を確認してから「消し込みを実行」でマッチした請求書を支払済にします。
         </p>
         <p className="text-xs text-slate-500 mb-4 rounded-lg bg-slate-100 p-3">
-          <strong>手順：</strong> CSVを選択したら「消し込み開始」を押して解析します。<strong>金額は完全に同じ</strong>未払い請求書と照合し、<strong>名前は完全でなくてもあってそうな候補</strong>を表示します。確認後に「消し込みを実行」で支払済にします。
+          <strong>手順：</strong> ファイルを選択したら「消し込み開始」を押して解析します。<strong>金額は完全に同じ</strong>未払い請求書と照合し、<strong>名前は完全でなくてもあってそうな候補</strong>を表示します。確認後に「消し込みを実行」で支払済にします。
+          <br />
+          <strong>対応形式：</strong> CSV（Shift_JIS / UTF-8）、画像（JPEG、PNG、GIF、WebP）、PDF
         </p>
         <div
           role="button"
@@ -223,16 +230,18 @@ export default function ReconcileClient({
           <input
             id="reconcile-file"
             type="file"
-            accept=".csv,text/csv,application/vnd.ms-excel,application/csv"
+            accept=".csv,text/csv,application/vnd.ms-excel,application/csv,.pdf,application/pdf,image/jpeg,image/jpg,image/png,image/gif,image/webp"
             onChange={handleFileInput}
             className="sr-only"
-            aria-label="CSVファイルを選択"
+            aria-label="ファイルを選択"
           />
           <Upload className="h-10 w-10 text-slate-400 pointer-events-none" />
           <span className="font-medium text-slate-600 pointer-events-none">
-            {file ? file.name : "CSVをドロップまたはクリックして選択"}
+            {file ? file.name : "ファイルをドロップまたはクリックして選択"}
           </span>
-          <span className="text-xs text-slate-500 pointer-events-none">CSVのみ（Shift_JIS / UTF-8）</span>
+          <span className="text-xs text-slate-500 pointer-events-none">
+            CSV、画像（JPEG、PNG、GIF、WebP）、PDF対応（AIで自動読み取り）
+          </span>
         </div>
         {file && (
           <div className="mt-4 flex flex-wrap items-center gap-3">

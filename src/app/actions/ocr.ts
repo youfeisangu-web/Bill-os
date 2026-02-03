@@ -5,6 +5,34 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { generateContentWithImage } from "@/lib/gemini";
 
+/** エラーメッセージを適切にフォーマットする */
+function formatErrorMessage(error: unknown, defaultMessage: string): string {
+  if (!error) return defaultMessage;
+  
+  const errorObj = error as any;
+  const errorMessage = errorObj.message || errorObj.toString() || "";
+  const errorCode = errorObj.code || errorObj.status || "";
+  
+  // APIキーエラー
+  if (errorMessage.includes("API key") || errorMessage.includes("401") || errorCode === 401) {
+    return "Gemini APIキーが無効です。設定を確認してください。";
+  }
+  
+  // レート制限エラー（429）
+  if (
+    errorMessage.includes("rate limit") ||
+    errorMessage.includes("429") ||
+    errorMessage.includes("RESOURCE_EXHAUSTED") ||
+    errorCode === 429 ||
+    errorMessage.includes("Resource exhausted")
+  ) {
+    return "Gemini APIの利用制限に達しました。\n\nしばらく待ってから（数分〜数時間後）再試行してください。\n\n詳細: https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429";
+  }
+  
+  // その他のエラー
+  return errorMessage || defaultMessage;
+}
+
 const TAX_RATE = 0.1;
 
 const formatInvoiceId = (date: Date, sequence: number) => {
@@ -138,21 +166,27 @@ export async function readBankBookImage(formData: FormData): Promise<OCRResult> 
         name: parsedData.name.trim(),
       },
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("OCR error:", error);
 
     // Gemini APIエラーの場合
-    if (error instanceof Error) {
+    if (error) {
+      const errorMessage = error.message || error.toString() || "";
+      const errorCode = error.code || error.status || "";
+      
       // APIキーエラー
-      if (error.message.includes("API key") || error.message.includes("401")) {
-        return { success: false, message: "Gemini APIキーが無効です" };
+      if (errorMessage.includes("API key") || errorMessage.includes("401") || errorCode === 401) {
+        return { success: false, message: "Gemini APIキーが無効です。設定を確認してください。" };
       }
-      // レート制限エラー
-      if (error.message.includes("rate limit") || error.message.includes("429") || error.message.includes("RESOURCE_EXHAUSTED")) {
-        return { success: false, message: "APIの利用制限に達しました。しばらく待ってから再試行してください" };
+      // レート制限エラー（429）
+      if (errorMessage.includes("rate limit") || errorMessage.includes("429") || errorMessage.includes("RESOURCE_EXHAUSTED") || errorCode === 429) {
+        return { 
+          success: false, 
+          message: "Gemini APIの利用制限に達しました。\n\nしばらく待ってから（数分〜数時間後）再試行してください。\n\n詳細: https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429" 
+        };
       }
       // その他のエラー
-      return { success: false, message: `エラーが発生しました: ${error.message}` };
+      return { success: false, message: `エラーが発生しました: ${errorMessage || "不明なエラー"}` };
     }
 
     return { success: false, message: "予期しないエラーが発生しました" };
@@ -263,7 +297,7 @@ export async function readInvoiceImage(formData: FormData): Promise<InvoiceOCRRe
     console.error("Invoice OCR error:", error);
     return {
       success: false,
-      message: error instanceof Error ? error.message : "請求書の読み込みに失敗しました",
+      message: formatErrorMessage(error, "請求書の読み込みに失敗しました"),
     };
   }
 }
@@ -359,7 +393,7 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
     console.error("Receipt OCR error:", error);
     return {
       success: false,
-      message: error instanceof Error ? error.message : "領収書の読み込みに失敗しました",
+      message: formatErrorMessage(error, "領収書の読み込みに失敗しました"),
     };
   }
 }
@@ -591,7 +625,7 @@ export async function importDocument(
     console.error("Document import error:", error);
     return {
       success: false,
-      message: error instanceof Error ? error.message : "書類の読み込みに失敗しました",
+      message: formatErrorMessage(error, "書類の読み込みに失敗しました"),
     };
   }
 }
@@ -691,7 +725,7 @@ export async function importDocumentAndCreateInvoice(formData: FormData): Promis
     console.error("Invoice creation error:", error);
     return {
       success: false,
-      message: error instanceof Error ? error.message : "請求書の作成に失敗しました",
+      message: formatErrorMessage(error, "請求書の作成に失敗しました"),
     };
   }
 }
@@ -791,7 +825,7 @@ export async function importDocumentAndCreateQuote(formData: FormData): Promise<
     console.error("Quote creation error:", error);
     return {
       success: false,
-      message: error instanceof Error ? error.message : "見積書の作成に失敗しました",
+      message: formatErrorMessage(error, "見積書の作成に失敗しました"),
     };
   }
 }
