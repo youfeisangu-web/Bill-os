@@ -17,6 +17,14 @@ export default function ImportDocumentButton() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
+    // デバッグ情報
+    console.log("選択されたファイル:", {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+    });
+    
     e.target.value = "";
 
     setIsProcessing(true);
@@ -31,6 +39,7 @@ export default function ImportDocumentButton() {
         alert(result.message ?? "見積書の作成に失敗しました");
       }
     } catch (err) {
+      console.error("エラー:", err);
       alert(err instanceof Error ? err.message : "エラーが発生しました");
     } finally {
       setIsProcessing(false);
@@ -42,7 +51,7 @@ export default function ImportDocumentButton() {
       <input
         ref={inputRef}
         type="file"
-        accept="application/pdf,.pdf,image/*"
+        accept=".pdf,application/pdf,image/jpeg,image/jpg,image/png,image/gif,image/webp"
         className="hidden"
         onChange={handleFileChange}
       />

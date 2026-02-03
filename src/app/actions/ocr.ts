@@ -462,11 +462,24 @@ export async function importDocument(
     const file = formData.get("file") as File | null;
     if (!file) return { success: false, message: "ファイルが指定されていません" };
 
+    // デバッグ情報
+    console.log("サーバー側で受け取ったファイル:", {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+    });
+
     // ファイルタイプの検証（PDF、画像）
     const allowedImageTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
-    const isImage = allowedImageTypes.includes(file.type);
-    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
-    const isExcel = file.name.toLowerCase().endsWith(".xlsx") || file.name.toLowerCase().endsWith(".xls");
+    const fileName = file.name.toLowerCase();
+    const isImage = allowedImageTypes.includes(file.type) || 
+                     fileName.endsWith(".jpg") || 
+                     fileName.endsWith(".jpeg") || 
+                     fileName.endsWith(".png") || 
+                     fileName.endsWith(".gif") || 
+                     fileName.endsWith(".webp");
+    const isPdf = file.type === "application/pdf" || fileName.endsWith(".pdf");
+    const isExcel = fileName.endsWith(".xlsx") || fileName.endsWith(".xls");
     
     if (isExcel) {
       return {
@@ -478,7 +491,7 @@ export async function importDocument(
     if (!isImage && !isPdf) {
       return {
         success: false,
-        message: "PDFまたは画像ファイル（JPEG、PNG、GIF、WebP）を選択してください",
+        message: `PDFまたは画像ファイル（JPEG、PNG、GIF、WebP）を選択してください。選択されたファイル: ${file.name} (タイプ: ${file.type || "不明"})`,
       };
     }
 
