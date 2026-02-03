@@ -9,42 +9,23 @@ export default function ImportDocumentButton() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const handleClick = () => {
     if (inputRef.current) {
-      // ファイル選択ダイアログを開く前に、accept属性を確実に設定
-      inputRef.current.setAttribute("accept", ".pdf,application/pdf,image/*");
+      // accept属性を削除して、すべてのファイルを受け入れる
+      inputRef.current.removeAttribute("accept");
       inputRef.current.click();
     }
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) {
-      console.log("ファイルが選択されていません");
-      return;
-    }
-    
+  const processFile = async (file: File) => {
     // デバッグ情報
-    console.log("選択されたファイル:", {
+    console.log("処理するファイル:", {
       name: file.name,
       type: file.type || "不明",
       size: file.size,
-      lastModified: new Date(file.lastModified).toISOString(),
     });
-    
-    // ファイル名による検証
-    const fileName = file.name.toLowerCase();
-    const isPdf = fileName.endsWith(".pdf") || file.type === "application/pdf";
-    const isImage = fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i) || file.type?.startsWith("image/");
-    
-    if (!isPdf && !isImage) {
-      alert(`このファイル形式はサポートされていません。\n選択されたファイル: ${file.name}\nファイルタイプ: ${file.type || "不明"}\n\nPDFまたは画像ファイル（JPEG、PNG、GIF、WebP）を選択してください。`);
-      e.target.value = "";
-      return;
-    }
-    
-    e.target.value = "";
 
     setIsProcessing(true);
     try {
@@ -65,12 +46,44 @@ export default function ImportDocumentButton() {
     }
   };
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    e.target.value = ""; // リセット
+    await processFile(file);
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    
+    await processFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
   return (
-    <>
+    <div
+      onDrop={handleDrop}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      className="relative"
+    >
       <input
         ref={inputRef}
         type="file"
-        accept=".pdf,application/pdf,image/*"
         className="hidden"
         onChange={handleFileChange}
       />
@@ -78,7 +91,9 @@ export default function ImportDocumentButton() {
         type="button"
         onClick={handleClick}
         disabled={isProcessing}
-        className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
+        className={`inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 ${
+          isDragOver ? "ring-2 ring-blue-500" : ""
+        }`}
       >
         {isProcessing ? (
           <>
@@ -92,6 +107,11 @@ export default function ImportDocumentButton() {
           </>
         )}
       </button>
-    </>
+      {isDragOver && (
+        <div className="absolute inset-0 rounded-full bg-blue-100 border-2 border-blue-500 border-dashed flex items-center justify-center z-10">
+          <span className="text-xs font-medium text-blue-700">ここにファイルをドロップ</span>
+        </div>
+      )}
+    </div>
   );
 }
