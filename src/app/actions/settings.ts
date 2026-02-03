@@ -38,6 +38,7 @@ export async function updateSettings(formData: FormData): Promise<SubmitResult> 
     const invoiceNumberPrefix = (formData.get("invoiceNumberPrefix") as string)?.trim() || "INV-";
     const invoiceNumberStartRaw = formData.get("invoiceNumberStart");
     const taxRateRaw = formData.get("taxRate");
+    const invoiceDesign = (formData.get("invoiceDesign") as string)?.trim() || "classic";
     const logoUrl = (formData.get("logoUrl") as string)?.trim() || "";
     const stampUrl = (formData.get("stampUrl") as string)?.trim() || "";
 
@@ -70,6 +71,7 @@ export async function updateSettings(formData: FormData): Promise<SubmitResult> 
         invoiceNumberPrefix: invoiceNumberPrefix ?? "INV-",
         invoiceNumberStart,
         taxRate,
+        invoiceDesign: invoiceDesign ?? "classic",
         logoUrl: logoUrl ?? "",
         stampUrl: stampUrl ?? "",
       },

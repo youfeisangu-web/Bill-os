@@ -5,7 +5,7 @@ import jaconv from 'jaconv';
 import Papa from 'papaparse';
 import stringSimilarity from 'string-similarity';
 import { prisma } from '@/lib/prisma';
-import { openai } from '@/lib/openai';
+import { generateText } from '@/lib/gemini';
 import type { ReconcileResult, ReconcileStatus } from '@/types/reconcile';
 
 type ColumnMap = { dateCol: number; amountCol: number; nameCol: number };
@@ -25,27 +25,18 @@ function hasKanji(s: string): boolean {
     return /[\u4e00-\u9fff\u3400-\u4dbf]/.test(s);
 }
 
-/** 名義リストを入金照合用カナに揃える（漢字ならOpenAIでカタカナ化） */
+/** 名義リストを入金照合用カナに揃える（漢字ならGeminiでカタカナ化） */
 async function getNamesForMatch(
     names: string[],
-    openaiKey: string | undefined,
+    geminiKey: string | undefined,
 ): Promise<string[]> {
     const normalized = names.map((n) => normalizeNameForMatch(n));
     const needConversion = names.filter((n) => hasKanji(n));
-    if (needConversion.length === 0 || !openaiKey) return normalized;
+    if (needConversion.length === 0 || !geminiKey) return normalized;
 
     try {
-        const res = await openai.chat.completions.create({
-            model: 'gpt-4o-mini',
-            messages: [
-                {
-                    role: 'user',
-                    content: `以下の日本語の名前を、全角カタカナに変換してください。会社名・人名です。変換結果だけを、1行に1件で、この順番のまま出力してください。\n\n${needConversion.join('\n')}`,
-                },
-            ],
-            max_tokens: 500,
-        });
-        const content = res.choices[0]?.message?.content?.trim() || '';
+        const prompt = `以下の日本語の名前を、全角カタカナに変換してください。会社名・人名です。変換結果だけを、1行に1件で、この順番のまま出力してください。\n\n${needConversion.join('\n')}`;
+        const content = (await generateText(prompt, { maxTokens: 500 })).trim();
         const lines = content.split(/\n/).map((l) => normalizeNameForMatch(l.trim()));
         let lineIdx = 0;
         return names.map((n, i) => {
@@ -53,7 +44,7 @@ async function getNamesForMatch(
             return normalized[i];
         });
     } catch (e) {
-        console.warn('OpenAI katakana conversion failed, using original:', e);
+        console.warn('Gemini katakana conversion failed, using original:', e);
         return normalized;
     }
 }
@@ -101,7 +92,7 @@ export async function POST(req: NextRequest) {
             orderBy: { issueDate: 'asc' },
         });
         const clientNames = invoices.map((inv) => inv.client.name);
-        const invoiceMatchNames = await getNamesForMatch(clientNames, process.env.OPENAI_API_KEY);
+        const invoiceMatchNames = await getNamesForMatch(clientNames, process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY);
 
         // 3. ファイルの中身を読み込む（UTF-8 BOM / UTF-8 / Shift_JIS 対応）
         const buffer = Buffer.from(await file.arrayBuffer());
@@ -122,28 +113,19 @@ export async function POST(req: NextRequest) {
         const results: ReconcileResult[] = [];
         const allocatedInvoiceIds = new Set<string>();
 
-        // 5. 列のマッピング（OpenAIで自動検出 or デフォルト）
+        // 5. 列のマッピング（Geminiで自動検出 or デフォルト）
         const MAX_ROWS = 10000;
         if (bankData.length > MAX_ROWS) {
             return NextResponse.json({ error: `CSVファイルの行数が多すぎます（${MAX_ROWS}行以下）` }, { status: 400 });
         }
 
         let colMap: ColumnMap = { dateCol: 0, amountCol: 2, nameCol: 3 };
-        const apiKey = process.env.OPENAI_API_KEY;
+        const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
         const sampleRows = bankData.slice(0, 5).map((r) => (Array.isArray(r) ? r : []));
         if (apiKey && sampleRows.length > 0 && sampleRows.some((r) => r.length >= 3)) {
             try {
-                const res = await openai.chat.completions.create({
-                    model: 'gpt-4o-mini',
-                    messages: [
-                        {
-                            role: 'user',
-                            content: `以下の銀行入金CSVのサンプル行です。列は0始まりのインデックスで、「取引日」「入金額（数値）」「入金名義（振込人名）」がそれぞれ何列目か判定し、JSONのみで返してください。形式: {"dateCol":0,"amountCol":2,"nameCol":3}\n\nサンプル:\n${JSON.stringify(sampleRows)}`,
-                        },
-                    ],
-                    max_tokens: 100,
-                });
-                const content = res.choices[0]?.message?.content?.trim() || '';
+                const prompt = `以下の銀行入金CSVのサンプル行です。列は0始まりのインデックスで、「取引日」「入金額（数値）」「入金名義（振込人名）」がそれぞれ何列目か判定し、JSONのみで返してください。形式: {"dateCol":0,"amountCol":2,"nameCol":3}\n\nサンプル:\n${JSON.stringify(sampleRows)}`;
+                const content = (await generateText(prompt, { maxTokens: 100 })).trim();
                 const jsonMatch = content.match(/\{[\s\S]*\}/);
                 if (jsonMatch) {
                     const parsed = JSON.parse(jsonMatch[0]) as ColumnMap;
@@ -159,7 +141,7 @@ export async function POST(req: NextRequest) {
                     }
                 }
             } catch (e) {
-                console.warn('OpenAI column detection failed, using default:', e);
+                console.warn('Gemini column detection failed, using default:', e);
             }
         }
 

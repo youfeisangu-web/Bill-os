@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { convertQuotesToInvoices } from "@/app/actions/invoice";
+import ImportDocumentButton from "./import-document-button";
 
 const formatDate = (date: Date | string) =>
   new Intl.DateTimeFormat("ja-JP", { dateStyle: "medium" }).format(
@@ -90,6 +91,7 @@ export default function QuotesTableWithBulkConvert({
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <ImportDocumentButton />
           {selectableQuotes.length > 0 && (
             <button
               type="button"

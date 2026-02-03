@@ -10,45 +10,46 @@ datasource db {
 
 // ユーザー (Clerk連携 + LINE対応)
 model UserProfile {
-  id                        String      @id // Clerk ID
-  email                     String
-  companyName               String?     // 屋号
-  representativeName        String?     // 代表者名
-  address                   String?     // 住所
-  phoneNumber               String?     // 電話番号
-  invoiceRegNumber          String?     // T番号（インボイス登録番号）
-  stampImageUrl             String?     // 印鑑画像（後方互換性のため保持）
-  logoUrl                   String?     // 会社ロゴ画像URL
-  stampUrl                  String?     // 角印画像URL
-  passwordEnabled           Boolean     @default(false)
-  role                      String      @default("USER") // USER or ADMIN
+  id                 String  @id // Clerk ID
+  email              String
+  companyName        String? // 屋号
+  representativeName String? // 代表者名
+  address            String? // 住所
+  phoneNumber        String? // 電話番号
+  invoiceRegNumber   String? // T番号（インボイス登録番号）
+  stampImageUrl      String? // 印鑑画像（後方互換性のため保持）
+  logoUrl            String? // 会社ロゴ画像URL
+  stampUrl           String? // 角印画像URL
+  passwordEnabled    Boolean @default(false)
+  role               String  @default("USER") // USER or ADMIN
 
   // 銀行口座情報（単一のデフォルト口座）
-  bankName                  String?
-  bankBranch                String?
-  bankAccountType           String?     // 普通/当座
-  bankAccountNumber         String?
-  bankAccountHolder         String?
+  bankName          String?
+  bankBranch        String?
+  bankAccountType   String? // 普通/当座
+  bankAccountNumber String?
+  bankAccountHolder String?
 
   // システム設定
-  defaultPaymentTerms       Int?        @default(30) // 支払い期限（日数）
-  invoiceNumberPrefix       String?     @default("INV-") // 請求書番号接頭辞
-  invoiceNumberStart        Int?        @default(1) // 開始番号
-  taxRate                   Int?        @default(10) // デフォルト税率（%）
+  defaultPaymentTerms Int?    @default(30) // 支払い期限（日数）
+  invoiceNumberPrefix String? @default("INV-") // 請求書番号接頭辞
+  invoiceNumberStart  Int?    @default(1) // 開始番号
+  taxRate             Int?    @default(10) // デフォルト税率（%）
+  invoiceDesign       String? @default("classic") // 請求書デザイン: classic, modern, minimal, elegant, professional
 
   // ★ LINE Messaging API用ID (将来用)
-  lineUserId                String?     @unique
+  lineUserId String? @unique
 
   // リレーション
-  bankAccounts              BankAccount[]
-  clients                   Client[]
-  itemMasters               ItemMaster[]
-  quotes                    Quote[]
-  invoices                  Invoice[]
-  expenses                  Expense[]
+  bankAccounts BankAccount[]
+  clients      Client[]
+  itemMasters  ItemMaster[]
+  quotes       Quote[]
+  invoices     Invoice[]
+  expenses     Expense[]
 
-  createdAt                 DateTime    @default(now())
-  updatedAt                 DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // 銀行口座 (複数登録・デフォルト設定可)
@@ -58,28 +59,28 @@ model BankAccount {
   user          UserProfile @relation(fields: [userId], references: [id])
   bankName      String
   branchName    String
-  accountType   String   // 普通/当座
+  accountType   String // 普通/当座
   accountNumber String
   accountHolder String
-  isDefault     Boolean  @default(false)
+  isDefault     Boolean     @default(false)
   clients       Client[]
 }
 
 // 取引先
 model Client {
-  id                   String      @id @default(uuid())
+  id                   String              @id @default(uuid())
   userId               String
-  user                 UserProfile @relation(fields: [userId], references: [id])
+  user                 UserProfile         @relation(fields: [userId], references: [id])
   name                 String
   email                String?
   address              String?
   defaultBankAccountId String?
-  defaultBankAccount   BankAccount? @relation(fields: [defaultBankAccountId], references: [id])
+  defaultBankAccount   BankAccount?        @relation(fields: [defaultBankAccountId], references: [id])
   invoices             Invoice[]
   quotes               Quote[]
   recurringTemplates   RecurringTemplate[]
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
 }
 
 // よく使う項目マスタ (スマホ入力支援)
@@ -93,60 +94,60 @@ model ItemMaster {
 
 // 見積書 (インタラクティブ機能・ログ付き)
 model Quote {
-  id             String      @id @default(uuid())
-  userId         String
-  user           UserProfile @relation(fields: [userId], references: [id])
-  clientId       String
-  client         Client      @relation(fields: [clientId], references: [id])
-  quoteNumber    String
-  status         String
-  issueDate      DateTime
-  validUntil     DateTime
-  subtotal       Int
-  taxAmount      Int
-  totalAmount    Int
-  initialAmount  Int?        // 交渉前の金額
-  password       String?
-  items          QuoteItem[]
-  logs           ActivityLog[]
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  id            String        @id @default(uuid())
+  userId        String
+  user          UserProfile   @relation(fields: [userId], references: [id])
+  clientId      String
+  client        Client        @relation(fields: [clientId], references: [id])
+  quoteNumber   String
+  status        String
+  issueDate     DateTime
+  validUntil    DateTime
+  subtotal      Int
+  taxAmount     Int
+  totalAmount   Int
+  initialAmount Int? // 交渉前の金額
+  password      String?
+  items         QuoteItem[]
+  logs          ActivityLog[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }
 
 // 見積明細 (オプション機能あり)
 model QuoteItem {
-  id          String  @id @default(uuid())
-  quoteId     String
-  quote       Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
-  name        String
-  quantity    Int
-  unitPrice   Int
-  taxRate     Int     @default(10)
-  isOptional  Boolean @default(false) // 相手が選べる項目
-  isSelected  Boolean @default(true)  // 選ばれているか
+  id         String  @id @default(uuid())
+  quoteId    String
+  quote      Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  name       String
+  quantity   Int
+  unitPrice  Int
+  taxRate    Int     @default(10)
+  isOptional Boolean @default(false) // 相手が選べる項目
+  isSelected Boolean @default(true) // 選ばれているか
 }
 
 // 請求書 (シンプル・堅実)
 model Invoice {
-  id              String      @id // "INV-202601-001"
-  userId          String
-  user            UserProfile @relation(fields: [userId], references: [id])
-  clientId        String
-  client          Client      @relation(fields: [clientId], references: [id])
-  status          String
-  issueDate       DateTime
-  dueDate         DateTime
-  subtotal        Int
-  taxAmount       Int
-  withholdingTax  Int         @default(0)
-  totalAmount     Int
-  password        String?
-  items           InvoiceItem[]
-  parentInvoiceId String?     // 将来の分割請求用
+  id                  String             @id // "INV-202601-001"
+  userId              String
+  user                UserProfile        @relation(fields: [userId], references: [id])
+  clientId            String
+  client              Client             @relation(fields: [clientId], references: [id])
+  status              String
+  issueDate           DateTime
+  dueDate             DateTime
+  subtotal            Int
+  taxAmount           Int
+  withholdingTax      Int                @default(0)
+  totalAmount         Int
+  password            String?
+  items               InvoiceItem[]
+  parentInvoiceId     String? // 将来の分割請求用
   recurringTemplateId String? // どの定期請求テンプレートから生成されたか
   recurringTemplate   RecurringTemplate? @relation(fields: [recurringTemplateId], references: [id], onDelete: SetNull)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
 }
 
 // 請求明細
@@ -186,84 +187,84 @@ model ActivityLog {
 // フォルダ（物件・クラスなど）
 model TenantGroup {
   id        String   @id @default(uuid())
-  name      String   // フォルダ名（例：ハイツ山田、英語クラス）
+  name      String // フォルダ名（例：ハイツ山田、英語クラス）
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // このフォルダに入っている人たち
-  tenants   Tenant[]
+  tenants Tenant[]
 }
 
 // 入居者（家賃管理用）
 model Tenant {
-  id        String   @id @default(uuid())
-  name      String   // 契約者名
-  nameKana  String   // フリガナ
-  amount    Int      // 家賃金額
-  groupId   String?  // どのフォルダに入っているか（オプショナル）
+  id        String       @id @default(uuid())
+  name      String // 契約者名
+  nameKana  String // フリガナ
+  amount    Int // 家賃金額
+  groupId   String? // どのフォルダに入っているか（オプショナル）
   group     TenantGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 
-  payments          Payment[]
-  paymentStatuses   PaymentStatus[]
+  payments           Payment[]
+  paymentStatuses    PaymentStatus[]
   recurringTemplates RecurringTemplate[]
 }
 
 model Payment {
   id              String   @id @default(uuid())
-  tenantId        String   // 誰の支払いか（Tenantテーブルと紐付け）
-  amount          Int      // 支払われた金額
+  tenantId        String // 誰の支払いか（Tenantテーブルと紐付け）
+  amount          Int // 支払われた金額
   date            DateTime // 支払日（入金日）
-  note            String?  // 備考（「1月分家賃」など）
-  paymentStatusId String?  // 月次入金台帳との紐付け（オプショナル）
+  note            String? // 備考（「1月分家賃」など）
+  paymentStatusId String? // 月次入金台帳との紐付け（オプショナル）
   createdAt       DateTime @default(now())
 
-  tenant          Tenant   @relation(fields: [tenantId], references: [id])
-  paymentStatus   PaymentStatus? @relation(fields: [paymentStatusId], references: [id], onDelete: SetNull)
+  tenant        Tenant         @relation(fields: [tenantId], references: [id])
+  paymentStatus PaymentStatus? @relation(fields: [paymentStatusId], references: [id], onDelete: SetNull)
 }
 
 // 月次入金台帳（Ledger）
 model PaymentStatus {
-  id          String   @id @default(uuid())
-  tenantId    String   // どの取引先か
-  targetMonth String   // "2026-01" 形式（YYYY-MM）
-  status      String   // "PAID" / "UNPAID" / "PARTIAL"
-  expectedAmount Int   // その月の請求予定額（Tenant.amountと同じ）
-  paidAmount  Int      @default(0) // 実際に支払われた金額
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(uuid())
+  tenantId       String // どの取引先か
+  targetMonth    String // "2026-01" 形式（YYYY-MM）
+  status         String // "PAID" / "UNPAID" / "PARTIAL"
+  expectedAmount Int // その月の請求予定額（Tenant.amountと同じ）
+  paidAmount     Int      @default(0) // 実際に支払われた金額
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  payments    Payment[] // この月次ステータスに関連する支払い履歴
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  payments Payment[] // この月次ステータスに関連する支払い履歴
 }
 
 // 定期請求テンプレート
 model RecurringTemplate {
-  id                String   @id @default(uuid())
-  tenantId          String   // どの入居者向けか
-  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  clientId           String?  // 自動紐付けされたClient（nullable、自動作成）
-  client             Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
-  
+  id       String  @id @default(uuid())
+  tenantId String // どの入居者向けか
+  tenant   Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  clientId String? // 自動紐付けされたClient（nullable、自動作成）
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
   // スケジュール設定
-  interval           String   @default("MONTHLY") // MONTHLY, WEEKLY, YEARLY
-  creationDay        Int      // 作成日（毎月何日、1-31）
-  sendDay            Int?     // 送信日（毎月何日、nullable、将来のメール送信用）
-  
+  interval    String @default("MONTHLY") // MONTHLY, WEEKLY, YEARLY
+  creationDay Int // 作成日（毎月何日、1-31）
+  sendDay     Int? // 送信日（毎月何日、nullable、将来のメール送信用）
+
   // 有効期限・状態
-  isActive           Boolean  @default(true) // 有効/無効
-  startDate          DateTime // 開始日
-  endDate            DateTime? // 終了日（nullable、無期限の場合はnull）
-  nextExecutionDate  DateTime // 次回実行日
-  
+  isActive          Boolean   @default(true) // 有効/無効
+  startDate         DateTime // 開始日
+  endDate           DateTime? // 終了日（nullable、無期限の場合はnull）
+  nextExecutionDate DateTime // 次回実行日
+
   // 請求内容
-  items              String   // JSON形式の明細（[{name, quantity, unitPrice, taxRate}]）
-  note               String?  // 備考
-  
+  items String // JSON形式の明細（[{name, quantity, unitPrice, taxRate}]）
+  note  String? // 備考
+
   // 生成された請求書の履歴
-  generatedInvoices  Invoice[]
-  
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  generatedInvoices Invoice[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

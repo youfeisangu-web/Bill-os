@@ -85,7 +85,7 @@ export default async function QuoteDetailPage({
         )}
       </DocumentActionBar>
       <div className="print-content">
-        <InvoiceTemplate data={data} />
+        <InvoiceTemplate data={data} design={quote.user.invoiceDesign || "classic"} />
       </div>
     </div>
   );

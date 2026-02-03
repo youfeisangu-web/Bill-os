@@ -82,7 +82,7 @@ export default async function InvoiceDetailPage({
         deliveryUrl={`/dashboard/invoices/${invoice.id}/delivery`}
       />
       <div className="print-content">
-        <InvoiceTemplate data={data} />
+        <InvoiceTemplate data={data} design={invoice.user.invoiceDesign || "classic"} />
       </div>
     </div>
   );

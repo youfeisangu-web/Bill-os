@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState, useTransition, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { STORAGE_KEY } from "../read-invoice-ocr-button";
+import type { InvoiceOCRData } from "@/app/actions/ocr";
 import { createInvoice } from "@/app/actions/invoice";
 import { normalizeToHalfWidthNumeric } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
@@ -104,6 +106,7 @@ const BILLING_DAYS = [
 
 export default function InvoiceEditor({ clients }: { clients: ClientOption[] }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [isNewClient, setIsNewClient] = useState(false);
   const [items, setItems] = useState<ItemRow[]>([
@@ -111,6 +114,39 @@ export default function InvoiceEditor({ clients }: { clients: ClientOption[] }) 
   ]);
   const defaultIssueDate = useMemo(() => todayString(), []);
   const defaultDueDate = useMemo(() => endOfNextMonthString(), []);
+
+  const [issueDate, setIssueDate] = useState(defaultIssueDate);
+  const [dueDate, setDueDate] = useState(defaultDueDate);
+  const [clientName, setClientName] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [clientAddress, setClientAddress] = useState("");
+
+  useEffect(() => {
+    if (searchParams.get("fromOcr") !== "1") return;
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const prefill = JSON.parse(raw) as InvoiceOCRData;
+      sessionStorage.removeItem(STORAGE_KEY);
+      setIsNewClient(true);
+      setClientName(prefill.clientName ?? "");
+      setClientEmail(prefill.clientEmail ?? "");
+      setClientAddress(prefill.clientAddress ?? "");
+      setIssueDate(prefill.issueDate ?? defaultIssueDate);
+      setDueDate(prefill.dueDate ?? defaultDueDate);
+      if (prefill.items?.length) {
+        setItems(
+          prefill.items.map((i) => ({
+            name: i.name,
+            quantity: String(i.quantity),
+            unitPrice: String(i.unitPrice),
+          })),
+        );
+      }
+    } catch {
+      // ignore
+    }
+  }, [searchParams, defaultIssueDate, defaultDueDate]);
 
   const [isRecurring, setIsRecurring] = useState(false);
   const [frequency, setFrequency] = useState<string>("毎月");
@@ -243,18 +279,24 @@ export default function InvoiceEditor({ clients }: { clients: ClientOption[] }) 
                   type="text"
                   placeholder="取引先名（必須）"
                   required={isNewClient}
+                  value={clientName}
+                  onChange={(e) => setClientName(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 />
                 <input
                   name="clientEmail"
                   type="email"
                   placeholder="メールアドレス（任意）"
+                  value={clientEmail}
+                  onChange={(e) => setClientEmail(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 />
                 <input
                   name="clientAddress"
                   type="text"
                   placeholder="住所（任意）"
+                  value={clientAddress}
+                  onChange={(e) => setClientAddress(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 />
               </div>
@@ -269,7 +311,8 @@ export default function InvoiceEditor({ clients }: { clients: ClientOption[] }) 
                 name="issueDate"
                 type="date"
                 required
-                defaultValue={defaultIssueDate}
+                value={issueDate}
+                onChange={(e) => setIssueDate(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
               />
             </div>
@@ -281,7 +324,8 @@ export default function InvoiceEditor({ clients }: { clients: ClientOption[] }) 
                 name="dueDate"
                 type="date"
                 required
-                defaultValue={defaultDueDate}
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
               />
             </div>

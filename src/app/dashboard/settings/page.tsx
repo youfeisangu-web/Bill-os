@@ -55,6 +55,7 @@ export default async function SettingsPage() {
       invoiceNumberPrefix: user.invoiceNumberPrefix ?? "INV-",
       invoiceNumberStart: user.invoiceNumberStart ?? 1,
       taxRate: user.taxRate ?? 10,
+      invoiceDesign: user.invoiceDesign ?? "classic",
       bankName: user.bankName,
       bankBranch: user.bankBranch,
       bankAccountType: user.bankAccountType,

@@ -31,6 +31,7 @@ type SettingsFormProps = {
       invoiceNumberPrefix: string;
       invoiceNumberStart: number;
       taxRate: number;
+      invoiceDesign: string;
       bankName: string | null;
       bankBranch: string | null;
       bankAccountType: string | null;
@@ -43,6 +44,7 @@ type SettingsFormProps = {
 export default function SettingsForm({ userId, initialData }: SettingsFormProps) {
   const [logoUrl, setLogoUrl] = useState<string | null>(initialData.user.logoUrl);
   const [stampUrl, setStampUrl] = useState<string | null>(initialData.user.stampUrl);
+  const [selectedDesign, setSelectedDesign] = useState<string>(initialData.settings.invoiceDesign);
   const [isPending, startTransition] = useTransition();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -56,6 +58,9 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
     if (stampUrl) {
       formData.set("stampUrl", stampUrl);
     }
+    
+    // 選択されたデザインを確実に設定
+    formData.set("invoiceDesign", selectedDesign);
 
     startTransition(async () => {
       const result = await updateSettings(formData);
@@ -308,7 +313,7 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
         </TabsContent>
 
         <TabsContent value="system" className="mt-6">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
             <h2 className="text-lg font-semibold text-slate-900">
               システム設定
             </h2>
@@ -341,6 +346,53 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
                 <p className="text-xs text-slate-500">
                   請求書番号の開始番号
                 </p>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-200">
+              <label className="text-xs uppercase tracking-[0.3em] text-slate-500 mb-4 block">
+                請求書デザイン
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[
+                  { value: "classic", label: "クラシック", description: "伝統的なレイアウト" },
+                  { value: "modern", label: "モダン", description: "シンプルで洗練されたデザイン" },
+                  { value: "minimal", label: "ミニマル", description: "シンプルで読みやすい" },
+                  { value: "elegant", label: "エレガント", description: "上品で落ち着いたデザイン" },
+                  { value: "professional", label: "プロフェッショナル", description: "ビジネス向けの堅実なデザイン" },
+                ].map((design) => (
+                  <label
+                    key={design.value}
+                    className={`relative flex flex-col p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      selectedDesign === design.value
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-slate-200 hover:border-slate-300 bg-white"
+                    }`}
+                    onClick={() => setSelectedDesign(design.value)}
+                  >
+                    <input
+                      type="radio"
+                      name="invoiceDesign"
+                      value={design.value}
+                      checked={selectedDesign === design.value}
+                      onChange={() => setSelectedDesign(design.value)}
+                      className="sr-only"
+                    />
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                        selectedDesign === design.value
+                          ? "border-blue-500"
+                          : "border-slate-300"
+                      }`}>
+                        {selectedDesign === design.value && (
+                          <div className="w-2 h-2 rounded-full bg-blue-500" />
+                        )}
+                      </div>
+                      <span className="font-semibold text-slate-900">{design.label}</span>
+                    </div>
+                    <p className="text-xs text-slate-500 ml-6">{design.description}</p>
+                  </label>
+                ))}
               </div>
             </div>
           </div>

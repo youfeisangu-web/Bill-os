@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition, useState } from "react";
 import { updateInvoiceStatusBulk } from "@/app/actions/invoice";
+import ReadInvoiceOcrButton from "./read-invoice-ocr-button";
+import ImportDocumentButton from "./import-document-button";
 
 const formatDate = (date: Date | string) =>
   new Intl.DateTimeFormat("ja-JP", { dateStyle: "medium" }).format(
@@ -87,12 +89,16 @@ export default function InvoicesTableWithBulkStatus({
             発行日・金額・ステータスを確認できます。チェックして一括でステータスを変更できます。
           </p>
         </div>
-        <Link
-          href="/dashboard/invoices/new"
-          className="inline-flex rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-        >
-          請求書を作成
-        </Link>
+        <div className="flex items-center gap-2">
+          <ImportDocumentButton />
+          <ReadInvoiceOcrButton />
+          <Link
+            href="/dashboard/invoices/new"
+            className="inline-flex rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+          >
+            請求書を作成
+          </Link>
+        </div>
       </div>
 
       {invoices.length > 0 && (

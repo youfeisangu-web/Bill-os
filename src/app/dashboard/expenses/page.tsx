@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import NewExpenseDialog from "./new-expense-dialog";
+import ReadReceiptOcrButton from "./read-receipt-ocr-button";
 
 const formatDate = (date: Date) =>
   new Intl.DateTimeFormat("ja-JP", { dateStyle: "medium" }).format(date);
@@ -42,7 +42,7 @@ export default async function ExpensesPage() {
               日付、件名、カテゴリ、金額を確認できます。
             </p>
           </div>
-          <NewExpenseDialog />
+          <ReadReceiptOcrButton />
         </div>
 
         <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200">
