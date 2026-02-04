@@ -42,6 +42,11 @@ export function translateErrorMessage(message: string): string {
     "JSON": "データの解析に失敗しました。",
     "Parse error": "データの解析に失敗しました。",
     
+    // Server Actionエラー
+    "An unexpected response was received from the server": "サーバーから予期しない応答がありました。しばらく待ってから再試行してください。",
+    "unexpected response": "サーバーから予期しない応答がありました。しばらく待ってから再試行してください。",
+    "Unexpected response": "サーバーから予期しない応答がありました。しばらく待ってから再試行してください。",
+    
     // その他
     "Error": "エラーが発生しました。",
     "Unknown error": "不明なエラーが発生しました。",

@@ -347,13 +347,19 @@ const RECEIPT_OCR_PROMPT = `この画像/PDFは領収書、レシート、他社
 export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRResult> {
   try {
     const { userId } = await auth();
-    if (!userId) return { success: false, message: "認証が必要です" };
+    if (!userId) {
+      return { success: false, message: "認証が必要です。ログインしてください。" };
+    }
 
     const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-    if (!geminiKey) return { success: false, message: "Gemini APIキーが設定されていません" };
+    if (!geminiKey) {
+      return { success: false, message: "Gemini APIキーが設定されていません。管理者にお問い合わせください。" };
+    }
 
     const file = formData.get("file") as File | null;
-    if (!file) return { success: false, message: "ファイルが指定されていません" };
+    if (!file) {
+      return { success: false, message: "ファイルが指定されていません" };
+    }
 
     // ファイルタイプの検証（画像、PDF）
     const fileName = file.name.toLowerCase();
@@ -374,17 +380,41 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
       return { success: false, message: "ファイルサイズは20MB以下にしてください" };
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const base64Data = buffer.toString("base64");
-    const mimeType = isPdf ? "application/pdf" : (fileType || "image/jpeg");
+    let buffer: Buffer;
+    let base64Data: string;
+    let mimeType: string;
+    
+    try {
+      buffer = Buffer.from(await file.arrayBuffer());
+      base64Data = buffer.toString("base64");
+      mimeType = isPdf ? "application/pdf" : (fileType || "image/jpeg");
+    } catch (fileError) {
+      console.error("File processing error:", fileError);
+      return {
+        success: false,
+        message: "ファイルの読み込みに失敗しました。ファイルが破損している可能性があります。",
+      };
+    }
 
-    const responseText = await generateContentWithImage(
-      RECEIPT_OCR_PROMPT,
-      base64Data,
-      mimeType,
-      { maxTokens: 1000, temperature: 0.1 }
-    );
-    if (!responseText) return { success: false, message: "AIからの応答がありませんでした" };
+    let responseText: string;
+    try {
+      responseText = await generateContentWithImage(
+        RECEIPT_OCR_PROMPT,
+        base64Data,
+        mimeType,
+        { maxTokens: 1000, temperature: 0.1 }
+      );
+    } catch (apiError: any) {
+      console.error("Gemini API error:", apiError);
+      return {
+        success: false,
+        message: formatErrorMessage(apiError, "AIによる解析に失敗しました。しばらく待ってから再試行してください。"),
+      };
+    }
+    
+    if (!responseText || responseText.trim().length === 0) {
+      return { success: false, message: "AIからの応答がありませんでした。もう一度お試しください。" };
+    }
 
     let jsonText = responseText.trim();
     if (jsonText.startsWith("```")) {
@@ -394,17 +424,38 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
         .join("\n")
         .trim();
     }
+    
     const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return { success: false, message: "AIの応答を解析できませんでした" };
+    if (!jsonMatch) {
+      console.error("JSON parse failed. Response:", responseText.substring(0, 200));
+      return { 
+        success: false, 
+        message: "AIの応答を解析できませんでした。画像が不鮮明な可能性があります。別の画像をお試しください。" 
+      };
+    }
 
-    const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
+    } catch (parseError) {
+      console.error("JSON parse error:", parseError);
+      console.error("Response text:", responseText.substring(0, 200));
+      return {
+        success: false,
+        message: "AIの応答を解析できませんでした。画像が不鮮明な可能性があります。別の画像をお試しください。",
+      };
+    }
+
     const title = typeof parsed.title === "string" ? parsed.title.trim() : "";
     const amount = Number(parsed.amount) || 0;
     let date = typeof parsed.date === "string" ? parsed.date : "";
     let category = typeof parsed.category === "string" ? parsed.category.trim() : "";
 
     if (!title || !amount || amount <= 0) {
-      return { success: false, message: "件名または金額が抽出できませんでした" };
+      return { 
+        success: false, 
+        message: "件名または金額が抽出できませんでした。画像が不鮮明な可能性があります。別の画像をお試しください。" 
+      };
     }
 
     // 日付が空の場合は現在の日付を使用
@@ -415,7 +466,7 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
 
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(date)) {
-      return { success: false, message: "日付の形式が正しくありません（YYYY-MM-DD）" };
+      return { success: false, message: "日付の形式が正しくありません（YYYY-MM-DD）。手動で修正してください。" };
     }
 
     if (!EXPENSE_CATEGORIES.includes(category)) category = "その他";
@@ -426,9 +477,10 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
     };
   } catch (error) {
     console.error("Receipt OCR error:", error);
+    const errorMessage = formatErrorMessage(error, "領収書の読み込みに失敗しました");
     return {
       success: false,
-      message: formatErrorMessage(error, "領収書の読み込みに失敗しました"),
+      message: errorMessage,
     };
   }
 }

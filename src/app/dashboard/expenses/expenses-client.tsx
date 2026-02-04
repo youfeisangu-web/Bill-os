@@ -33,16 +33,30 @@ export default function ExpensesClient() {
     try {
       const formData = new FormData();
       formData.set("file", file);
-      const result = await readReceiptImage(formData);
+      
+      let result;
+      try {
+        result = await readReceiptImage(formData);
+      } catch (serverError: any) {
+        // Server Actionが例外をスローした場合
+        console.error("Server Action error:", serverError);
+        const errorMessage = serverError?.message || serverError?.toString() || "サーバーエラーが発生しました";
+        alert(translateErrorMessage(errorMessage));
+        return;
+      }
+      
       if (result.success && result.data) {
         setInitialValues(receiptToInitialValues(result.data));
         setDialogOpen(true);
       } else {
-        alert(result.message ?? "領収書・レシートの読み込みに失敗しました");
+        // Server Actionから返されたエラーメッセージを表示
+        const errorMessage = result.message ?? "領収書・レシートの読み込みに失敗しました";
+        alert(translateErrorMessage(errorMessage));
       }
     } catch (err) {
+      // 予期しないエラー
+      console.error("Unexpected error:", err);
       const errorMessage = err instanceof Error ? err.message : "エラーが発生しました";
-      // エラーメッセージを日本語化
       const japaneseMessage = translateErrorMessage(errorMessage);
       alert(japaneseMessage);
     } finally {
