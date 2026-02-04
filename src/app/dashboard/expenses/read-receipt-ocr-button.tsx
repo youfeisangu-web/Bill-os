@@ -81,7 +81,7 @@ export default function ReadReceiptOcrButton() {
       <input
         ref={inputRef}
         type="file"
-        accept=".pdf,application/pdf,image/jpeg,image/jpg,image/png,image/gif,image/webp"
+        accept=".pdf,.xlsx,.xls,.docx,.doc,.txt,.csv,image/*,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,text/*"
         className="hidden"
         onChange={handleFileChange}
       />
@@ -90,7 +90,7 @@ export default function ReadReceiptOcrButton() {
           type="button"
           onClick={handleOcrClick}
           disabled={isProcessing}
-          className="inline-flex rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
+          className="inline-flex rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isProcessing ? "読み込み中..." : "領収書・請求書を読み込み"}
         </button>

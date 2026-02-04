@@ -96,12 +96,6 @@ export default function ExpensesClient() {
     }
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = "";
-    await processFile(file);
-  };
 
   const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -123,50 +117,70 @@ export default function ExpensesClient() {
     setIsDragOver(false);
   };
 
-  const handleClick = () => {
-    inputRef.current?.click();
+  const handleClick = (e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    if (!isProcessing && inputRef.current) {
+      console.log("Opening file dialog...");
+      inputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    console.log("File selected:", file ? { name: file.name, size: file.size, type: file.type } : "no file");
+    if (!file) return;
+    e.target.value = "";
+    await processFile(file);
   };
 
   return (
     <>
-      <div
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onClick={handleClick}
-        className={`mt-6 rounded-2xl border-2 border-dashed p-12 text-center cursor-pointer transition-all ${
-          isDragOver
-            ? "border-blue-500 bg-blue-50"
-            : "border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-slate-100"
-        } ${isProcessing ? "pointer-events-none opacity-70" : ""}`}
-      >
-        <input
-          ref={inputRef}
-          type="file"
-          accept=".pdf,application/pdf,image/jpeg,image/jpg,image/png,image/gif,image/webp"
-          className="hidden"
-          onChange={handleFileChange}
-        />
-        {isProcessing ? (
-          <>
-            <Loader2 className="h-12 w-12 mx-auto text-blue-600 animate-spin mb-4" />
-            <p className="font-semibold text-slate-900">読み込み中...</p>
-            <p className="text-sm text-slate-500 mt-1">AIがレシート・領収書を解析しています</p>
-          </>
-        ) : (
-          <>
-            <Upload className="h-12 w-12 mx-auto text-blue-600 mb-4" />
-            <p className="font-semibold text-slate-900">
-              レシート・領収書・請求書をドラッグ&ドロップ
-            </p>
-            <p className="text-sm text-slate-500 mt-1">
-              またはクリックしてファイルを選択（PDF、画像対応）
-            </p>
-            <p className="text-xs text-slate-400 mt-2">
-              AIが自動で経費情報を抽出します
-            </p>
-          </>
-        )}
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold text-slate-900 mb-2">レシート・領収書を読み込む</h2>
+        <p className="text-sm text-slate-500 mb-4">
+          AIが自動で経費情報を抽出します（画像、PDF、Excel、Word、テキストファイル対応、最大50MB）
+        </p>
+        <div
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onClick={handleClick}
+          className={`rounded-2xl border-2 border-dashed p-12 text-center transition-all ${
+            isProcessing
+              ? "border-slate-200 bg-slate-50 cursor-not-allowed opacity-70"
+              : isDragOver
+              ? "border-blue-500 bg-blue-50 cursor-pointer"
+              : "border-slate-200 bg-slate-50 hover:border-blue-400 hover:bg-blue-50/50 cursor-pointer"
+          }`}
+        >
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".pdf,.xlsx,.xls,.docx,.doc,.txt,.csv,image/*,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,text/*"
+            className="hidden"
+            onChange={handleFileChange}
+            disabled={isProcessing}
+          />
+          {isProcessing ? (
+            <>
+              <Loader2 className="h-12 w-12 mx-auto text-blue-600 animate-spin mb-4" />
+              <p className="font-semibold text-slate-900">読み込み中...</p>
+              <p className="text-sm text-slate-500 mt-1">AIがレシート・領収書を解析しています</p>
+            </>
+          ) : (
+            <>
+              <Upload className="h-12 w-12 mx-auto text-blue-600 mb-4" />
+              <p className="font-semibold text-slate-900 mb-2">
+                レシート・領収書・請求書をドラッグ&ドロップ
+              </p>
+              <p className="text-sm text-slate-600 font-medium">
+                またはここをクリックしてファイルを選択
+              </p>
+            </>
+          )}
+        </div>
       </div>
       <NewExpenseDialog
         open={dialogOpen}

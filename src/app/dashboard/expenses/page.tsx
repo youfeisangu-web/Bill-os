@@ -35,10 +35,9 @@ export default async function ExpensesPage() {
         </p>
       </header>
 
-      {/* ドラッグ&ドロップエリア */}
-      <ExpensesClient />
-
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        {/* ドラッグ&ドロップエリア */}
+        <ExpensesClient />
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">登録済み経費</h2>

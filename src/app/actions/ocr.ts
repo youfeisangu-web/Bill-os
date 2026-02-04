@@ -372,23 +372,64 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
       return { success: false, message: "ファイルが指定されていません" };
     }
 
-    // ファイルタイプの検証（画像、PDF）
+    // ファイルタイプの検証（画像、PDF、Office文書など幅広く対応）
     const fileName = file.name.toLowerCase();
     const fileType = file.type.toLowerCase();
-    const allowedImageTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
-    const isImage = allowedImageTypes.includes(fileType) || fileName.match(/\.(jpg|jpeg|png|gif|webp)$/);
+    
+    // 対応する画像形式を拡張
+    const allowedImageTypes = [
+      "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp",
+      "image/bmp", "image/tiff", "image/tif", "image/heic", "image/heif",
+      "image/svg+xml", "image/x-icon"
+    ];
+    const imageExtensions = /\.(jpg|jpeg|png|gif|webp|bmp|tiff|tif|heic|heif|svg|ico)$/i;
+    const isImage = allowedImageTypes.includes(fileType) || imageExtensions.test(fileName);
+    
+    // PDF形式
     const isPdf = fileType === "application/pdf" || fileName.endsWith(".pdf");
     
-    if (!isImage && !isPdf) {
-      return { 
-        success: false, 
-        message: "画像ファイル（JPEG、PNG、GIF、WebP）またはPDFファイルを選択してください" 
-      };
+    // Office文書形式（Excel, Word）
+    const officeExtensions = /\.(xlsx|xls|docx|doc)$/i;
+    const officeMimeTypes = [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+      "application/vnd.ms-excel", // .xls
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+      "application/msword" // .doc
+    ];
+    const isOffice = officeMimeTypes.includes(fileType) || officeExtensions.test(fileName);
+    
+    // テキストファイル
+    const textExtensions = /\.(txt|csv)$/i;
+    const isText = fileType.startsWith("text/") || textExtensions.test(fileName);
+    
+    // ファイル形式がサポートされていない場合
+    if (!isImage && !isPdf && !isOffice && !isText) {
+      // ファイルタイプが空の場合は拡張子で判定を試みる
+      if (!fileType || fileType === "application/octet-stream") {
+        // 拡張子がある場合は許可（多くの場合、ブラウザが正しくMIMEタイプを判定できない）
+        if (fileName.includes(".")) {
+          console.log("File type unknown, but has extension. Allowing:", fileName);
+        } else {
+          return { 
+            success: false, 
+            message: `対応していないファイル形式です。\n\n対応形式: 画像（JPEG、PNG、GIF、WebP、BMP、TIFF、HEICなど）、PDF、Excel（.xlsx、.xls）、Word（.docx、.doc）、テキスト（.txt、.csv）\n\n選択されたファイル: ${file.name}` 
+          };
+        }
+      } else {
+        return { 
+          success: false, 
+          message: `対応していないファイル形式です（${fileType}）。\n\n対応形式: 画像（JPEG、PNG、GIF、WebP、BMP、TIFF、HEICなど）、PDF、Excel（.xlsx、.xls）、Word（.docx、.doc）、テキスト（.txt、.csv）\n\n選択されたファイル: ${file.name}` 
+        };
+      }
     }
 
-    const MAX_SIZE = 20 * 1024 * 1024; // 20MB
+    // ファイルサイズ制限を緩和（50MBまで）
+    const MAX_SIZE = 50 * 1024 * 1024; // 50MB
     if (file.size > MAX_SIZE) {
-      return { success: false, message: "ファイルサイズは20MB以下にしてください" };
+      return { 
+        success: false, 
+        message: `ファイルサイズが大きすぎます（${Math.round(file.size / 1024 / 1024)}MB）。\n\n最大サイズ: 50MB\n\nファイルサイズを小さくするか、画像の解像度を下げて再試行してください。` 
+      };
     }
 
     // ファイル処理（タイムアウト対策として、大きなファイルの処理を最適化）
@@ -400,7 +441,41 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
       const arrayBuffer = await file.arrayBuffer();
       buffer = Buffer.from(arrayBuffer);
       base64Data = buffer.toString("base64");
-      mimeType = isPdf ? "application/pdf" : (fileType || "image/jpeg");
+      
+      // MIMEタイプの決定（Gemini APIがサポートする形式に合わせる）
+      if (isPdf) {
+        mimeType = "application/pdf";
+      } else if (isImage) {
+        // 画像形式のMIMEタイプを正規化
+        if (fileType.startsWith("image/")) {
+          mimeType = fileType;
+        } else if (fileName.match(/\.(jpg|jpeg)$/i)) {
+          mimeType = "image/jpeg";
+        } else if (fileName.match(/\.png$/i)) {
+          mimeType = "image/png";
+        } else if (fileName.match(/\.gif$/i)) {
+          mimeType = "image/gif";
+        } else if (fileName.match(/\.webp$/i)) {
+          mimeType = "image/webp";
+        } else if (fileName.match(/\.(bmp|tiff|tif)$/i)) {
+          // BMPやTIFFはPNGとして扱う（Geminiが直接サポートしない場合がある）
+          mimeType = "image/png";
+        } else {
+          mimeType = "image/jpeg"; // デフォルト
+        }
+      } else if (isOffice || isText) {
+        // Office文書やテキストファイルは、Gemini APIが直接サポートしないため、
+        // PDFとして扱うか、エラーメッセージを表示
+        // ただし、実際にはGeminiは画像とPDFのみをサポートするため、
+        // ここではエラーを返す
+        return {
+          success: false,
+          message: `Office文書（.xlsx、.xls、.docx、.doc）やテキストファイル（.txt、.csv）は、現在画像やPDFに変換してからアップロードしてください。\n\n選択されたファイル: ${file.name}`,
+        };
+      } else {
+        // その他のファイル形式
+        mimeType = fileType || "image/jpeg";
+      }
       
       // base64データが大きすぎる場合の警告
       if (base64Data.length > 15 * 1024 * 1024) { // 約15MB
