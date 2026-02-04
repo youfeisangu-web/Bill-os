@@ -29,6 +29,16 @@ function formatErrorMessage(error: unknown, defaultMessage: string): string {
     return "Gemini APIの利用制限に達しました。\n\nしばらく待ってから（数分〜数時間後）再試行してください。\n\n詳細: https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429";
   }
   
+  // タイムアウトエラー
+  if (
+    errorMessage.includes("タイムアウト") ||
+    errorMessage.includes("timeout") ||
+    errorMessage.includes("Timeout") ||
+    errorCode === 504
+  ) {
+    return "処理に時間がかかりすぎました。ファイルサイズを小さくするか、画像の解像度を下げて再試行してください。";
+  }
+  
   // その他のエラー
   return errorMessage || defaultMessage;
 }
@@ -345,6 +355,7 @@ const RECEIPT_OCR_PROMPT = `この画像/PDFは領収書、レシート、他社
  * CSV、画像、PDFに対応
  */
 export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRResult> {
+  // 最外層のtry-catchで、すべての予期しないエラーを確実にキャッチ
   try {
     const { userId } = await auth();
     if (!userId) {
@@ -380,32 +391,59 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
       return { success: false, message: "ファイルサイズは20MB以下にしてください" };
     }
 
+    // ファイル処理（タイムアウト対策として、大きなファイルの処理を最適化）
     let buffer: Buffer;
     let base64Data: string;
     let mimeType: string;
     
     try {
-      buffer = Buffer.from(await file.arrayBuffer());
+      const arrayBuffer = await file.arrayBuffer();
+      buffer = Buffer.from(arrayBuffer);
       base64Data = buffer.toString("base64");
       mimeType = isPdf ? "application/pdf" : (fileType || "image/jpeg");
-    } catch (fileError) {
+      
+      // base64データが大きすぎる場合の警告
+      if (base64Data.length > 15 * 1024 * 1024) { // 約15MB
+        console.warn("Large base64 data:", base64Data.length, "bytes");
+      }
+    } catch (fileError: any) {
       console.error("File processing error:", fileError);
+      const errorMsg = fileError?.message || String(fileError);
       return {
         success: false,
-        message: "ファイルの読み込みに失敗しました。ファイルが破損している可能性があります。",
+        message: `ファイルの読み込みに失敗しました: ${errorMsg}`,
       };
     }
 
+    // Gemini API呼び出し（タイムアウト対策）
     let responseText: string;
     try {
-      responseText = await generateContentWithImage(
+      // タイムアウトを設定（VercelのServerless Functionの制限を考慮）
+      const apiCallPromise = generateContentWithImage(
         RECEIPT_OCR_PROMPT,
         base64Data,
         mimeType,
         { maxTokens: 1000, temperature: 0.1 }
       );
+      
+      // 60秒でタイムアウト（Vercel Proプランの制限）
+      const timeoutPromise = new Promise<string>((_, reject) => {
+        setTimeout(() => reject(new Error("API呼び出しがタイムアウトしました。ファイルサイズが大きすぎる可能性があります。")), 60000);
+      });
+      
+      responseText = await Promise.race([apiCallPromise, timeoutPromise]);
     } catch (apiError: any) {
       console.error("Gemini API error:", apiError);
+      const errorMsg = apiError?.message || String(apiError);
+      
+      // タイムアウトエラーの場合
+      if (errorMsg.includes("タイムアウト") || errorMsg.includes("timeout")) {
+        return {
+          success: false,
+          message: "処理に時間がかかりすぎました。ファイルサイズを小さくするか、画像の解像度を下げて再試行してください。",
+        };
+      }
+      
       return {
         success: false,
         message: formatErrorMessage(apiError, "AIによる解析に失敗しました。しばらく待ってから再試行してください。"),
@@ -416,6 +454,7 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
       return { success: false, message: "AIからの応答がありませんでした。もう一度お試しください。" };
     }
 
+    // JSON解析
     let jsonText = responseText.trim();
     if (jsonText.startsWith("```")) {
       jsonText = jsonText
@@ -427,7 +466,8 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
     
     const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      console.error("JSON parse failed. Response:", responseText.substring(0, 200));
+      console.error("JSON parse failed. Response length:", responseText.length);
+      console.error("Response preview:", responseText.substring(0, 200));
       return { 
         success: false, 
         message: "AIの応答を解析できませんでした。画像が不鮮明な可能性があります。別の画像をお試しください。" 
@@ -437,15 +477,17 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
     let parsed: Record<string, unknown>;
     try {
       parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
-    } catch (parseError) {
+    } catch (parseError: any) {
       console.error("JSON parse error:", parseError);
-      console.error("Response text:", responseText.substring(0, 200));
+      console.error("Response text length:", responseText.length);
+      console.error("Response preview:", responseText.substring(0, 200));
       return {
         success: false,
         message: "AIの応答を解析できませんでした。画像が不鮮明な可能性があります。別の画像をお試しください。",
       };
     }
 
+    // データ検証
     const title = typeof parsed.title === "string" ? parsed.title.trim() : "";
     const amount = Number(parsed.amount) || 0;
     let date = typeof parsed.date === "string" ? parsed.date : "";
@@ -471,16 +513,31 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
 
     if (!EXPENSE_CATEGORIES.includes(category)) category = "その他";
 
-    return {
+    // 成功レスポンス（シリアライズ可能な形式を保証）
+    const result: ReceiptOCRResult = {
       success: true,
-      data: { title, amount, date, category },
+      data: { 
+        title: String(title), 
+        amount: Number(amount), 
+        date: String(date), 
+        category: String(category) 
+      },
     };
-  } catch (error) {
-    console.error("Receipt OCR error:", error);
+    
+    return result;
+  } catch (error: any) {
+    // すべての予期しないエラーをキャッチ
+    console.error("Receipt OCR unexpected error:", error);
+    console.error("Error stack:", error?.stack);
+    console.error("Error name:", error?.name);
+    console.error("Error message:", error?.message);
+    
     const errorMessage = formatErrorMessage(error, "領収書の読み込みに失敗しました");
+    
+    // 確実にシリアライズ可能な形式で返す
     return {
       success: false,
-      message: errorMessage,
+      message: errorMessage || "予期しないエラーが発生しました。しばらく待ってから再試行してください。",
     };
   }
 }

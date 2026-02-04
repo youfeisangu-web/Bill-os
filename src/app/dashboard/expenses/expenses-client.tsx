@@ -31,17 +31,43 @@ export default function ExpensesClient() {
   const processFile = async (file: File) => {
     setIsProcessing(true);
     try {
+      // ファイル情報をログに記録（デバッグ用）
+      console.log("Processing file:", {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      });
+
       const formData = new FormData();
       formData.set("file", file);
       
-      let result;
+      let result: Awaited<ReturnType<typeof readReceiptImage>>;
       try {
-        result = await readReceiptImage(formData);
+        // Server Action呼び出し（タイムアウト対策）
+        const actionPromise = readReceiptImage(formData);
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error("サーバーからの応答がタイムアウトしました。ファイルサイズが大きすぎる可能性があります。")), 90000); // 90秒
+        });
+        
+        result = await Promise.race([actionPromise, timeoutPromise]);
       } catch (serverError: any) {
         // Server Actionが例外をスローした場合
         console.error("Server Action error:", serverError);
+        console.error("Error details:", {
+          name: serverError?.name,
+          message: serverError?.message,
+          stack: serverError?.stack,
+        });
+        
         const errorMessage = serverError?.message || serverError?.toString() || "サーバーエラーが発生しました";
         alert(translateErrorMessage(errorMessage));
+        return;
+      }
+      
+      // 結果の検証
+      if (!result || typeof result !== "object") {
+        console.error("Invalid result format:", result);
+        alert("サーバーから予期しない形式の応答がありました。もう一度お試しください。");
         return;
       }
       
@@ -56,6 +82,12 @@ export default function ExpensesClient() {
     } catch (err) {
       // 予期しないエラー
       console.error("Unexpected error:", err);
+      console.error("Error details:", {
+        name: err instanceof Error ? err.name : "Unknown",
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+      });
+      
       const errorMessage = err instanceof Error ? err.message : "エラーが発生しました";
       const japaneseMessage = translateErrorMessage(errorMessage);
       alert(japaneseMessage);
