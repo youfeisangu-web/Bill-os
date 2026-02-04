@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { readInvoiceImage } from "@/app/actions/ocr";
+import { translateErrorMessage } from "@/lib/error-translator";
 const STORAGE_KEY = "invoiceOcrPrefill";
 
 export default function ReadInvoiceOcrButton() {
@@ -31,7 +32,8 @@ export default function ReadInvoiceOcrButton() {
         alert(result.message ?? "請求書の読み込みに失敗しました");
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "エラーが発生しました");
+      const errorMessage = err instanceof Error ? err.message : "エラーが発生しました";
+      alert(translateErrorMessage(errorMessage));
     } finally {
       setIsProcessing(false);
     }

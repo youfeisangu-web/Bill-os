@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import ReadReceiptOcrButton from "./read-receipt-ocr-button";
+import ExpensesClient from "./expenses-client";
 
 const formatDate = (date: Date) =>
   new Intl.DateTimeFormat("ja-JP", { dateStyle: "medium" }).format(date);
@@ -33,6 +34,9 @@ export default async function ExpensesPage() {
           ビジネスで発生した経費を管理できます。
         </p>
       </header>
+
+      {/* ドラッグ&ドロップエリア */}
+      <ExpensesClient />
 
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-4">

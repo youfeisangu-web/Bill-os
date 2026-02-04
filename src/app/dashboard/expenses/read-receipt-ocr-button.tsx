@@ -6,6 +6,7 @@ import { readReceiptImage } from "@/app/actions/ocr";
 import type { ReceiptOCRData } from "@/app/actions/ocr";
 import type { ExpenseInitialValues } from "./new-expense-dialog";
 import NewExpenseDialog from "./new-expense-dialog";
+import { translateErrorMessage } from "@/lib/error-translator";
 
 export const RECEIPT_OCR_PREFILL_KEY = "receiptOcrPrefill";
 
@@ -61,7 +62,10 @@ export default function ReadReceiptOcrButton() {
         alert(result.message ?? "領収書の読み込みに失敗しました");
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "エラーが発生しました");
+      const errorMessage = err instanceof Error ? err.message : "エラーが発生しました";
+      // エラーメッセージを日本語化
+      const japaneseMessage = translateErrorMessage(errorMessage);
+      alert(japaneseMessage);
     } finally {
       setIsProcessing(false);
     }

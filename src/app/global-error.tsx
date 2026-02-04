@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { translateErrorMessage } from "@/lib/error-translator";
 
 export default function GlobalError({
   error,
@@ -13,6 +14,8 @@ export default function GlobalError({
     // エラーをログに記録（本番環境では外部サービスに送信）
     console.error("Global application error:", error);
   }, [error]);
+
+  const japaneseMessage = translateErrorMessage(error.message);
 
   return (
     <html lang="ja">
@@ -45,18 +48,25 @@ export default function GlobalError({
                   ページを再読み込みして再度お試しください。
                 </p>
               </div>
-              {process.env.NODE_ENV === "development" && (
-                <div className="w-full rounded-lg bg-slate-100 p-4 text-left">
-                  <p className="text-xs font-mono text-slate-600">
-                    {error.message}
-                  </p>
-                  {error.stack && (
-                    <pre className="mt-2 max-h-40 overflow-auto text-xs text-slate-600">
-                      {error.stack}
-                    </pre>
-                  )}
-                </div>
-              )}
+              <div className="w-full rounded-lg bg-slate-100 p-4 text-left">
+                <p className="text-sm text-slate-700 font-medium mb-2">エラー詳細:</p>
+                <p className="text-xs text-slate-600 whitespace-pre-wrap">
+                  {japaneseMessage}
+                </p>
+                {process.env.NODE_ENV === "development" && (
+                  <details className="mt-2">
+                    <summary className="text-xs text-slate-500 cursor-pointer">技術詳細（開発用）</summary>
+                    <p className="text-xs font-mono text-slate-500 mt-1 break-all">
+                      {error.message}
+                    </p>
+                    {error.stack && (
+                      <pre className="mt-2 max-h-40 overflow-auto text-xs text-slate-500">
+                        {error.stack}
+                      </pre>
+                    )}
+                  </details>
+                )}
+              </div>
               <div className="flex w-full gap-3 pt-4">
                 <button
                   onClick={reset}

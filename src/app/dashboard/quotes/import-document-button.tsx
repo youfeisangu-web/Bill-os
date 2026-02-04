@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { importDocumentAndCreateQuote } from "@/app/actions/ocr";
 import { FileText, Loader2 } from "lucide-react";
+import { translateErrorMessage } from "@/lib/error-translator";
 
 export default function ImportDocumentButton() {
   const router = useRouter();
@@ -40,7 +41,8 @@ export default function ImportDocumentButton() {
       }
     } catch (err) {
       console.error("エラー:", err);
-      alert(err instanceof Error ? err.message : "エラーが発生しました");
+      const errorMessage = err instanceof Error ? err.message : "エラーが発生しました";
+      alert(translateErrorMessage(errorMessage));
     } finally {
       setIsProcessing(false);
     }

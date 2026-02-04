@@ -15,6 +15,7 @@ import {
   Lightbulb,
 } from "lucide-react";
 import { readInvoiceImage, readReceiptImage } from "@/app/actions/ocr";
+import { translateErrorMessage } from "@/lib/error-translator";
 import { RECEIPT_OCR_PREFILL_KEY } from "@/app/dashboard/expenses/read-receipt-ocr-button";
 import { STORAGE_KEY as INVOICE_OCR_STORAGE_KEY } from "@/app/dashboard/invoices/read-invoice-ocr-button";
 import { getInvoiceByIdForDisplay } from "@/app/actions/invoice";
@@ -128,7 +129,8 @@ export default function DashboardClientView({
         }
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "エラーが発生しました");
+      const errorMessage = err instanceof Error ? err.message : "エラーが発生しました";
+      alert(translateErrorMessage(errorMessage));
     } finally {
       setIsProcessingOCR(false);
       fileInputRef.current && (fileInputRef.current.value = "");
