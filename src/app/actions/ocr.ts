@@ -509,19 +509,36 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
       responseText = await Promise.race([apiCallPromise, timeoutPromise]);
     } catch (apiError: any) {
       console.error("Gemini API error:", apiError);
-      const errorMsg = apiError?.message || String(apiError);
+      console.error("Error type:", typeof apiError);
+      console.error("Error keys:", Object.keys(apiError || {}));
+      
+      // エラーメッセージを安全に取得
+      let errorMsg = "AIによる解析に失敗しました";
+      try {
+        if (apiError?.message) {
+          errorMsg = String(apiError.message);
+        } else if (typeof apiError === "string") {
+          errorMsg = apiError;
+        } else {
+          errorMsg = String(apiError);
+        }
+      } catch (e) {
+        errorMsg = "AIによる解析に失敗しました（エラーの詳細を取得できませんでした）";
+      }
       
       // タイムアウトエラーの場合
-      if (errorMsg.includes("タイムアウト") || errorMsg.includes("timeout")) {
+      if (errorMsg.includes("タイムアウト") || errorMsg.includes("timeout") || errorMsg.includes("Timeout")) {
         return {
           success: false,
           message: "処理に時間がかかりすぎました。ファイルサイズを小さくするか、画像の解像度を下げて再試行してください。",
         };
       }
       
+      // フォーマットされたエラーメッセージを返す
+      const formattedMessage = formatErrorMessage(apiError, "AIによる解析に失敗しました。しばらく待ってから再試行してください。");
       return {
         success: false,
-        message: formatErrorMessage(apiError, "AIによる解析に失敗しました。しばらく待ってから再試行してください。"),
+        message: formattedMessage,
       };
     }
     
@@ -603,17 +620,43 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
   } catch (error: any) {
     // すべての予期しないエラーをキャッチ
     console.error("Receipt OCR unexpected error:", error);
-    console.error("Error stack:", error?.stack);
-    console.error("Error name:", error?.name);
-    console.error("Error message:", error?.message);
+    console.error("Error type:", typeof error);
+    console.error("Error constructor:", error?.constructor?.name);
     
-    const errorMessage = formatErrorMessage(error, "領収書の読み込みに失敗しました");
+    // エラーメッセージを安全に取得（シリアライズ可能な形式に変換）
+    let errorMessage = "領収書の読み込みに失敗しました";
+    try {
+      if (error && typeof error === "object") {
+        // エラーオブジェクトからメッセージを抽出
+        if (error.message) {
+          errorMessage = String(error.message);
+        } else if (error.toString && typeof error.toString === "function") {
+          const errorString = error.toString();
+          if (errorString !== "[object Object]") {
+            errorMessage = errorString;
+          }
+        }
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      } else {
+        errorMessage = String(error);
+      }
+    } catch (e) {
+      // エラーメッセージの取得に失敗した場合
+      console.error("Failed to extract error message:", e);
+      errorMessage = "予期しないエラーが発生しました";
+    }
     
-    // 確実にシリアライズ可能な形式で返す
-    return {
+    // フォーマットされたエラーメッセージを取得
+    const formattedMessage = formatErrorMessage(error, errorMessage);
+    
+    // 確実にシリアライズ可能な形式で返す（プレーンなオブジェクトのみ）
+    const response: ReceiptOCRResult = {
       success: false,
-      message: errorMessage || "予期しないエラーが発生しました。しばらく待ってから再試行してください。",
+      message: formattedMessage || "予期しないエラーが発生しました。しばらく待ってから再試行してください。",
     };
+    
+    return response;
   }
 }
 

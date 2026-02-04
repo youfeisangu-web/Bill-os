@@ -27,10 +27,43 @@ async function retryApiCall<T>(
     try {
       return await fn();
     } catch (error: any) {
-      lastError = error;
+      // エラーを安全に処理
+      let errorMessage = "API呼び出しに失敗しました";
+      let errorStatus: number | undefined;
+      let errorCode: number | undefined;
+      
+      try {
+        if (error?.message) {
+          errorMessage = String(error.message);
+        } else if (typeof error === "string") {
+          errorMessage = error;
+        } else if (error?.toString && typeof error.toString === "function") {
+          const errorString = error.toString();
+          if (errorString !== "[object Object]") {
+            errorMessage = errorString;
+          }
+        }
+        
+        errorStatus = error?.status;
+        errorCode = error?.code;
+      } catch (e) {
+        // エラー情報の取得に失敗した場合
+        console.error("Failed to extract error info:", e);
+      }
+      
+      // 新しいエラーオブジェクトを作成（シリアライズ可能な形式）
+      const processedError = new Error(errorMessage);
+      if (errorStatus !== undefined) {
+        (processedError as any).status = errorStatus;
+      }
+      if (errorCode !== undefined) {
+        (processedError as any).code = errorCode;
+      }
+      
+      lastError = processedError;
       
       // 429エラー（レート制限）の場合はリトライ
-      if (error?.status === 429 || error?.code === 429 || error?.message?.includes("429")) {
+      if (errorStatus === 429 || errorCode === 429 || errorMessage.includes("429")) {
         if (attempt < maxRetries - 1) {
           const delay = baseDelay * Math.pow(2, attempt); // 指数バックオフ
           console.warn(`API rate limit reached. Retrying in ${delay}ms... (attempt ${attempt + 1}/${maxRetries})`);
@@ -40,7 +73,7 @@ async function retryApiCall<T>(
       }
       
       // 429以外のエラーまたはリトライ上限に達した場合はそのままエラーを投げる
-      throw error;
+      throw processedError;
     }
   }
   
@@ -70,18 +103,52 @@ export async function generateContentWithImage(
   options?: { maxTokens?: number; temperature?: number }
 ): Promise<string> {
   return retryApiCall(async () => {
-    const gemini = getGeminiClient();
-    const response = await gemini.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: [
-        { inlineData: { mimeType, data: imageBase64 } },
-        { text: prompt },
-      ],
-      config: {
-        maxOutputTokens: options?.maxTokens ?? 500,
-        temperature: options?.temperature ?? 0.1,
-      },
-    });
-    return response.text ?? "";
+    try {
+      const gemini = getGeminiClient();
+      const response = await gemini.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: [
+          { inlineData: { mimeType, data: imageBase64 } },
+          { text: prompt },
+        ],
+        config: {
+          maxOutputTokens: options?.maxTokens ?? 500,
+          temperature: options?.temperature ?? 0.1,
+        },
+      });
+      
+      if (!response || !response.text) {
+        throw new Error("Gemini APIからの応答が空です");
+      }
+      
+      return response.text;
+    } catch (error: any) {
+      // エラーを適切に処理して再スロー
+      console.error("generateContentWithImage error:", error);
+      
+      // エラーメッセージを安全に取得
+      let errorMessage = "Gemini APIの呼び出しに失敗しました";
+      if (error?.message) {
+        errorMessage = String(error.message);
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      } else if (error?.toString && typeof error.toString === "function") {
+        const errorString = error.toString();
+        if (errorString !== "[object Object]") {
+          errorMessage = errorString;
+        }
+      }
+      
+      // 新しいエラーオブジェクトを作成（シリアライズ可能な形式）
+      const newError = new Error(errorMessage);
+      if (error?.status) {
+        (newError as any).status = error.status;
+      }
+      if (error?.code) {
+        (newError as any).code = error.code;
+      }
+      
+      throw newError;
+    }
   });
 }
