@@ -364,11 +364,23 @@ const RECEIPT_OCR_PROMPT = `この画像/PDFは領収書、レシート、他社
 export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRResult> {
   // 最外層のtry-catchで、すべての予期しないエラーを確実にキャッチ
   try {
+    console.log("readReceiptImage called");
+    
+    // FormDataの検証
+    if (!formData || !(formData instanceof FormData)) {
+      console.error("Invalid FormData:", formData);
+      return { 
+        success: false, 
+        message: "リクエストが不正です。ページを再読み込みして再試行してください。" 
+      };
+    }
+    
     // 認証チェック（エラーを確実にキャッチ）
     let userId: string | null = null;
     try {
       const authResult = await auth();
       userId = authResult.userId || null;
+      console.log("Auth check passed, userId:", userId ? "exists" : "null");
     } catch (authError: any) {
       console.error("Auth error:", authError);
       return { 
@@ -389,8 +401,15 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
 
     const file = formData.get("file") as File | null;
     if (!file) {
+      console.error("No file in FormData");
       return { success: false, message: "ファイルが指定されていません" };
     }
+    
+    console.log("File received:", {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    });
 
     // ファイルタイプの検証（画像、PDF、Office文書など幅広く対応）
     const fileName = file.name.toLowerCase();

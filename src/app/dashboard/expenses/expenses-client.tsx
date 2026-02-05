@@ -38,11 +38,24 @@ export default function ExpensesClient() {
         type: file.type,
       });
 
+      // ファイルサイズの事前チェック（50MB制限）
+      const MAX_SIZE = 50 * 1024 * 1024; // 50MB
+      if (file.size > MAX_SIZE) {
+        alert(`ファイルサイズが大きすぎます（${Math.round(file.size / 1024 / 1024)}MB）。最大50MBまで対応しています。`);
+        return;
+      }
+
+      // FormDataの作成と検証
       const formData = new FormData();
       formData.set("file", file);
       
+      // FormDataの内容を確認（デバッグ用）
+      console.log("FormData created, file in FormData:", formData.get("file") ? "yes" : "no");
+      
       let result: Awaited<ReturnType<typeof readReceiptImage>>;
       try {
+        console.log("Calling Server Action...");
+        
         // Server Action呼び出し（タイムアウト対策）
         const actionPromise = readReceiptImage(formData);
         const timeoutPromise = new Promise<never>((_, reject) => {
@@ -50,6 +63,7 @@ export default function ExpensesClient() {
         });
         
         result = await Promise.race([actionPromise, timeoutPromise]);
+        console.log("Server Action completed successfully");
       } catch (serverError: any) {
         // Server Actionが例外をスローした場合
         console.error("Server Action error:", serverError);
@@ -57,7 +71,14 @@ export default function ExpensesClient() {
           name: serverError?.name,
           message: serverError?.message,
           stack: serverError?.stack,
+          cause: serverError?.cause,
         });
+        
+        // 400エラーの場合の特別な処理
+        if (serverError?.message?.includes("400") || serverError?.message?.includes("Bad Request")) {
+          alert("リクエストが不正です。ファイルサイズが大きすぎる可能性があります。ファイルサイズを小さくして再試行してください。");
+          return;
+        }
         
         const errorMessage = serverError?.message || serverError?.toString() || "サーバーエラーが発生しました";
         alert(translateErrorMessage(errorMessage));
