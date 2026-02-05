@@ -329,12 +329,12 @@ export type ReceiptOCRResult = {
   message?: string;
 };
 
-const RECEIPT_OCR_PROMPT = `この画像/PDFは領収書、レシート、他社請求書、経費の明細書などです。以下の情報をすべて抽出し、JSON形式のみで返してください（Markdown記法は不要）。
+const RECEIPT_OCR_PROMPT = `この画像/PDFは領収書、レシート、他社請求書、経費の明細書、国民年金の領収書などです。画像内のすべての文字を読み取り、以下の情報を抽出してください。JSON形式のみで返してください（Markdown記法は不要）。
 
 必須項目:
-- title: 店名・会社名・内容（例: 〇〇商事、会議費、サーバー代、広告費など）
-- amount: 合計金額（数値のみ、カンマは除去）
-- date: 発行日・日付（YYYY-MM-DD形式。日付が見つからない場合は現在の日付を使用）
+- title: 店名・会社名・内容・支払先名（例: 〇〇商事、国民年金保険料、会議費、サーバー代、広告費など）。領収書の種類や支払先を明確に記載してください。
+- amount: 合計金額（数値のみ、カンマは除去）。「合計額」「総額」「保険料」などの欄から金額を抽出してください。
+- date: 発行日・日付（YYYY-MM-DD形式）。令和年号の場合は西暦に変換してください（例: 令和7年12月18日 → 2025-12-18）。日付が見つからない場合は現在の日付を使用してください。
 - category: 経費カテゴリ。次のいずれか1つを選択: ${EXPENSE_CATEGORIES.join("、")}
 
 カテゴリの判定基準:
@@ -344,10 +344,17 @@ const RECEIPT_OCR_PROMPT = `この画像/PDFは領収書、レシート、他社
 - 旅費交通費: 交通費、宿泊費、出張費など
 - 地代家賃: オフィス賃貸料、駐車場代など
 - 広告宣伝費: 広告費、マーケティング費用など
-- その他: 上記に該当しないもの
+- その他: 上記に該当しないもの（国民年金、健康保険、税金、その他の公的費用など）
+
+重要な注意事項:
+- 画像内のすべての文字を注意深く読み取ってください
+- 金額は「合計額」「総額」「保険料」などの欄から抽出してください
+- 日付は令和年号を西暦に変換してください（令和7年 = 2025年）
+- カテゴリは内容に応じて適切に選択してください
 
 例: { "title": "〇〇文具店", "amount": 5500, "date": "2025-02-01", "category": "消耗品" }
 例: { "title": "AWS クラウドサービス", "amount": 12000, "date": "2025-02-01", "category": "通信費" }
+例: { "title": "国民年金保険料", "amount": 70040, "date": "2025-12-18", "category": "その他" }
 例: { "title": "株式会社デザイン事務所", "amount": 50000, "date": "2025-02-01", "category": "外注費" }`;
 
 /**
@@ -493,12 +500,19 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
     // Gemini API呼び出し（タイムアウト対策）
     let responseText: string;
     try {
+      console.log("Calling Gemini API...", {
+        fileName: file.name,
+        fileSize: file.size,
+        mimeType: mimeType,
+        base64Length: base64Data.length,
+      });
+      
       // タイムアウトを設定（VercelのServerless Functionの制限を考慮）
       const apiCallPromise = generateContentWithImage(
         RECEIPT_OCR_PROMPT,
         base64Data,
         mimeType,
-        { maxTokens: 1000, temperature: 0.1 }
+        { maxTokens: 2000, temperature: 0.1 } // maxTokensを増やして詳細なレスポンスを取得
       );
       
       // 60秒でタイムアウト（Vercel Proプランの制限）
@@ -507,6 +521,11 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
       });
       
       responseText = await Promise.race([apiCallPromise, timeoutPromise]);
+      
+      console.log("Gemini API response received:", {
+        responseLength: responseText?.length || 0,
+        responsePreview: responseText?.substring(0, 200) || "empty",
+      });
     } catch (apiError: any) {
       console.error("Gemini API error:", apiError);
       console.error("Error type:", typeof apiError);
@@ -548,34 +567,43 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
 
     // JSON解析
     let jsonText = responseText.trim();
+    console.log("Raw response text:", jsonText.substring(0, 500));
+    
+    // Markdownコードブロックを除去
     if (jsonText.startsWith("```")) {
-      jsonText = jsonText
-        .split("\n")
+      const lines = jsonText.split("\n");
+      jsonText = lines
         .filter((line) => !line.startsWith("```"))
         .join("\n")
         .trim();
+      console.log("After removing markdown:", jsonText.substring(0, 500));
     }
     
-    const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+    // JSONオブジェクトを抽出（複数の方法を試す）
+    let jsonMatch = jsonText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      console.error("JSON parse failed. Response length:", responseText.length);
-      console.error("Response preview:", responseText.substring(0, 200));
+      // 別のパターンを試す
+      jsonMatch = jsonText.match(/\{.*\}/s);
+    }
+    if (!jsonMatch) {
+      console.error("JSON parse failed. Full response:", responseText);
       return { 
         success: false, 
-        message: "AIの応答を解析できませんでした。画像が不鮮明な可能性があります。別の画像をお試しください。" 
+        message: `AIの応答を解析できませんでした。\n\nレスポンス: ${responseText.substring(0, 500)}\n\n画像が不鮮明な可能性があります。別の画像をお試しください。` 
       };
     }
 
     let parsed: Record<string, unknown>;
     try {
       parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
+      console.log("Parsed JSON:", parsed);
     } catch (parseError: any) {
       console.error("JSON parse error:", parseError);
-      console.error("Response text length:", responseText.length);
-      console.error("Response preview:", responseText.substring(0, 200));
+      console.error("Full response text:", responseText);
+      console.error("Matched JSON string:", jsonMatch[0]);
       return {
         success: false,
-        message: "AIの応答を解析できませんでした。画像が不鮮明な可能性があります。別の画像をお試しください。",
+        message: `AIの応答を解析できませんでした。\n\nレスポンス: ${responseText.substring(0, 500)}\n\n画像が不鮮明な可能性があります。別の画像をお試しください。`,
       };
     }
 

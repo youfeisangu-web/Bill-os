@@ -71,12 +71,17 @@ export default function ExpensesClient() {
         return;
       }
       
+      console.log("Server Action result:", result);
+      
       if (result.success && result.data) {
+        console.log("OCR success! Data:", result.data);
         setInitialValues(receiptToInitialValues(result.data));
         setDialogOpen(true);
       } else {
         // Server Actionから返されたエラーメッセージを表示
         const errorMessage = result.message ?? "領収書・レシートの読み込みに失敗しました";
+        console.error("OCR failed:", errorMessage);
+        console.error("Full result:", result);
         alert(translateErrorMessage(errorMessage));
       }
     } catch (err) {
