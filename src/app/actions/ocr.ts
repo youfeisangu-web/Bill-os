@@ -364,11 +364,24 @@ const RECEIPT_OCR_PROMPT = `この画像/PDFは領収書、レシート、他社
 export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRResult> {
   // 最外層のtry-catchで、すべての予期しないエラーを確実にキャッチ
   try {
-    const { userId } = await auth();
+    // 認証チェック（エラーを確実にキャッチ）
+    let userId: string | null = null;
+    try {
+      const authResult = await auth();
+      userId = authResult.userId || null;
+    } catch (authError: any) {
+      console.error("Auth error:", authError);
+      return { 
+        success: false, 
+        message: "認証エラーが発生しました。ページを再読み込みしてください。" 
+      };
+    }
+    
     if (!userId) {
       return { success: false, message: "認証が必要です。ログインしてください。" };
     }
 
+    // APIキーチェック
     const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
     if (!geminiKey) {
       return { success: false, message: "Gemini APIキーが設定されていません。管理者にお問い合わせください。" };
@@ -508,23 +521,41 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
       });
       
       // タイムアウトを設定（VercelのServerless Functionの制限を考慮）
-      const apiCallPromise = generateContentWithImage(
-        RECEIPT_OCR_PROMPT,
-        base64Data,
-        mimeType,
-        { maxTokens: 2000, temperature: 0.1 } // maxTokensを増やして詳細なレスポンスを取得
-      );
+      let apiCallPromise: Promise<string>;
+      try {
+        apiCallPromise = generateContentWithImage(
+          RECEIPT_OCR_PROMPT,
+          base64Data,
+          mimeType,
+          { maxTokens: 2000, temperature: 0.1 } // maxTokensを増やして詳細なレスポンスを取得
+        );
+      } catch (promiseError: any) {
+        console.error("Failed to create API promise:", promiseError);
+        throw new Error(`API呼び出しの準備に失敗しました: ${promiseError?.message || String(promiseError)}`);
+      }
       
       // 60秒でタイムアウト（Vercel Proプランの制限）
       const timeoutPromise = new Promise<string>((_, reject) => {
-        setTimeout(() => reject(new Error("API呼び出しがタイムアウトしました。ファイルサイズが大きすぎる可能性があります。")), 60000);
+        setTimeout(() => {
+          reject(new Error("API呼び出しがタイムアウトしました。ファイルサイズが大きすぎる可能性があります。"));
+        }, 60000);
       });
       
-      responseText = await Promise.race([apiCallPromise, timeoutPromise]);
+      try {
+        responseText = await Promise.race([apiCallPromise, timeoutPromise]);
+      } catch (raceError: any) {
+        console.error("Promise.race error:", raceError);
+        throw raceError;
+      }
+      
+      // レスポンスの検証
+      if (!responseText || typeof responseText !== "string") {
+        throw new Error("APIからの応答が無効です");
+      }
       
       console.log("Gemini API response received:", {
-        responseLength: responseText?.length || 0,
-        responsePreview: responseText?.substring(0, 200) || "empty",
+        responseLength: responseText.length,
+        responsePreview: responseText.substring(0, 200),
       });
     } catch (apiError: any) {
       console.error("Gemini API error:", apiError);
@@ -634,15 +665,24 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
     if (!EXPENSE_CATEGORIES.includes(category)) category = "その他";
 
     // 成功レスポンス（シリアライズ可能な形式を保証）
+    // すべての値を明示的にシリアライズ可能な形式に変換
     const result: ReceiptOCRResult = {
       success: true,
       data: { 
-        title: String(title), 
-        amount: Number(amount), 
-        date: String(date), 
-        category: String(category) 
+        title: String(title || "").trim(), 
+        amount: Number(amount) || 0, 
+        date: String(date || "").trim(), 
+        category: String(category || "その他").trim()
       },
     };
+    
+    // 最終的な検証（シリアライズ可能であることを確認）
+    if (typeof result.success !== "boolean") {
+      throw new Error("Invalid result format: success must be boolean");
+    }
+    if (result.data && typeof result.data !== "object") {
+      throw new Error("Invalid result format: data must be object");
+    }
     
     return result;
   } catch (error: any) {
@@ -650,25 +690,29 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
     console.error("Receipt OCR unexpected error:", error);
     console.error("Error type:", typeof error);
     console.error("Error constructor:", error?.constructor?.name);
+    console.error("Error stack:", error?.stack?.substring(0, 500));
     
     // エラーメッセージを安全に取得（シリアライズ可能な形式に変換）
     let errorMessage = "領収書の読み込みに失敗しました";
     try {
       if (error && typeof error === "object") {
         // エラーオブジェクトからメッセージを抽出
-        if (error.message) {
-          errorMessage = String(error.message);
+        if (error.message && typeof error.message === "string") {
+          errorMessage = error.message.substring(0, 1000); // 長すぎるメッセージを制限
         } else if (error.toString && typeof error.toString === "function") {
           const errorString = error.toString();
           if (errorString !== "[object Object]") {
-            errorMessage = errorString;
+            errorMessage = errorString.substring(0, 1000);
           }
         }
       } else if (typeof error === "string") {
-        errorMessage = error;
+        errorMessage = error.substring(0, 1000);
       } else {
-        errorMessage = String(error);
+        errorMessage = String(error).substring(0, 1000);
       }
+      
+      // 改行文字を安全に処理（シリアライズ可能な形式に）
+      errorMessage = errorMessage.replace(/\n/g, " ").replace(/\r/g, "");
     } catch (e) {
       // エラーメッセージの取得に失敗した場合
       console.error("Failed to extract error message:", e);
@@ -676,13 +720,30 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
     }
     
     // フォーマットされたエラーメッセージを取得
-    const formattedMessage = formatErrorMessage(error, errorMessage);
+    let formattedMessage: string;
+    try {
+      formattedMessage = formatErrorMessage(error, errorMessage);
+      // 改行文字を安全に処理
+      formattedMessage = formattedMessage.replace(/\n/g, " ").replace(/\r/g, "");
+    } catch (e) {
+      console.error("Failed to format error message:", e);
+      formattedMessage = errorMessage || "予期しないエラーが発生しました。しばらく待ってから再試行してください。";
+    }
     
     // 確実にシリアライズ可能な形式で返す（プレーンなオブジェクトのみ）
+    // すべての値を明示的にシリアライズ可能な形式に変換
     const response: ReceiptOCRResult = {
       success: false,
       message: formattedMessage || "予期しないエラーが発生しました。しばらく待ってから再試行してください。",
     };
+    
+    // 最終的な検証
+    if (typeof response.success !== "boolean") {
+      response.success = false;
+    }
+    if (typeof response.message !== "string") {
+      response.message = "予期しないエラーが発生しました。しばらく待ってから再試行してください。";
+    }
     
     return response;
   }
