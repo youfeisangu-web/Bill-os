@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { generateContentWithImage } from "@/lib/gemini";
+import { createClient } from "@supabase/supabase-js";
 
 /** エラーメッセージを適切にフォーマットする */
 function formatErrorMessage(error: unknown, defaultMessage: string): string {
@@ -321,6 +322,16 @@ export type ReceiptOCRData = {
   amount: number;
   date: string; // YYYY-MM-DD
   category: string; // 上記のいずれか
+};
+
+export type ScanAndSaveResult = {
+  success: boolean;
+  imageUrl?: string;
+  transactionDate?: string;
+  merchantName?: string;
+  totalAmount?: number;
+  registrationNumber?: string;
+  message?: string;
 };
 
 export type ReceiptOCRResult = {
@@ -1242,6 +1253,157 @@ export async function importDocumentAndCreateQuote(formData: FormData): Promise<
     return {
       success: false,
       message: formatErrorMessage(error, "見積書の作成に失敗しました"),
+    };
+  }
+}
+
+/**
+ * ファイルをSupabase Storageに保存し、OCR処理を実行する
+ * Server Actionから実行するため、Service Role Keyを使用してRLSをバイパス
+ */
+export async function scanAndSaveDocument(formData: FormData): Promise<ScanAndSaveResult> {
+  try {
+    console.log("scanAndSaveDocument called");
+    
+    // 認証チェック
+    const { userId } = await auth();
+    if (!userId) {
+      return { success: false, message: "認証が必要です。ログインしてください。" };
+    }
+
+    // ファイルの取得
+    const file = formData.get("file") as File | null;
+    if (!file) {
+      return { success: false, message: "ファイルが指定されていません" };
+    }
+
+    // Supabase Service Role Keyの確認（RLSをバイパスするため）
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!supabaseUrl || !supabaseServiceRoleKey) {
+      console.error("Supabase Service Role Key not configured");
+      return { 
+        success: false, 
+        message: "Supabase Service Role Keyが設定されていません。環境変数 SUPABASE_SERVICE_ROLE_KEY を設定してください。" 
+      };
+    }
+
+    // Service Role KeyでSupabaseクライアントを作成（RLSをバイパス）
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
+
+    // ファイルをSupabase Storageにアップロード
+    const timestamp = Date.now();
+    const sanitizedFilename = file.name.replace(/[^a-zA-Z0-9._-]/g, "_").substring(0, 100);
+    const fileName = `receipts/${userId}/${timestamp}-${sanitizedFilename}`;
+
+    console.log("Uploading file to Supabase Storage:", fileName);
+
+    const arrayBuffer = await file.arrayBuffer();
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from("receipts")
+      .upload(fileName, arrayBuffer, {
+        contentType: file.type,
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error("Supabase Storage upload error:", uploadError);
+      return { 
+        success: false, 
+        message: `ファイルのアップロードに失敗しました: ${uploadError.message}` 
+      };
+    }
+
+    // Public URLを取得
+    const { data: { publicUrl } } = supabaseAdmin.storage
+      .from("receipts")
+      .getPublicUrl(fileName);
+
+    console.log("File uploaded successfully:", publicUrl);
+
+    // OCR処理を実行
+    const base64Data = Buffer.from(arrayBuffer).toString("base64");
+    const mimeType = file.type || "image/jpeg";
+
+    // Gemini API呼び出し
+    const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    if (!geminiKey) {
+      return { success: false, message: "Gemini APIキーが設定されていません。" };
+    }
+
+    // OCR用のプロンプト（領収書用）
+    const OCR_PROMPT = `この画像/PDFは領収書、レシート、他社請求書、経費の明細書、国民年金の領収書などです。画像内のすべての文字を読み取り、以下の情報を抽出してください。JSON形式のみで返してください（Markdown記法は不要）。
+
+必須項目:
+- transactionDate: 発行日・日付（YYYY-MM-DD形式）。令和年号の場合は西暦に変換してください（例: 令和7年12月18日 → 2025-12-18）。日付が見つからない場合は現在の日付を使用してください。
+- merchantName: 店名・会社名・内容・支払先名（例: 〇〇商事、国民年金保険料、会議費、サーバー代、広告費など）
+- totalAmount: 合計金額（数値のみ、カンマは除去）。「合計額」「総額」「保険料」などの欄から金額を抽出してください。
+- registrationNumber: インボイス登録番号（見つからない場合は省略可）
+
+例: { "transactionDate": "2025-02-01", "merchantName": "〇〇文具店", "totalAmount": 5500, "registrationNumber": "T1234567890123" }
+例: { "transactionDate": "2025-12-18", "merchantName": "国民年金保険料", "totalAmount": 70040 }`;
+
+    let responseText: string;
+    try {
+      responseText = await generateContentWithImage(OCR_PROMPT, base64Data, mimeType, {
+        maxTokens: 2000,
+        temperature: 0.1,
+      });
+    } catch (ocrError: any) {
+      console.error("OCR error:", ocrError);
+      return {
+        success: false,
+        message: `OCR処理に失敗しました: ${formatErrorMessage(ocrError, "AIによる解析に失敗しました")}`,
+      };
+    }
+
+    // JSON解析
+    let jsonText = responseText.trim();
+    if (jsonText.startsWith("```")) {
+      const lines = jsonText.split("\n");
+      jsonText = lines.filter((line) => !line.startsWith("```")).join("\n").trim();
+    }
+
+    const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return {
+        success: false,
+        message: "AIの応答を解析できませんでした。画像が不鮮明な可能性があります。",
+      };
+    }
+
+    let parsed: any;
+    try {
+      parsed = JSON.parse(jsonMatch[0]);
+    } catch (parseError) {
+      console.error("JSON parse error:", parseError);
+      return {
+        success: false,
+        message: "AIの応答を解析できませんでした。",
+      };
+    }
+
+    // 結果を返す
+    return {
+      success: true,
+      imageUrl: publicUrl,
+      transactionDate: parsed.transactionDate || new Date().toISOString().split("T")[0],
+      merchantName: parsed.merchantName || "",
+      totalAmount: parsed.totalAmount ? Number(parsed.totalAmount) : 0,
+      registrationNumber: parsed.registrationNumber || undefined,
+    };
+  } catch (error: any) {
+    console.error("scanAndSaveDocument error:", error);
+    return {
+      success: false,
+      message: formatErrorMessage(error, "ファイルの処理に失敗しました"),
     };
   }
 }

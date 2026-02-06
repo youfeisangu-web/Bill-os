@@ -1,95 +1,150 @@
-import { prisma } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
-import ReadReceiptOcrButton from "./read-receipt-ocr-button";
-import ExpensesClient from "./expenses-client";
+'use client';
 
-const formatDate = (date: Date) =>
-  new Intl.DateTimeFormat("ja-JP", { dateStyle: "medium" }).format(date);
+import { useState } from 'react';
+import { scanAndSaveDocument } from '@/app/actions/ocr'; // さっき作った機能をインポート
+import { Loader2, UploadCloud, CheckCircle, AlertCircle } from 'lucide-react';
 
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("ja-JP").format(value);
+export default function ExpensesPage() {
+  const [isScanning, setIsScanning] = useState(false);
+  const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
-export default async function ExpensesPage() {
-  const { userId } = await auth();
-  if (!userId) {
-    redirect("/");
-  }
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const expenses = await prisma.expense.findMany({
-    where: { userId: userId },
-    orderBy: { date: "desc" },
-  });
+    setIsScanning(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      // 1. フォームデータを作る
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // 2. Server Action (OCR + Supabase保存) を呼び出す
+      // ※ここで「裏口」を使うのでRLSエラーが出なくなります
+      const data = await scanAndSaveDocument(formData);
+      
+      if (data.success) {
+        setResult(data);
+        console.log('スキャン成功:', data);
+      } else {
+        setError(data.message || 'スキャンに失敗しました。もう一度お試しください。');
+      }
+
+    } catch (err) {
+      console.error(err);
+      setError('スキャンに失敗しました。もう一度お試しください。');
+    } finally {
+      setIsScanning(false);
+    }
+  };
 
   return (
-    <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-1">
-          <p className="text-xs uppercase tracking-[0.4em] text-slate-400">
-            経費
-          </p>
-          <h1 className="text-2xl font-semibold text-slate-900">経費一覧</h1>
-        </div>
-        <p className="text-sm text-slate-600">
-          ビジネスで発生した経費を管理できます。
-        </p>
-      </header>
+    <div className="p-8 max-w-4xl mx-auto space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900">経費管理</h1>
+        <p className="text-gray-500 mt-2">領収書をアップロードして、AIに自動入力させましょう。</p>
+      </div>
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-      {/* ドラッグ&ドロップエリア */}
-      <ExpensesClient userId={userId} />
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">登録済み経費</h2>
-            <p className="text-sm text-slate-500">
-              日付、件名、カテゴリ、金額を確認できます。
-            </p>
+      {/* アップロードエリア */}
+      <div className="bg-white border-2 border-dashed border-indigo-200 rounded-2xl p-10 text-center hover:bg-indigo-50 transition cursor-pointer relative group">
+        <input
+          type="file"
+          accept="image/*, .pdf"
+          onChange={handleFileChange}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          disabled={isScanning}
+        />
+        
+        {isScanning ? (
+          <div className="flex flex-col items-center animate-pulse">
+            <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-4" />
+            <p className="text-lg font-semibold text-indigo-700">AIが解析中...</p>
+            <p className="text-sm text-indigo-500">画像をSupabaseに保存しています</p>
           </div>
-          <ReadReceiptOcrButton />
-        </div>
+        ) : (
+          <div className="flex flex-col items-center group-hover:scale-105 transition-transform">
+            <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-4">
+              <UploadCloud className="w-8 h-8" />
+            </div>
+            <p className="text-xl font-bold text-gray-700">ここをクリックして領収書を選択</p>
+            <p className="text-sm text-gray-400 mt-2">またはドラッグ＆ドロップ (JPG, PNG, PDF)</p>
+          </div>
+        )}
+      </div>
 
-        <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-[0.2em] text-slate-500">
-              <tr>
-                <th className="px-4 py-3">日付</th>
-                <th className="px-4 py-3">件名</th>
-                <th className="px-4 py-3">カテゴリ</th>
-                <th className="px-4 py-3 text-right">金額 (円)</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200">
-              {expenses.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-4 py-10 text-center text-sm text-slate-500"
-                  >
-                    まだ経費が登録されていません。「経費を登録」から追加してください。
-                  </td>
-                </tr>
-              ) : (
-                expenses.map((expense) => (
-                  <tr key={expense.id} className="text-slate-700">
-                    <td className="px-4 py-4">{formatDate(expense.date)}</td>
-                    <td className="px-4 py-4 font-medium text-slate-900">
-                      {expense.title}
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
-                        {expense.category}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-right">
-                      ¥{formatCurrency(expense.amount)}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {/* エラー表示 */}
+      {error && (
+        <div className="bg-red-50 text-red-600 p-4 rounded-lg flex items-center gap-2">
+          <AlertCircle className="w-5 h-5" />
+          {error}
         </div>
-      </section>
+      )}
+
+      {/* 結果表示エリア */}
+      {result && (
+        <div className="bg-white shadow-lg rounded-xl border p-6 animate-in fade-in slide-in-from-bottom-4">
+          <div className="flex items-center gap-2 mb-6 text-green-600">
+            <CheckCircle className="w-6 h-6" />
+            <span className="font-bold text-lg">読み取り完了</span>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* 左側: 読み取った画像 */}
+            <div className="bg-gray-100 rounded-lg p-2 border">
+              {/* SupabaseのURLを表示 */}
+              <img src={result.imageUrl} alt="Uploaded Receipt" className="w-full h-auto rounded shadow-sm" />
+            </div>
+
+            {/* 右側: 読み取ったデータ */}
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-gray-400 uppercase">日付</label>
+                <input 
+                  type="date" 
+                  defaultValue={result.transactionDate} 
+                  className="block w-full mt-1 p-2 border rounded font-mono"
+                />
+              </div>
+              
+              <div>
+                <label className="text-xs font-bold text-gray-400 uppercase">支払先</label>
+                <input 
+                  type="text" 
+                  defaultValue={result.merchantName} 
+                  className="block w-full mt-1 p-2 border rounded font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-gray-400 uppercase">合計金額</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2 text-gray-500">¥</span>
+                  <input 
+                    type="number" 
+                    defaultValue={result.totalAmount} 
+                    className="block w-full mt-1 pl-8 p-2 border rounded text-2xl font-bold text-indigo-600"
+                  />
+                </div>
+              </div>
+
+              {result.registrationNumber && (
+                <div className="pt-2">
+                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
+                    インボイス登録番号: {result.registrationNumber}
+                  </span>
+                </div>
+              )}
+
+              <button className="w-full bg-black text-white py-3 rounded-lg font-bold hover:bg-gray-800 transition mt-4">
+                この内容で登録する
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
