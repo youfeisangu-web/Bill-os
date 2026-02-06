@@ -27,6 +27,8 @@ export default function ExpensesPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    console.log('📁 ファイル選択:', { name: file.name, size: file.size, type: file.type });
+
     setIsScanning(true);
     setError(null);
 
@@ -35,14 +37,44 @@ export default function ExpensesPage() {
       const MAX_SIZE = 4 * 1024 * 1024; // 4MB
       let processedFile = file;
 
+      console.log('📊 ファイルサイズチェック:', { originalSize: file.size, maxSize: MAX_SIZE });
+
       // 画像の場合、大きければ圧縮
       if (file.type.startsWith('image/') && file.size > MAX_SIZE) {
-        processedFile = await compressImage(file, 3.5);
+        console.log('🔄 画像を圧縮中...');
+        try {
+          processedFile = await compressImage(file, 3.5);
+          console.log('✅ 圧縮完了:', { originalSize: file.size, compressedSize: processedFile.size });
+        } catch (compressError: any) {
+          console.error('❌ 圧縮エラー:', compressError);
+          setError(`画像の圧縮に失敗しました: ${compressError?.message || String(compressError)}`);
+          setIsScanning(false);
+          return;
+        }
       }
 
       // 最終チェック
       if (processedFile.size > MAX_SIZE) {
-        setError(`ファイルサイズが大きすぎます（${Math.round(processedFile.size / 1024 / 1024)}MB）。3MB以下のファイルを選択してください。`);
+        const errorMsg = `ファイルサイズが大きすぎます（${Math.round(processedFile.size / 1024 / 1024)}MB）。3MB以下のファイルを選択してください。`;
+        console.error('❌ ファイルサイズエラー:', errorMsg);
+        setError(errorMsg);
+        setIsScanning(false);
+        return;
+      }
+
+      console.log('📤 Server Actionに送信中...', { 
+        fileName: processedFile.name, 
+        fileSize: processedFile.size, 
+        fileSizeMB: Math.round(processedFile.size / 1024 / 1024 * 100) / 100,
+        fileType: processedFile.type 
+      });
+
+      // Vercelの制限チェック（4.5MB以下であることを確認）
+      const VERCEL_LIMIT = 4.5 * 1024 * 1024; // 4.5MB
+      if (processedFile.size > VERCEL_LIMIT) {
+        const errorMsg = `ファイルサイズが大きすぎます（${Math.round(processedFile.size / 1024 / 1024 * 100) / 100}MB）。Vercelの制限（4.5MB）を超えています。`;
+        console.error('❌ ファイルサイズエラー:', errorMsg);
+        setError(errorMsg);
         setIsScanning(false);
         return;
       }
@@ -50,18 +82,99 @@ export default function ExpensesPage() {
       // Server Actionに送信
       const formData = new FormData();
       formData.append('file', processedFile);
+      
+      // FormDataの内容を確認
+      const fileInFormData = formData.get('file') as File | null;
+      console.log('📋 FormData作成完了:', {
+        hasFile: formData.has('file'),
+        fileInFormData: fileInFormData ? {
+          name: fileInFormData.name,
+          size: fileInFormData.size,
+          type: fileInFormData.type,
+        } : 'no',
+        originalFile: {
+          name: processedFile.name,
+          size: processedFile.size,
+          type: processedFile.type,
+        },
+      });
 
-      const result = await readReceiptImage(formData);
+      // FormDataにファイルが正しく含まれているか確認
+      if (!fileInFormData || fileInFormData.size === 0) {
+        const errorMsg = 'ファイルがFormDataに正しく含まれていません。ページを再読み込みして再試行してください。';
+        console.error('❌ FormDataエラー:', errorMsg);
+        setError(errorMsg);
+        setIsScanning(false);
+        return;
+      }
+
+      console.log('⏳ OCR処理を開始...');
+      const startTime = Date.now();
+      
+      let result;
+      try {
+        // Server Actionを呼び出す前に、ファイル情報を再度確認
+        console.log('🚀 Server Action呼び出し直前:', {
+          fileName: processedFile.name,
+          fileSize: processedFile.size,
+          fileType: processedFile.type,
+          formDataFileSize: fileInFormData.size,
+        });
+        
+        result = await readReceiptImage(formData);
+      } catch (serverError: any) {
+        const elapsed = Date.now() - startTime;
+        console.error(`❌ Server Action呼び出しエラー (経過時間: ${elapsed}ms):`, serverError);
+        console.error('エラー詳細:', {
+          name: serverError?.name,
+          message: serverError?.message,
+          stack: serverError?.stack?.substring(0, 500),
+          cause: serverError?.cause,
+        });
+        
+        // 400 Bad Requestエラーの場合
+        if (serverError?.message?.includes('400') || serverError?.message?.includes('Bad Request')) {
+          const errorMsg = `リクエストが不正です（400 Bad Request）。\n\n考えられる原因:\n1. ファイル形式がサポートされていない（現在: ${processedFile.type || '不明'}）\n2. ファイルが破損している\n3. サーバーの制限に達している\n\nファイル形式: ${processedFile.type || '不明'}\nファイルサイズ: ${Math.round(processedFile.size / 1024 / 1024 * 100) / 100}MB`;
+          console.error('❌ 400エラー詳細:', errorMsg);
+          setError(errorMsg);
+          setIsScanning(false);
+          return;
+        }
+        
+        throw serverError; // 他のエラーは再スロー
+      }
+      
+      const duration = Date.now() - startTime;
+      console.log(`⏱️ OCR処理完了 (${duration}ms):`, result);
 
       if (result.success && result.data) {
+        console.log('✅ OCR成功:', result.data);
         setInitialValues(receiptToInitialValues(result.data));
         setDialogOpen(true);
       } else {
-        setError(result.message || '読み取りに失敗しました。もう一度お試しください。');
+        const errorMsg = result.message || '読み取りに失敗しました。もう一度お試しください。';
+        console.error('❌ OCR失敗:', errorMsg);
+        setError(errorMsg);
       }
     } catch (err: any) {
-      console.error('エラー:', err);
-      setError(err?.message || 'エラーが発生しました。もう一度お試しください。');
+      console.error('❌ 予期しないエラー:', err);
+      console.error('エラー詳細:', {
+        name: err?.name,
+        message: err?.message,
+        stack: err?.stack,
+        toString: err?.toString(),
+      });
+      
+      let errorMessage = 'エラーが発生しました。もう一度お試しください。';
+      if (err?.message) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      } else if (err?.toString && err.toString() !== '[object Object]') {
+        errorMessage = err.toString();
+      }
+      
+      setError(`エラー: ${errorMessage}`);
     } finally {
       setIsScanning(false);
     }

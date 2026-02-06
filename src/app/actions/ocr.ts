@@ -427,6 +427,37 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
       fileName = file.name;
       fileSize = file.size;
       fileType = file.type;
+      
+      console.log("📁 ファイル情報:", {
+        name: fileName,
+        size: fileSize,
+        sizeMB: Math.round(fileSize / 1024 / 1024 * 100) / 100,
+        type: fileType,
+        lastModified: file.lastModified,
+      });
+      
+      // ファイルサイズが0の場合はエラー
+      if (fileSize === 0) {
+        console.error("❌ ファイルサイズが0です");
+        return {
+          success: false,
+          message: "ファイルが空です。正しいファイルを選択してください。",
+        };
+      }
+      
+      // Vercelの制限チェック（4.5MB）
+      const VERCEL_LIMIT = 4.5 * 1024 * 1024;
+      if (fileSize > VERCEL_LIMIT) {
+        console.error("❌ ファイルサイズがVercelの制限を超えています:", {
+          fileSize: fileSize,
+          limit: VERCEL_LIMIT,
+          sizeMB: Math.round(fileSize / 1024 / 1024 * 100) / 100,
+        });
+        return {
+          success: false,
+          message: `ファイルサイズが大きすぎます（${Math.round(fileSize / 1024 / 1024 * 100) / 100}MB）。Vercelの制限（4.5MB）を超えています。3MB以下のファイルを選択してください。`,
+        };
+      }
     } else if (fileUrl) {
       // URLからファイルをダウンロード（Vercelの制限を回避）
       console.log("Downloading file from URL:", fileUrl);
@@ -591,16 +622,22 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
     // Gemini API呼び出し（タイムアウト対策）
     let responseText: string;
     try {
-      console.log("Calling Gemini API...", {
+      console.log("🔍 Calling Gemini API...", {
         fileName: fileName,
         fileSize: fileSize,
+        fileSizeMB: Math.round(fileSize / 1024 / 1024 * 100) / 100,
         mimeType: mimeType,
         base64Length: base64Data.length,
+        base64LengthMB: Math.round(base64Data.length / 1024 / 1024 * 100) / 100,
       });
       
       // タイムアウトを設定（VercelのServerless Functionの制限を考慮）
+      const TIMEOUT_MS = 60000; // 60秒
+      const apiStartTime = Date.now();
+      
       let apiCallPromise: Promise<string>;
       try {
+        console.log("🚀 Starting Gemini API call...");
         apiCallPromise = generateContentWithImage(
           RECEIPT_OCR_PROMPT,
           base64Data,
@@ -608,21 +645,32 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
           { maxTokens: 2000, temperature: 0.1 } // maxTokensを増やして詳細なレスポンスを取得
         );
       } catch (promiseError: any) {
-        console.error("Failed to create API promise:", promiseError);
+        console.error("❌ Failed to create API promise:", promiseError);
         throw new Error(`API呼び出しの準備に失敗しました: ${promiseError?.message || String(promiseError)}`);
       }
       
       // 60秒でタイムアウト（Vercel Proプランの制限）
       const timeoutPromise = new Promise<string>((_, reject) => {
         setTimeout(() => {
-          reject(new Error("API呼び出しがタイムアウトしました。ファイルサイズが大きすぎる可能性があります。"));
-        }, 60000);
+          const elapsed = Date.now() - apiStartTime;
+          console.error(`⏱️ TIMEOUT: API呼び出しが${TIMEOUT_MS}ms（${TIMEOUT_MS / 1000}秒）でタイムアウトしました。経過時間: ${elapsed}ms`);
+          reject(new Error(`API呼び出しがタイムアウトしました（${TIMEOUT_MS / 1000}秒）。ファイルサイズが大きすぎる可能性があります。`));
+        }, TIMEOUT_MS);
       });
       
       try {
         responseText = await Promise.race([apiCallPromise, timeoutPromise]);
+        const elapsed = Date.now() - apiStartTime;
+        console.log(`✅ API呼び出し成功: ${elapsed}ms（${elapsed / 1000}秒）で完了`);
       } catch (raceError: any) {
-        console.error("Promise.race error:", raceError);
+        const elapsed = Date.now() - apiStartTime;
+        console.error(`❌ Promise.race error (経過時間: ${elapsed}ms):`, raceError);
+        
+        // タイムアウトかどうかを確認
+        if (raceError?.message?.includes("タイムアウト") || raceError?.message?.includes("timeout")) {
+          console.error(`⏱️ タイムアウト発生: ${elapsed}ms経過後にタイムアウト`);
+        }
+        
         throw raceError;
       }
       
@@ -631,9 +679,9 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
         throw new Error("APIからの応答が無効です");
       }
       
-      console.log("Gemini API response received:", {
+      console.log("✅ Gemini API response received:", {
         responseLength: responseText.length,
-        responsePreview: responseText.substring(0, 200),
+        responsePreview: responseText.substring(0, 500),
       });
     } catch (apiError: any) {
       console.error("Gemini API error:", apiError);
@@ -695,10 +743,11 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
       jsonMatch = jsonText.match(/\{.*\}/s);
     }
     if (!jsonMatch) {
-      console.error("JSON parse failed. Full response:", responseText);
+      console.error("❌ JSON parse failed. Full response:", responseText);
+      const preview = responseText.substring(0, 200).replace(/\n/g, " ");
       return { 
         success: false, 
-        message: `AIの応答を解析できませんでした。\n\nレスポンス: ${responseText.substring(0, 500)}\n\n画像が不鮮明な可能性があります。別の画像をお試しください。` 
+        message: `AIの応答を解析できませんでした。レスポンス: ${preview}... 画像が不鮮明な可能性があります。別の画像をお試しください。` 
       };
     }
 
@@ -710,9 +759,10 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
       console.error("JSON parse error:", parseError);
       console.error("Full response text:", responseText);
       console.error("Matched JSON string:", jsonMatch[0]);
+      const preview = responseText.substring(0, 200).replace(/\n/g, " ");
       return {
         success: false,
-        message: `AIの応答を解析できませんでした。\n\nレスポンス: ${responseText.substring(0, 500)}\n\n画像が不鮮明な可能性があります。別の画像をお試しください。`,
+        message: `AIの応答を解析できませんでした。レスポンス: ${preview}... 画像が不鮮明な可能性があります。別の画像をお試しください。`,
       };
     }
 
