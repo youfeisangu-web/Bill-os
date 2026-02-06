@@ -399,21 +399,67 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
       return { success: false, message: "Gemini APIキーが設定されていません。管理者にお問い合わせください。" };
     }
 
+    // ファイルまたはURLの取得（Vercelの制限を回避するため、URLからダウンロードも対応）
     const file = formData.get("file") as File | null;
-    if (!file) {
-      console.error("No file in FormData");
+    const fileUrl = formData.get("fileUrl") as string | null;
+    
+    let fileToProcess: File | null = null;
+    let fileName = "";
+    let fileSize = 0;
+    let fileType = "";
+    
+    if (file) {
+      // FormDataから直接ファイルを取得
+      fileToProcess = file;
+      fileName = file.name;
+      fileSize = file.size;
+      fileType = file.type;
+    } else if (fileUrl) {
+      // URLからファイルをダウンロード（Vercelの制限を回避）
+      console.log("Downloading file from URL:", fileUrl);
+      try {
+        const response = await fetch(fileUrl);
+        if (!response.ok) {
+          throw new Error(`ファイルのダウンロードに失敗しました: ${response.status} ${response.statusText}`);
+        }
+        
+        const blob = await response.blob();
+        const urlParts = fileUrl.split("/");
+        fileName = urlParts[urlParts.length - 1] || "receipt.jpg";
+        fileToProcess = new File([blob], fileName, { type: blob.type });
+        fileSize = blob.size;
+        fileType = blob.type;
+        
+        console.log("File downloaded from URL:", {
+          name: fileName,
+          size: fileSize,
+          type: fileType,
+        });
+      } catch (downloadError: any) {
+        console.error("File download error:", downloadError);
+        return {
+          success: false,
+          message: `ファイルのダウンロードに失敗しました: ${downloadError?.message || String(downloadError)}`,
+        };
+      }
+    } else {
+      console.error("No file or fileUrl in FormData");
       return { success: false, message: "ファイルが指定されていません" };
     }
     
-    console.log("File received:", {
-      name: file.name,
-      size: file.size,
-      type: file.type,
+    if (!fileToProcess) {
+      return { success: false, message: "ファイルの取得に失敗しました" };
+    }
+    
+    console.log("File to process:", {
+      name: fileName,
+      size: fileSize,
+      type: fileType,
     });
 
     // ファイルタイプの検証（画像、PDF、Office文書など幅広く対応）
-    const fileName = file.name.toLowerCase();
-    const fileType = file.type.toLowerCase();
+    const fileNameLower = fileName.toLowerCase();
+    const fileTypeLower = fileType.toLowerCase();
     
     // 対応する画像形式を拡張
     const allowedImageTypes = [
@@ -449,25 +495,25 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
         if (fileName.includes(".")) {
           console.log("File type unknown, but has extension. Allowing:", fileName);
         } else {
-          return { 
+            return { 
             success: false, 
-            message: `対応していないファイル形式です。\n\n対応形式: 画像（JPEG、PNG、GIF、WebP、BMP、TIFF、HEICなど）、PDF、Excel（.xlsx、.xls）、Word（.docx、.doc）、テキスト（.txt、.csv）\n\n選択されたファイル: ${file.name}` 
+            message: `対応していないファイル形式です。\n\n対応形式: 画像（JPEG、PNG、GIF、WebP、BMP、TIFF、HEICなど）、PDF、Excel（.xlsx、.xls）、Word（.docx、.doc）、テキスト（.txt、.csv）\n\n選択されたファイル: ${fileName}` 
           };
         }
       } else {
         return { 
           success: false, 
-          message: `対応していないファイル形式です（${fileType}）。\n\n対応形式: 画像（JPEG、PNG、GIF、WebP、BMP、TIFF、HEICなど）、PDF、Excel（.xlsx、.xls）、Word（.docx、.doc）、テキスト（.txt、.csv）\n\n選択されたファイル: ${file.name}` 
+          message: `対応していないファイル形式です（${fileTypeLower}）。\n\n対応形式: 画像（JPEG、PNG、GIF、WebP、BMP、TIFF、HEICなど）、PDF、Excel（.xlsx、.xls）、Word（.docx、.doc）、テキスト（.txt、.csv）\n\n選択されたファイル: ${fileName}` 
         };
       }
     }
 
     // ファイルサイズ制限を緩和（50MBまで）
     const MAX_SIZE = 50 * 1024 * 1024; // 50MB
-    if (file.size > MAX_SIZE) {
+    if (fileSize > MAX_SIZE) {
       return { 
         success: false, 
-        message: `ファイルサイズが大きすぎます（${Math.round(file.size / 1024 / 1024)}MB）。\n\n最大サイズ: 50MB\n\nファイルサイズを小さくするか、画像の解像度を下げて再試行してください。` 
+        message: `ファイルサイズが大きすぎます（${Math.round(fileSize / 1024 / 1024)}MB）。\n\n最大サイズ: 50MB\n\nファイルサイズを小さくするか、画像の解像度を下げて再試行してください。` 
       };
     }
 
@@ -477,7 +523,7 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
     let mimeType: string;
     
     try {
-      const arrayBuffer = await file.arrayBuffer();
+      const arrayBuffer = await fileToProcess.arrayBuffer();
       buffer = Buffer.from(arrayBuffer);
       base64Data = buffer.toString("base64");
       
@@ -509,11 +555,11 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
         // ここではエラーを返す
         return {
           success: false,
-          message: `Office文書（.xlsx、.xls、.docx、.doc）やテキストファイル（.txt、.csv）は、現在画像やPDFに変換してからアップロードしてください。\n\n選択されたファイル: ${file.name}`,
+          message: `Office文書（.xlsx、.xls、.docx、.doc）やテキストファイル（.txt、.csv）は、現在画像やPDFに変換してからアップロードしてください。\n\n選択されたファイル: ${fileName}`,
         };
       } else {
         // その他のファイル形式
-        mimeType = fileType || "image/jpeg";
+        mimeType = fileTypeLower || "image/jpeg";
       }
       
       // base64データが大きすぎる場合の警告
@@ -533,8 +579,8 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
     let responseText: string;
     try {
       console.log("Calling Gemini API...", {
-        fileName: file.name,
-        fileSize: file.size,
+        fileName: fileName,
+        fileSize: fileSize,
         mimeType: mimeType,
         base64Length: base64Data.length,
       });

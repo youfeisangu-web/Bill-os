@@ -9,6 +9,7 @@ import NewExpenseDialog from "./new-expense-dialog";
 import { Upload, Loader2 } from "lucide-react";
 import { translateErrorMessage } from "@/lib/error-translator";
 import heic2any from "heic2any";
+import { supabase } from "@/lib/supabase-client";
 
 export const RECEIPT_OCR_PREFILL_KEY = "receiptOcrPrefill";
 
@@ -21,7 +22,7 @@ function receiptToInitialValues(data: ReceiptOCRData): ExpenseInitialValues {
   };
 }
 
-export default function ExpensesClient() {
+export default function ExpensesClient({ userId }: { userId: string }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -246,25 +247,70 @@ export default function ExpensesClient() {
         sizeMB: Math.round(processedFile.size / 1024 / 1024 * 100) / 100,
       });
 
-      // FormDataの作成と検証
-      const formData = new FormData();
-      formData.set("file", processedFile);
+      // Vercelの制限を回避するため、Supabase Storageに直接アップロードしてからURLを渡す
+      let fileUrl: string;
       
-      // FormDataの内容を確認（デバッグ用）
-      console.log("FormData created, file in FormData:", formData.get("file") ? "yes" : "no");
+      try {
+        console.log("Uploading to Supabase Storage to avoid Vercel limit...");
+        
+        // Supabase Storageにアップロード
+        const timestamp = Date.now();
+        const sanitizedFilename = processedFile.name.replace(/[^a-zA-Z0-9._-]/g, "_").substring(0, 100);
+        const fileName = `receipts/${userId}/${timestamp}-${sanitizedFilename}`;
+        
+        const { error: uploadError, data: uploadData } = await supabase.storage
+          .from("receipts")
+          .upload(fileName, processedFile, {
+            cacheControl: "3600",
+            upsert: false,
+          });
+        
+        if (uploadError) {
+          throw new Error(`Supabase Storageへのアップロードに失敗しました: ${uploadError.message}`);
+        }
+        
+        // Public URLを取得
+        const { data: { publicUrl } } = supabase.storage.from("receipts").getPublicUrl(fileName);
+        fileUrl = publicUrl;
+        
+        console.log("File uploaded to Supabase Storage:", fileUrl);
+      } catch (uploadError: any) {
+        console.error("Supabase Storage upload error:", uploadError);
+        alert(`ファイルのアップロードに失敗しました。\n\n${uploadError?.message || "エラーが発生しました"}\n\n【解決方法】\n- ファイルサイズを小さくする（3MB以下を推奨）\n- 画像の解像度を下げる\n- 別の画像を試してください`);
+        return;
+      }
+      
+      // FormDataの作成（URLを渡す）
+      const formData = new FormData();
+      formData.set("fileUrl", fileUrl);
       
       let result: Awaited<ReturnType<typeof readReceiptImage>>;
       try {
-        console.log("Calling Server Action...");
+        console.log("Calling Server Action with file URL...");
         
         // Server Action呼び出し（タイムアウト対策）
         const actionPromise = readReceiptImage(formData);
         const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => reject(new Error("サーバーからの応答がタイムアウトしました。ファイルサイズが大きすぎる可能性があります。")), 90000); // 90秒
+          setTimeout(() => reject(new Error("サーバーからの応答がタイムアウトしました。")), 90000); // 90秒
         });
         
         result = await Promise.race([actionPromise, timeoutPromise]);
         console.log("Server Action completed successfully");
+        
+        // 処理完了後、Supabase Storageからファイルを削除（オプション）
+        try {
+          // fileUrlからファイルパスを抽出（例: https://xxx.supabase.co/storage/v1/object/public/receipts/receipts/userId/timestamp-filename）
+          // パス部分を取得: receipts/userId/timestamp-filename
+          const urlParts = fileUrl.split("/receipts/");
+          if (urlParts.length > 1) {
+            const filePath = `receipts/${urlParts[1]}`;
+            await supabase.storage.from("receipts").remove([filePath]);
+            console.log("Temporary file removed from Supabase Storage:", filePath);
+          }
+        } catch (cleanupError) {
+          console.warn("Failed to cleanup temporary file:", cleanupError);
+          // クリーンアップの失敗は無視（一時ファイルは後で手動削除可能）
+        }
       } catch (serverError: any) {
         // Server Actionが例外をスローした場合
         console.error("Server Action error:", serverError);
