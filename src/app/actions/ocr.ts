@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { generateContentWithImage } from "@/lib/gemini";
 import { createClient } from "@supabase/supabase-js";
 
-/** エラーメッセージを適切にフォーマットする */
+/** エラーメッセージを適切にフォーマットする（シリアライズ可能な形式に変換） */
 function formatErrorMessage(error: unknown, defaultMessage: string): string {
   if (!error) return defaultMessage;
   
@@ -27,7 +27,8 @@ function formatErrorMessage(error: unknown, defaultMessage: string): string {
     errorCode === 429 ||
     errorMessage.includes("Resource exhausted")
   ) {
-    return "Gemini APIの利用制限に達しました。\n\nしばらく待ってから（数分〜数時間後）再試行してください。\n\n詳細: https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429";
+    // 改行を削除してシリアライズ可能にする
+    return "Gemini APIの利用制限に達しました。しばらく待ってから（数分〜数時間後）再試行してください。詳細: https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429";
   }
   
   // タイムアウトエラー
@@ -40,8 +41,9 @@ function formatErrorMessage(error: unknown, defaultMessage: string): string {
     return "処理に時間がかかりすぎました。ファイルサイズを小さくするか、画像の解像度を下げて再試行してください。";
   }
   
-  // その他のエラー
-  return errorMessage || defaultMessage;
+  // その他のエラー（改行を削除）
+  const cleanMessage = (errorMessage || defaultMessage).replace(/\n/g, " ").replace(/\r/g, "").trim();
+  return cleanMessage || defaultMessage;
 }
 
 const TAX_RATE = 0.1;
@@ -1266,16 +1268,27 @@ export async function scanAndSaveDocument(formData: FormData): Promise<ScanAndSa
   try {
     console.log("scanAndSaveDocument called");
     
+    // FormDataの検証
+    if (!formData || !(formData instanceof FormData)) {
+      console.error("Invalid FormData:", formData);
+      return { 
+        success: false, 
+        message: "リクエストが不正です。ページを再読み込みして再試行してください。" 
+      };
+    }
+    
     // 認証チェック
     let userId: string | null = null;
     try {
       const authResult = await auth();
       userId = authResult.userId || null;
+      console.log("Auth check passed, userId:", userId ? "exists" : "null");
     } catch (authError: any) {
       console.error("Auth error:", authError);
+      const errorMsg = authError?.message || String(authError || "認証エラー");
       return { 
         success: false, 
-        message: "認証エラーが発生しました。ページを再読み込みしてください。" 
+        message: `認証エラーが発生しました: ${errorMsg.replace(/\n/g, " ").trim()}` 
       };
     }
     
@@ -1284,7 +1297,17 @@ export async function scanAndSaveDocument(formData: FormData): Promise<ScanAndSa
     }
 
     // ファイルの取得
-    const file = formData.get("file") as File | null;
+    let file: File | null = null;
+    try {
+      file = formData.get("file") as File | null;
+    } catch (fileError: any) {
+      console.error("File get error:", fileError);
+      return {
+        success: false,
+        message: `ファイルの取得に失敗しました: ${fileError?.message || String(fileError)}`,
+      };
+    }
+    
     if (!file) {
       return { success: false, message: "ファイルが指定されていません" };
     }
@@ -1486,9 +1509,14 @@ export async function scanAndSaveDocument(formData: FormData): Promise<ScanAndSa
       errorMessage = "ファイルの処理に失敗しました";
     }
     
+    // エラーメッセージを確実にシリアライズ可能な形式に変換
+    const finalErrorMessage = formatErrorMessage(error, errorMessage);
+    // 念のため、再度改行を削除
+    const cleanFinalMessage = finalErrorMessage.replace(/\n/g, " ").replace(/\r/g, "").trim();
+    
     return {
       success: false,
-      message: formatErrorMessage(error, errorMessage),
+      message: cleanFinalMessage || "ファイルの処理に失敗しました",
     };
   }
 }

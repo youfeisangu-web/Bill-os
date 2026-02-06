@@ -1,13 +1,26 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { scanAndSaveDocument } from '@/app/actions/ocr'; // さっき作った機能をインポート
+import { readReceiptImage } from '@/app/actions/ocr';
 import { Loader2, UploadCloud, CheckCircle, AlertCircle } from 'lucide-react';
+import NewExpenseDialog from './new-expense-dialog';
+import type { ExpenseInitialValues } from './new-expense-dialog';
+import type { ReceiptOCRData } from '@/app/actions/ocr';
+
+function receiptToInitialValues(data: ReceiptOCRData): ExpenseInitialValues {
+  return {
+    title: data.title,
+    amount: data.amount,
+    date: data.date,
+    category: data.category,
+  };
+}
 
 export default function ExpensesPage() {
   const [isScanning, setIsScanning] = useState(false);
-  const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [initialValues, setInitialValues] = useState<ExpenseInitialValues | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -16,33 +29,111 @@ export default function ExpensesPage() {
 
     setIsScanning(true);
     setError(null);
-    setResult(null);
 
     try {
-      // 1. フォームデータを作る
-      const formData = new FormData();
-      formData.append('file', file);
+      // ファイルサイズチェック（4MB以下に圧縮）
+      const MAX_SIZE = 4 * 1024 * 1024; // 4MB
+      let processedFile = file;
 
-      // 2. Server Action (OCR + Supabase保存) を呼び出す
-      // ※ここで「裏口」を使うのでRLSエラーが出なくなります
-      const data = await scanAndSaveDocument(formData);
-      
-      if (data.success) {
-        setResult(data);
-        console.log('スキャン成功:', data);
-      } else {
-        console.error('スキャン失敗:', data);
-        const errorMsg = data.message || 'スキャンに失敗しました。もう一度お試しください。';
-        setError(errorMsg);
+      // 画像の場合、大きければ圧縮
+      if (file.type.startsWith('image/') && file.size > MAX_SIZE) {
+        processedFile = await compressImage(file, 3.5);
       }
 
+      // 最終チェック
+      if (processedFile.size > MAX_SIZE) {
+        setError(`ファイルサイズが大きすぎます（${Math.round(processedFile.size / 1024 / 1024)}MB）。3MB以下のファイルを選択してください。`);
+        setIsScanning(false);
+        return;
+      }
+
+      // Server Actionに送信
+      const formData = new FormData();
+      formData.append('file', processedFile);
+
+      const result = await readReceiptImage(formData);
+
+      if (result.success && result.data) {
+        setInitialValues(receiptToInitialValues(result.data));
+        setDialogOpen(true);
+      } else {
+        setError(result.message || '読み取りに失敗しました。もう一度お試しください。');
+      }
     } catch (err: any) {
-      console.error('スキャンエラー:', err);
-      const errorMessage = err?.message || err?.toString() || 'スキャンに失敗しました。もう一度お試しください。';
-      setError(`エラー: ${errorMessage}`);
+      console.error('エラー:', err);
+      setError(err?.message || 'エラーが発生しました。もう一度お試しください。');
     } finally {
       setIsScanning(false);
     }
+  };
+
+  // 画像圧縮関数
+  const compressImage = async (file: File, maxSizeMB: number = 3.5): Promise<File> => {
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+    if (file.size <= maxSizeBytes) return file;
+
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const maxDimension = 2000;
+
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = (height * maxDimension) / width;
+              width = maxDimension;
+            } else {
+              width = (width * maxDimension) / height;
+              height = maxDimension;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Canvas context not available'));
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+
+          let quality = 0.7;
+          const tryCompress = (q: number) => {
+            canvas.toBlob(
+              (blob) => {
+                if (!blob) {
+                  reject(new Error('圧縮に失敗しました'));
+                  return;
+                }
+
+                if (blob.size > maxSizeBytes && q > 0.3) {
+                  tryCompress(q - 0.1);
+                } else {
+                  const compressedFile = new File([blob], file.name.replace(/\.(png|gif|webp)$/i, '.jpg'), {
+                    type: 'image/jpeg',
+                    lastModified: file.lastModified,
+                  });
+                  resolve(compressedFile);
+                }
+              },
+              'image/jpeg',
+              q
+            );
+          };
+
+          tryCompress(quality);
+        };
+        img.onerror = () => reject(new Error('画像の読み込みに失敗しました'));
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => reject(new Error('ファイルの読み込みに失敗しました'));
+      reader.readAsDataURL(file);
+    });
   };
 
   return (
@@ -53,7 +144,7 @@ export default function ExpensesPage() {
       </div>
 
       {/* アップロードエリア */}
-      <div 
+      <div
         className="bg-white border-2 border-dashed border-indigo-200 rounded-2xl p-10 text-center hover:bg-indigo-50 transition cursor-pointer relative group"
         onClick={() => {
           if (!isScanning && fileInputRef.current) {
@@ -69,12 +160,11 @@ export default function ExpensesPage() {
           className="hidden"
           disabled={isScanning}
         />
-        
+
         {isScanning ? (
           <div className="flex flex-col items-center animate-pulse">
             <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-4" />
             <p className="text-lg font-semibold text-indigo-700">AIが解析中...</p>
-            <p className="text-sm text-indigo-500">画像をSupabaseに保存しています</p>
           </div>
         ) : (
           <div className="flex flex-col items-center group-hover:scale-105 transition-transform">
@@ -95,68 +185,12 @@ export default function ExpensesPage() {
         </div>
       )}
 
-      {/* 結果表示エリア */}
-      {result && (
-        <div className="bg-white shadow-lg rounded-xl border p-6 animate-in fade-in slide-in-from-bottom-4">
-          <div className="flex items-center gap-2 mb-6 text-green-600">
-            <CheckCircle className="w-6 h-6" />
-            <span className="font-bold text-lg">読み取り完了</span>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* 左側: 読み取った画像 */}
-            <div className="bg-gray-100 rounded-lg p-2 border">
-              {/* SupabaseのURLを表示 */}
-              <img src={result.imageUrl} alt="Uploaded Receipt" className="w-full h-auto rounded shadow-sm" />
-            </div>
-
-            {/* 右側: 読み取ったデータ */}
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs font-bold text-gray-400 uppercase">日付</label>
-                <input 
-                  type="date" 
-                  defaultValue={result.transactionDate} 
-                  className="block w-full mt-1 p-2 border rounded font-mono"
-                />
-              </div>
-              
-              <div>
-                <label className="text-xs font-bold text-gray-400 uppercase">支払先</label>
-                <input 
-                  type="text" 
-                  defaultValue={result.merchantName} 
-                  className="block w-full mt-1 p-2 border rounded font-bold"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-gray-400 uppercase">合計金額</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-2 text-gray-500">¥</span>
-                  <input 
-                    type="number" 
-                    defaultValue={result.totalAmount} 
-                    className="block w-full mt-1 pl-8 p-2 border rounded text-2xl font-bold text-indigo-600"
-                  />
-                </div>
-              </div>
-
-              {result.registrationNumber && (
-                <div className="pt-2">
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
-                    インボイス登録番号: {result.registrationNumber}
-                  </span>
-                </div>
-              )}
-
-              <button className="w-full bg-black text-white py-3 rounded-lg font-bold hover:bg-gray-800 transition mt-4">
-                この内容で登録する
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 経費登録ダイアログ */}
+      <NewExpenseDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        initialValues={initialValues}
+      />
     </div>
   );
 }
