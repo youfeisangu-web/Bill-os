@@ -11,8 +11,10 @@ const nextConfig: NextConfig = {
   
   // Server Actionsのボディサイズ制限を設定（デフォルトは1MB）
   // Vercelの制限（4.5MB）を考慮して5MBに設定
-  serverActions: {
-    bodySizeLimit: '5mb',
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '5mb',
+    },
   },
 };
 
