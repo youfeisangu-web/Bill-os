@@ -1262,11 +1262,23 @@ export async function importDocumentAndCreateQuote(formData: FormData): Promise<
  * Server Actionから実行するため、Service Role Keyを使用してRLSをバイパス
  */
 export async function scanAndSaveDocument(formData: FormData): Promise<ScanAndSaveResult> {
+  // 最外層のtry-catchで、すべての予期しないエラーを確実にキャッチ
   try {
     console.log("scanAndSaveDocument called");
     
     // 認証チェック
-    const { userId } = await auth();
+    let userId: string | null = null;
+    try {
+      const authResult = await auth();
+      userId = authResult.userId || null;
+    } catch (authError: any) {
+      console.error("Auth error:", authError);
+      return { 
+        success: false, 
+        message: "認証エラーが発生しました。ページを再読み込みしてください。" 
+      };
+    }
+    
     if (!userId) {
       return { success: false, message: "認証が必要です。ログインしてください。" };
     }
@@ -1276,6 +1288,8 @@ export async function scanAndSaveDocument(formData: FormData): Promise<ScanAndSa
     if (!file) {
       return { success: false, message: "ファイルが指定されていません" };
     }
+
+    console.log("File received:", { name: file.name, size: file.size, type: file.type });
 
     // Supabase Service Role Keyの確認（RLSをバイパスするため）
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -1290,12 +1304,21 @@ export async function scanAndSaveDocument(formData: FormData): Promise<ScanAndSa
     }
 
     // Service Role KeyでSupabaseクライアントを作成（RLSをバイパス）
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    });
+    let supabaseAdmin;
+    try {
+      supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      });
+    } catch (clientError: any) {
+      console.error("Supabase client creation error:", clientError);
+      return {
+        success: false,
+        message: `Supabaseクライアントの作成に失敗しました: ${clientError?.message || String(clientError)}`,
+      };
+    }
 
     // ファイルをSupabase Storageにアップロード
     const timestamp = Date.now();
@@ -1304,33 +1327,72 @@ export async function scanAndSaveDocument(formData: FormData): Promise<ScanAndSa
 
     console.log("Uploading file to Supabase Storage:", fileName);
 
-    const arrayBuffer = await file.arrayBuffer();
-    const { error: uploadError } = await supabaseAdmin.storage
-      .from("receipts")
-      .upload(fileName, arrayBuffer, {
-        contentType: file.type,
-        cacheControl: "3600",
-        upsert: false,
-      });
-
-    if (uploadError) {
-      console.error("Supabase Storage upload error:", uploadError);
-      return { 
-        success: false, 
-        message: `ファイルのアップロードに失敗しました: ${uploadError.message}` 
+    let arrayBuffer: ArrayBuffer;
+    try {
+      arrayBuffer = await file.arrayBuffer();
+    } catch (bufferError: any) {
+      console.error("File buffer error:", bufferError);
+      return {
+        success: false,
+        message: `ファイルの読み込みに失敗しました: ${bufferError?.message || String(bufferError)}`,
       };
     }
 
-    // Public URLを取得
-    const { data: { publicUrl } } = supabaseAdmin.storage
-      .from("receipts")
-      .getPublicUrl(fileName);
+    let publicUrl: string;
+    try {
+      const { error: uploadError, data: uploadData } = await supabaseAdmin.storage
+        .from("receipts")
+        .upload(fileName, arrayBuffer, {
+          contentType: file.type || "image/jpeg",
+          cacheControl: "3600",
+          upsert: false,
+        });
 
-    console.log("File uploaded successfully:", publicUrl);
+      if (uploadError) {
+        console.error("Supabase Storage upload error:", uploadError);
+        const errorMsg = uploadError.message || String(uploadError);
+        return { 
+          success: false, 
+          message: `ファイルのアップロードに失敗しました: ${errorMsg}` 
+        };
+      }
+
+      // Public URLを取得
+      const { data: urlData } = supabaseAdmin.storage
+        .from("receipts")
+        .getPublicUrl(fileName);
+      
+      if (!urlData?.publicUrl) {
+        return {
+          success: false,
+          message: "ファイルのURLを取得できませんでした。",
+        };
+      }
+      
+      publicUrl = urlData.publicUrl;
+      console.log("File uploaded successfully:", publicUrl);
+    } catch (uploadError: any) {
+      console.error("Upload process error:", uploadError);
+      const errorMsg = uploadError?.message || String(uploadError);
+      return {
+        success: false,
+        message: `ファイルのアップロードに失敗しました: ${errorMsg}`,
+      };
+    }
 
     // OCR処理を実行
-    const base64Data = Buffer.from(arrayBuffer).toString("base64");
-    const mimeType = file.type || "image/jpeg";
+    let base64Data: string;
+    let mimeType: string;
+    try {
+      base64Data = Buffer.from(arrayBuffer).toString("base64");
+      mimeType = file.type || "image/jpeg";
+    } catch (base64Error: any) {
+      console.error("Base64 conversion error:", base64Error);
+      return {
+        success: false,
+        message: `ファイルの変換に失敗しました: ${base64Error?.message || String(base64Error)}`,
+      };
+    }
 
     // Gemini API呼び出し
     const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
@@ -1356,11 +1418,18 @@ export async function scanAndSaveDocument(formData: FormData): Promise<ScanAndSa
         maxTokens: 2000,
         temperature: 0.1,
       });
+      
+      if (!responseText || typeof responseText !== "string") {
+        throw new Error("AIからの応答が無効です");
+      }
     } catch (ocrError: any) {
       console.error("OCR error:", ocrError);
+      const errorMsg = formatErrorMessage(ocrError, "AIによる解析に失敗しました");
+      // 改行を削除してシリアライズ可能にする
+      const cleanMsg = errorMsg.replace(/\n/g, " ").trim();
       return {
         success: false,
-        message: `OCR処理に失敗しました: ${formatErrorMessage(ocrError, "AIによる解析に失敗しました")}`,
+        message: `OCR処理に失敗しました: ${cleanMsg}`,
       };
     }
 
@@ -1382,7 +1451,7 @@ export async function scanAndSaveDocument(formData: FormData): Promise<ScanAndSa
     let parsed: any;
     try {
       parsed = JSON.parse(jsonMatch[0]);
-    } catch (parseError) {
+    } catch (parseError: any) {
       console.error("JSON parse error:", parseError);
       return {
         success: false,
@@ -1390,20 +1459,36 @@ export async function scanAndSaveDocument(formData: FormData): Promise<ScanAndSa
       };
     }
 
-    // 結果を返す
-    return {
+    // 結果を返す（すべての値を明示的にシリアライズ可能な形式に変換）
+    const result: ScanAndSaveResult = {
       success: true,
-      imageUrl: publicUrl,
-      transactionDate: parsed.transactionDate || new Date().toISOString().split("T")[0],
-      merchantName: parsed.merchantName || "",
+      imageUrl: String(publicUrl || ""),
+      transactionDate: String(parsed.transactionDate || new Date().toISOString().split("T")[0]),
+      merchantName: String(parsed.merchantName || ""),
       totalAmount: parsed.totalAmount ? Number(parsed.totalAmount) : 0,
-      registrationNumber: parsed.registrationNumber || undefined,
+      registrationNumber: parsed.registrationNumber ? String(parsed.registrationNumber) : undefined,
     };
+    
+    return result;
   } catch (error: any) {
-    console.error("scanAndSaveDocument error:", error);
+    console.error("scanAndSaveDocument unexpected error:", error);
+    // エラーメッセージを安全に取得してシリアライズ可能な形式に変換
+    let errorMessage = "ファイルの処理に失敗しました";
+    try {
+      if (error?.message) {
+        errorMessage = String(error.message).replace(/\n/g, " ").trim();
+      } else if (typeof error === "string") {
+        errorMessage = error.replace(/\n/g, " ").trim();
+      } else {
+        errorMessage = String(error).replace(/\n/g, " ").trim();
+      }
+    } catch (e) {
+      errorMessage = "ファイルの処理に失敗しました";
+    }
+    
     return {
       success: false,
-      message: formatErrorMessage(error, "ファイルの処理に失敗しました"),
+      message: formatErrorMessage(error, errorMessage),
     };
   }
 }
