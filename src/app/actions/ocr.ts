@@ -377,16 +377,18 @@ const RECEIPT_OCR_PROMPT = `この画像/PDFは領収書、レシート、他社
 export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRResult> {
   // 最外層のtry-catchで、すべての予期しないエラーを確実にキャッチ
   try {
-    console.log("readReceiptImage called");
+    console.log("✅ readReceiptImage called");
     
     // FormDataの検証
     if (!formData || !(formData instanceof FormData)) {
-      console.error("Invalid FormData:", formData);
+      console.error("❌ Invalid FormData:", formData);
       return { 
         success: false, 
         message: "リクエストが不正です。ページを再読み込みして再試行してください。" 
       };
     }
+    
+    console.log("📋 FormData検証完了");
     
     // 認証チェック（エラーを確実にキャッチ）
     let userId: string | null = null;
@@ -815,10 +817,41 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
     return result;
   } catch (error: any) {
     // すべての予期しないエラーをキャッチ
-    console.error("Receipt OCR unexpected error:", error);
+    console.error("❌ Receipt OCR unexpected error:", error);
     console.error("Error type:", typeof error);
     console.error("Error constructor:", error?.constructor?.name);
     console.error("Error stack:", error?.stack?.substring(0, 500));
+    console.error("Error message:", error?.message);
+    console.error("Error toString:", error?.toString?.());
+    
+    // エラーメッセージを安全に取得
+    let errorMessage = "ファイルの処理に失敗しました";
+    try {
+      if (error?.message) {
+        errorMessage = String(error.message).replace(/\n/g, " ").trim();
+      } else if (typeof error === "string") {
+        errorMessage = error.replace(/\n/g, " ").trim();
+      } else if (error?.toString && typeof error.toString === "function") {
+        const errorString = error.toString();
+        if (errorString !== "[object Object]") {
+          errorMessage = errorString.replace(/\n/g, " ").trim();
+        }
+      }
+    } catch (e) {
+      console.error("Failed to extract error message:", e);
+      errorMessage = "ファイルの処理に失敗しました（エラーの詳細を取得できませんでした）";
+    }
+    
+    // フォーマットされたエラーメッセージを返す
+    const formattedMessage = formatErrorMessage(error, errorMessage);
+    const cleanMessage = formattedMessage.replace(/\n/g, " ").trim();
+    
+    console.error("Returning error response:", cleanMessage);
+    
+    return {
+      success: false,
+      message: cleanMessage || "ファイルの処理に失敗しました",
+    };
     
     // エラーメッセージを安全に取得（シリアライズ可能な形式に変換）
     let errorMessage = "領収書の読み込みに失敗しました";
