@@ -164,6 +164,10 @@ export default function ExpensesClient() {
         type: file.type,
       });
 
+      // Vercelの制限（4.5MB）を考慮して、4MB以上の場合に自動圧縮
+      const VERCEL_LIMIT = 4 * 1024 * 1024; // 4MB（安全マージン込み）
+      const MAX_ORIGINAL_SIZE = 50 * 1024 * 1024; // 元のファイルサイズの上限50MB
+      
       // HEIC形式の場合は自動的にJPEGに変換
       const fileName = file.name.toLowerCase();
       const fileType = file.type.toLowerCase();
@@ -177,6 +181,12 @@ export default function ExpensesClient() {
             originalSize: file.size,
             convertedSize: processedFile.size,
           });
+          
+          // HEIC変換後も、サイズが大きい場合は圧縮
+          if (processedFile.size > VERCEL_LIMIT) {
+            console.log("Converted HEIC file is still too large, compressing...");
+            processedFile = await compressImage(processedFile, 3.5);
+          }
         } catch (conversionError: any) {
           console.error("HEIC conversion error:", conversionError);
           const errorMsg = conversionError?.message || "変換に失敗しました";
@@ -184,44 +194,57 @@ export default function ExpensesClient() {
           return;
         }
       }
-
-      // Vercelの制限（4.5MB）を考慮して、4MB以上の場合に自動圧縮
-      const VERCEL_LIMIT = 4 * 1024 * 1024; // 4MB（安全マージン込み）
-      const MAX_ORIGINAL_SIZE = 50 * 1024 * 1024; // 元のファイルサイズの上限50MB
       
       if (processedFile.size > MAX_ORIGINAL_SIZE) {
         alert(`ファイルサイズが大きすぎます（${Math.round(processedFile.size / 1024 / 1024)}MB）。最大50MBまで対応しています。`);
         return;
       }
       
-      // 画像ファイルで4MBを超える場合は自動圧縮
-      const isImage = fileType.startsWith("image/") && 
-        (fileType === "image/jpeg" || fileType === "image/jpg" || fileType === "image/png" || 
-         fileType === "image/gif" || fileType === "image/webp");
+      // 画像ファイルで4MBを超える場合は自動圧縮（HEIC変換後も含む）
+      const isImage = processedFile.type.startsWith("image/") && 
+        (processedFile.type === "image/jpeg" || processedFile.type === "image/jpg" || processedFile.type === "image/png" || 
+         processedFile.type === "image/gif" || processedFile.type === "image/webp");
       
       if (isImage && processedFile.size > VERCEL_LIMIT) {
         console.log("Image size exceeds Vercel limit, compressing...", {
           originalSize: processedFile.size,
           limit: VERCEL_LIMIT,
+          fileName: processedFile.name,
+          fileType: processedFile.type,
         });
         try {
-          processedFile = await compressImage(processedFile, 4);
+          const originalSize = processedFile.size;
+          processedFile = await compressImage(processedFile, 3.5); // 3.5MBに圧縮（より安全なマージン）
           console.log("Image compressed successfully:", {
-            originalSize: file.size,
+            originalSize: originalSize,
             compressedSize: processedFile.size,
+            reduction: `${Math.round((1 - processedFile.size / originalSize) * 100)}%`,
           });
+          
+          // 圧縮後もまだ大きい場合はエラー
+          if (processedFile.size > VERCEL_LIMIT) {
+            alert(`画像の圧縮に失敗しました。ファイルサイズが大きすぎます（${Math.round(processedFile.size / 1024 / 1024)}MB）。\n\n【解決方法】\n- 画像の解像度を下げる\n- 画像編集ソフトでファイルサイズを小さくする（3MB以下を推奨）\n- 別の画像を試してください`);
+            return;
+          }
         } catch (compressError: any) {
           console.error("Image compression error:", compressError);
-          alert(`画像の圧縮に失敗しました。\n\nファイルサイズを小さくするか、画像の解像度を下げてから再度お試しください。\n\n現在のファイルサイズ: ${Math.round(file.size / 1024 / 1024)}MB`);
+          alert(`画像の圧縮に失敗しました。\n\n${compressError?.message || "エラーが発生しました"}\n\n【解決方法】\n- ファイルサイズを小さくする（3MB以下を推奨）\n- 画像の解像度を下げる\n- 別の画像を試してください\n\n現在のファイルサイズ: ${Math.round(processedFile.size / 1024 / 1024)}MB`);
           return;
         }
       }
       
       // 最終的なサイズチェック（Vercelの制限）
       if (processedFile.size > VERCEL_LIMIT) {
-        alert(`ファイルサイズが大きすぎます（${Math.round(processedFile.size / 1024 / 1024)}MB）。\n\nVercelの制限により、4MB以下のファイルのみアップロードできます。\n\n【解決方法】\n- 画像の解像度を下げる\n- 画像編集ソフトでファイルサイズを小さくする\n- 別の画像を試してください`);
+        alert(`ファイルサイズが大きすぎます（${Math.round(processedFile.size / 1024 / 1024)}MB）。\n\nVercelの制限により、4MB以下のファイルのみアップロードできます。\n\n【解決方法】\n- 画像の解像度を下げる（3MB以下を推奨）\n- 画像編集ソフトでファイルサイズを小さくする\n- 別の画像を試してください`);
         return;
       }
+      
+      console.log("Final file ready for upload:", {
+        name: processedFile.name,
+        size: processedFile.size,
+        type: processedFile.type,
+        sizeMB: Math.round(processedFile.size / 1024 / 1024 * 100) / 100,
+      });
 
       // FormDataの作成と検証
       const formData = new FormData();
