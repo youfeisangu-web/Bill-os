@@ -247,36 +247,73 @@ export default function ExpensesClient({ userId }: { userId: string }) {
         sizeMB: Math.round(processedFile.size / 1024 / 1024 * 100) / 100,
       });
 
-      // Vercelの制限を回避するため、Supabase Storageに直接アップロードしてからURLを渡す
+      // Vercelの制限を回避するため、ファイルをアップロードしてからURLを渡す
       let fileUrl: string;
       
       try {
-        console.log("Uploading to Supabase Storage to avoid Vercel limit...");
+        // カスタムアップロードサーバーが設定されている場合はそれを使用、なければSupabase Storageを使用
+        const uploadServerUrl = process.env.NEXT_PUBLIC_UPLOAD_SERVER_URL;
         
-        // Supabase Storageにアップロード
-        const timestamp = Date.now();
-        const sanitizedFilename = processedFile.name.replace(/[^a-zA-Z0-9._-]/g, "_").substring(0, 100);
-        const fileName = `receipts/${userId}/${timestamp}-${sanitizedFilename}`;
-        
-        const { error: uploadError, data: uploadData } = await supabase.storage
-          .from("receipts")
-          .upload(fileName, processedFile, {
-            cacheControl: "3600",
-            upsert: false,
+        if (uploadServerUrl) {
+          // カスタムアップロードサーバーを使用
+          console.log("Uploading to custom upload server:", uploadServerUrl);
+          
+          const uploadFormData = new FormData();
+          uploadFormData.append("file", processedFile);
+          
+          const uploadResponse = await fetch(`${uploadServerUrl}/upload`, {
+            method: "POST",
+            body: uploadFormData,
           });
-        
-        if (uploadError) {
-          throw new Error(`Supabase Storageへのアップロードに失敗しました: ${uploadError.message}`);
+          
+          if (!uploadResponse.ok) {
+            const errorData = await uploadResponse.json().catch(() => ({ error: "アップロードに失敗しました" }));
+            throw new Error(errorData.error || `アップロードサーバーエラー: ${uploadResponse.status}`);
+          }
+          
+          const uploadResult = await uploadResponse.json();
+          fileUrl = uploadResult.url;
+          
+          if (!fileUrl) {
+            throw new Error("アップロードサーバーからURLが返されませんでした");
+          }
+          
+          console.log("File uploaded to custom server:", fileUrl);
+        } else {
+          // Supabase Storageにアップロード
+          console.log("Uploading to Supabase Storage to avoid Vercel limit...");
+          
+          const timestamp = Date.now();
+          const sanitizedFilename = processedFile.name.replace(/[^a-zA-Z0-9._-]/g, "_").substring(0, 100);
+          const fileName = `receipts/${userId}/${timestamp}-${sanitizedFilename}`;
+          
+          const { error: uploadError, data: uploadData } = await supabase.storage
+            .from("receipts")
+            .upload(fileName, processedFile, {
+              cacheControl: "3600",
+              upsert: false,
+            });
+          
+          if (uploadError) {
+            throw new Error(`Supabase Storageへのアップロードに失敗しました: ${uploadError.message}`);
+          }
+          
+          // Public URLを取得
+          const { data: { publicUrl } } = supabase.storage.from("receipts").getPublicUrl(fileName);
+          fileUrl = publicUrl;
+          
+          console.log("File uploaded to Supabase Storage:", fileUrl);
         }
-        
-        // Public URLを取得
-        const { data: { publicUrl } } = supabase.storage.from("receipts").getPublicUrl(fileName);
-        fileUrl = publicUrl;
-        
-        console.log("File uploaded to Supabase Storage:", fileUrl);
       } catch (uploadError: any) {
-        console.error("Supabase Storage upload error:", uploadError);
-        alert(`ファイルのアップロードに失敗しました。\n\n${uploadError?.message || "エラーが発生しました"}\n\n【解決方法】\n- ファイルサイズを小さくする（3MB以下を推奨）\n- 画像の解像度を下げる\n- 別の画像を試してください`);
+        console.error("File upload error:", uploadError);
+        const errorMessage = uploadError?.message || "エラーが発生しました";
+        
+        // RLSポリシーエラーの場合の特別なメッセージ
+        if (errorMessage.includes("row-level security") || errorMessage.includes("RLS")) {
+          alert(`ファイルのアップロードに失敗しました。\n\n【原因】\nSupabase Storageのセキュリティ設定（RLSポリシー）が正しく設定されていません。\n\n【解決方法】\n1. Supabaseダッシュボードにログイン\n2. Storage → receipts バケットを開く\n3. Policies → New Policy で以下を設定:\n   - 操作: INSERT, SELECT\n   - ターゲットロール: authenticated\n   - ポリシー: (bucket_id = 'receipts'::text) AND (auth.role() = 'authenticated'::text)\n\nまたは、カスタムアップロードサーバーを用意する場合は、.envに以下を追加:\nNEXT_PUBLIC_UPLOAD_SERVER_URL=https://your-server.com`);
+        } else {
+          alert(`ファイルのアップロードに失敗しました。\n\n${errorMessage}\n\n【解決方法】\n- ファイルサイズを小さくする（3MB以下を推奨）\n- 画像の解像度を下げる\n- 別の画像を試してください`);
+        }
         return;
       }
       
@@ -297,19 +334,21 @@ export default function ExpensesClient({ userId }: { userId: string }) {
         result = await Promise.race([actionPromise, timeoutPromise]);
         console.log("Server Action completed successfully");
         
-        // 処理完了後、Supabase Storageからファイルを削除（オプション）
-        try {
-          // fileUrlからファイルパスを抽出（例: https://xxx.supabase.co/storage/v1/object/public/receipts/receipts/userId/timestamp-filename）
-          // パス部分を取得: receipts/userId/timestamp-filename
-          const urlParts = fileUrl.split("/receipts/");
-          if (urlParts.length > 1) {
-            const filePath = `receipts/${urlParts[1]}`;
-            await supabase.storage.from("receipts").remove([filePath]);
-            console.log("Temporary file removed from Supabase Storage:", filePath);
+        // 処理完了後、Supabase Storageからファイルを削除（オプション、Supabase使用時のみ）
+        if (!process.env.NEXT_PUBLIC_UPLOAD_SERVER_URL) {
+          try {
+            // fileUrlからファイルパスを抽出（例: https://xxx.supabase.co/storage/v1/object/public/receipts/receipts/userId/timestamp-filename）
+            // パス部分を取得: receipts/userId/timestamp-filename
+            const urlParts = fileUrl.split("/receipts/");
+            if (urlParts.length > 1) {
+              const filePath = `receipts/${urlParts[1]}`;
+              await supabase.storage.from("receipts").remove([filePath]);
+              console.log("Temporary file removed from Supabase Storage:", filePath);
+            }
+          } catch (cleanupError) {
+            console.warn("Failed to cleanup temporary file:", cleanupError);
+            // クリーンアップの失敗は無視（一時ファイルは後で手動削除可能）
           }
-        } catch (cleanupError) {
-          console.warn("Failed to cleanup temporary file:", cleanupError);
-          // クリーンアップの失敗は無視（一時ファイルは後で手動削除可能）
         }
       } catch (serverError: any) {
         // Server Actionが例外をスローした場合
