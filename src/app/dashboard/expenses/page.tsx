@@ -39,11 +39,46 @@ export default function ExpensesPage() {
 
       console.log('📊 ファイルサイズチェック:', { originalSize: file.size, maxSize: MAX_SIZE });
 
+      // HEIC形式の場合はJPEGに変換
+      const fileName = file.name.toLowerCase();
+      const fileType = file.type.toLowerCase();
+      const isHeic = fileType === 'image/heic' || fileType === 'image/heif' || fileName.endsWith('.heic') || fileName.endsWith('.heif');
+      
+      if (isHeic) {
+        console.log('🔄 HEIC形式を検出、JPEGに変換中...');
+        try {
+          const heic2any = (await import('heic2any')).default;
+          const convertedBlob = await heic2any({
+            blob: file,
+            toType: 'image/jpeg',
+            quality: 0.9,
+          });
+          
+          const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+          processedFile = new File([blob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), {
+            type: 'image/jpeg',
+            lastModified: file.lastModified,
+          });
+          
+          console.log('✅ HEIC変換完了:', { 
+            originalSize: file.size, 
+            convertedSize: processedFile.size,
+            originalType: file.type,
+            convertedType: processedFile.type,
+          });
+        } catch (heicError: any) {
+          console.error('❌ HEIC変換エラー:', heicError);
+          setError(`HEIC形式の画像の変換に失敗しました: ${heicError?.message || String(heicError)}。JPEGまたはPNG形式の画像を使用してください。`);
+          setIsScanning(false);
+          return;
+        }
+      }
+
       // 画像の場合、大きければ圧縮
-      if (file.type.startsWith('image/') && file.size > MAX_SIZE) {
+      if (processedFile.type.startsWith('image/') && processedFile.size > MAX_SIZE) {
         console.log('🔄 画像を圧縮中...');
         try {
-          processedFile = await compressImage(file, 3.5);
+          processedFile = await compressImage(processedFile, 3.5);
           console.log('✅ 圧縮完了:', { originalSize: file.size, compressedSize: processedFile.size });
         } catch (compressError: any) {
           console.error('❌ 圧縮エラー:', compressError);
