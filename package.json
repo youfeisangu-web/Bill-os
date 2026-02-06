@@ -24,6 +24,7 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@supabase/supabase-js": "^2.90.1",
     "clsx": "^2.1.1",
+    "heic2any": "^0.0.4",
     "iconv-lite": "^0.7.2",
     "jaconv": "^1.1.2",
     "lucide-react": "^0.562.0",

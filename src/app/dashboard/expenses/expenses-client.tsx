@@ -8,6 +8,7 @@ import type { ExpenseInitialValues } from "./new-expense-dialog";
 import NewExpenseDialog from "./new-expense-dialog";
 import { Upload, Loader2 } from "lucide-react";
 import { translateErrorMessage } from "@/lib/error-translator";
+import heic2any from "heic2any";
 
 export const RECEIPT_OCR_PREFILL_KEY = "receiptOcrPrefill";
 
@@ -114,54 +115,43 @@ export default function ExpensesClient() {
     });
   };
 
-  /** HEIC形式の画像をJPEGに変換（可能な場合） */
+  /** HEIC形式の画像をJPEGに変換 */
   const convertHeicToJpeg = async (file: File): Promise<File> => {
-    return new Promise((resolve, reject) => {
-      // HEIC形式はブラウザで直接処理できない場合が多いため、
-      // まずはFileReaderで読み込んでみる
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          try {
-            const canvas = document.createElement("canvas");
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext("2d");
-            if (!ctx) {
-              reject(new Error("Canvas context not available"));
-              return;
-            }
-            ctx.drawImage(img, 0, 0);
-            canvas.toBlob(
-              (blob) => {
-                if (!blob) {
-                  reject(new Error("Failed to convert image"));
-                  return;
-                }
-                const jpegFile = new File([blob], file.name.replace(/\.(heic|heif)$/i, ".jpg"), {
-                  type: "image/jpeg",
-                  lastModified: file.lastModified,
-                });
-                resolve(jpegFile);
-              },
-              "image/jpeg",
-              0.95
-            );
-          } catch (error) {
-            reject(error);
-          }
-        };
-        img.onerror = () => {
-          reject(new Error("HEIC形式の画像を読み込めませんでした。JPEGまたはPNG形式に変換してください。"));
-        };
-        img.src = e.target?.result as string;
-      };
-      reader.onerror = () => {
-        reject(new Error("ファイルの読み込みに失敗しました"));
-      };
-      reader.readAsDataURL(file);
-    });
+    try {
+      console.log("Converting HEIC to JPEG using heic2any...");
+      
+      // heic2anyライブラリを使用してHEIC形式をJPEGに変換
+      const convertedBlobs = await heic2any({
+        blob: file,
+        toType: "image/jpeg",
+        quality: 0.9,
+      });
+      
+      // 変換結果は配列で返される（複数ページの場合は複数のblob）
+      const blob = Array.isArray(convertedBlobs) ? convertedBlobs[0] : convertedBlobs;
+      
+      if (!blob) {
+        throw new Error("HEIC形式の変換に失敗しました");
+      }
+      
+      // BlobをFileオブジェクトに変換
+      const jpegFile = new File([blob], file.name.replace(/\.(heic|heif)$/i, ".jpg"), {
+        type: "image/jpeg",
+        lastModified: file.lastModified,
+      });
+      
+      console.log("HEIC converted successfully:", {
+        originalName: file.name,
+        originalSize: file.size,
+        convertedName: jpegFile.name,
+        convertedSize: jpegFile.size,
+      });
+      
+      return jpegFile;
+    } catch (error: any) {
+      console.error("HEIC conversion error:", error);
+      throw new Error(`HEIC形式の変換に失敗しました: ${error?.message || String(error)}`);
+    }
   };
 
   const processFile = async (file: File) => {
@@ -174,16 +164,26 @@ export default function ExpensesClient() {
         type: file.type,
       });
 
-      // HEIC形式の場合はエラーメッセージを表示（ブラウザで直接処理できないため）
+      // HEIC形式の場合は自動的にJPEGに変換
       const fileName = file.name.toLowerCase();
       const fileType = file.type.toLowerCase();
+      let processedFile = file;
       
       if (fileType === "image/heic" || fileType === "image/heif" || fileName.endsWith(".heic") || fileName.endsWith(".heif")) {
-        alert(`HEIC形式の画像は現在サポートされていません。\n\n【解決方法】\n1. iPhoneの場合: 設定 > カメラ > フォーマット > 「互換性優先」に変更してから写真を撮影\n2. または、写真アプリで画像を開き、「共有」>「写真を保存」でJPEG形式で保存\n3. または、JPEG/PNG形式の画像を使用してください\n\n現在のファイル: ${file.name}`);
-        return;
+        console.log("HEIC file detected, converting to JPEG...");
+        try {
+          processedFile = await convertHeicToJpeg(file);
+          console.log("HEIC converted successfully:", {
+            originalSize: file.size,
+            convertedSize: processedFile.size,
+          });
+        } catch (conversionError: any) {
+          console.error("HEIC conversion error:", conversionError);
+          const errorMsg = conversionError?.message || "変換に失敗しました";
+          alert(`HEIC形式の画像の変換に失敗しました。\n\n${errorMsg}\n\n【解決方法】\n1. iPhoneの場合: 設定 > カメラ > フォーマット > 「互換性優先」に変更してから写真を撮影\n2. または、写真アプリで画像を開き、「共有」>「写真を保存」でJPEG形式で保存\n3. または、JPEG/PNG形式の画像を使用してください\n\n現在のファイル: ${file.name}`);
+          return;
+        }
       }
-      
-      let processedFile = file;
 
       // Vercelの制限（4.5MB）を考慮して、4MB以上の場合に自動圧縮
       const VERCEL_LIMIT = 4 * 1024 * 1024; // 4MB（安全マージン込み）
