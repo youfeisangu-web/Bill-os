@@ -853,51 +853,6 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
       message: cleanMessage || "ファイルの処理に失敗しました",
     };
     
-    // エラーメッセージを安全に取得（シリアライズ可能な形式に変換）
-    let errorMessage = "領収書の読み込みに失敗しました";
-    try {
-      if (error && typeof error === "object") {
-        // エラーオブジェクトからメッセージを抽出
-        if (error.message && typeof error.message === "string") {
-          errorMessage = error.message.substring(0, 1000); // 長すぎるメッセージを制限
-        } else if (error.toString && typeof error.toString === "function") {
-          const errorString = error.toString();
-          if (errorString !== "[object Object]") {
-            errorMessage = errorString.substring(0, 1000);
-          }
-        }
-      } else if (typeof error === "string") {
-        errorMessage = error.substring(0, 1000);
-      } else {
-        errorMessage = String(error).substring(0, 1000);
-      }
-      
-      // 改行文字を安全に処理（シリアライズ可能な形式に）
-      errorMessage = errorMessage.replace(/\n/g, " ").replace(/\r/g, "");
-    } catch (e) {
-      // エラーメッセージの取得に失敗した場合
-      console.error("Failed to extract error message:", e);
-      errorMessage = "予期しないエラーが発生しました";
-    }
-    
-    // フォーマットされたエラーメッセージを取得
-    let formattedMessage: string;
-    try {
-      formattedMessage = formatErrorMessage(error, errorMessage);
-      // 改行文字を安全に処理
-      formattedMessage = formattedMessage.replace(/\n/g, " ").replace(/\r/g, "");
-    } catch (e) {
-      console.error("Failed to format error message:", e);
-      formattedMessage = errorMessage || "予期しないエラーが発生しました。しばらく待ってから再試行してください。";
-    }
-    
-    // 確実にシリアライズ可能な形式で返す（プレーンなオブジェクトのみ）
-    // すべての値を明示的にシリアライズ可能な形式に変換
-    const response: ReceiptOCRResult = {
-      success: false,
-      message: formattedMessage || "予期しないエラーが発生しました。しばらく待ってから再試行してください。",
-    };
-    
     // 最終的な検証
     if (typeof response.success !== "boolean") {
       response.success = false;
