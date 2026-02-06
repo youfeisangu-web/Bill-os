@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { scanAndSaveDocument } from '@/app/actions/ocr'; // さっき作った機能をインポート
 import { Loader2, UploadCloud, CheckCircle, AlertCircle } from 'lucide-react';
 
@@ -8,6 +8,7 @@ export default function ExpensesPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -30,12 +31,15 @@ export default function ExpensesPage() {
         setResult(data);
         console.log('スキャン成功:', data);
       } else {
-        setError(data.message || 'スキャンに失敗しました。もう一度お試しください。');
+        console.error('スキャン失敗:', data);
+        const errorMsg = data.message || 'スキャンに失敗しました。もう一度お試しください。';
+        setError(errorMsg);
       }
 
-    } catch (err) {
-      console.error(err);
-      setError('スキャンに失敗しました。もう一度お試しください。');
+    } catch (err: any) {
+      console.error('スキャンエラー:', err);
+      const errorMessage = err?.message || err?.toString() || 'スキャンに失敗しました。もう一度お試しください。';
+      setError(`エラー: ${errorMessage}`);
     } finally {
       setIsScanning(false);
     }
@@ -49,12 +53,20 @@ export default function ExpensesPage() {
       </div>
 
       {/* アップロードエリア */}
-      <div className="bg-white border-2 border-dashed border-indigo-200 rounded-2xl p-10 text-center hover:bg-indigo-50 transition cursor-pointer relative group">
+      <div 
+        className="bg-white border-2 border-dashed border-indigo-200 rounded-2xl p-10 text-center hover:bg-indigo-50 transition cursor-pointer relative group"
+        onClick={() => {
+          if (!isScanning && fileInputRef.current) {
+            fileInputRef.current.click();
+          }
+        }}
+      >
         <input
+          ref={fileInputRef}
           type="file"
           accept="image/*, .pdf"
           onChange={handleFileChange}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          className="hidden"
           disabled={isScanning}
         />
         
