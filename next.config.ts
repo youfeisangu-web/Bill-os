@@ -8,6 +8,12 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true, // TODO: 型エラーを修正したら false に変更
   },
   // eslintの設定は削除する（Vercelの設定画面で無視設定を入れるため、ここでは書かない）
+  
+  // Server Actionsのボディサイズ制限を設定（デフォルトは1MB）
+  // Vercelの制限（4.5MB）を考慮して5MBに設定
+  serverActions: {
+    bodySizeLimit: '5mb',
+  },
 };
 
 export default nextConfig;

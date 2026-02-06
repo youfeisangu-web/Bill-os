@@ -152,11 +152,19 @@ export default function ExpensesPage() {
         console.log('🚀 Server Action呼び出し直前:', {
           fileName: processedFile.name,
           fileSize: processedFile.size,
+          fileSizeMB: Math.round(processedFile.size / 1024 / 1024 * 100) / 100,
           fileType: processedFile.type,
           formDataFileSize: fileInFormData.size,
+          formDataFileSizeMB: Math.round(fileInFormData.size / 1024 / 1024 * 100) / 100,
         });
         
+        console.log('📡 Server Actionを呼び出します...');
+        const actionStartTime = Date.now();
+        
         result = await readReceiptImage(formData);
+        
+        const actionDuration = Date.now() - actionStartTime;
+        console.log(`✅ Server Action完了: ${actionDuration}ms`);
       } catch (serverError: any) {
         const elapsed = Date.now() - startTime;
         console.error(`❌ Server Action呼び出しエラー (経過時間: ${elapsed}ms):`, serverError);
