@@ -10,14 +10,20 @@ export default async function NewQuotePage() {
     redirect("/");
   }
 
-  const clients = await prisma.client.findMany({
-    where: { userId: userId },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-    },
-  });
+  const [clients, user] = await Promise.all([
+    prisma.client.findMany({
+      where: { userId: userId },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, name: true },
+    }),
+    prisma.userProfile.findUnique({
+      where: { id: userId },
+      select: { taxRate: true, taxRounding: true },
+    }),
+  ]);
+
+  const taxRate = user?.taxRate ?? 10;
+  const taxRounding = user?.taxRounding ?? "floor";
 
   return (
     <div className="flex flex-col gap-6">
@@ -29,7 +35,7 @@ export default async function NewQuotePage() {
           ← 見積書一覧へ戻る
         </Link>
       </div>
-      <QuoteEditor clients={clients} />
+      <QuoteEditor clients={clients} taxRate={taxRate} taxRounding={taxRounding} />
     </div>
   );
 }

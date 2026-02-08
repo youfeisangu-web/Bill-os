@@ -51,10 +51,12 @@ export default async function SettingsPage() {
     },
     bankAccount: user.bankAccounts[0] || null,
     settings: {
+      defaultPaymentTerm: user.defaultPaymentTerm ?? "end_of_next_month",
       defaultPaymentTerms: user.defaultPaymentTerms ?? 30,
       invoiceNumberPrefix: user.invoiceNumberPrefix ?? "INV-",
       invoiceNumberStart: user.invoiceNumberStart ?? 1,
       taxRate: user.taxRate ?? 10,
+      taxRounding: user.taxRounding ?? "floor",
       invoiceDesign: user.invoiceDesign ?? "classic",
       bankName: user.bankName,
       bankBranch: user.bankBranch,

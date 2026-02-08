@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createQuote } from "@/app/actions/quote";
-import { normalizeToHalfWidthNumeric } from "@/lib/utils";
+import { normalizeToHalfWidthNumeric, calcTaxAmount, type TaxRounding } from "@/lib/utils";
 
 type ClientOption = {
   id: string;
@@ -32,7 +32,13 @@ function endOfNextMonthString() {
   return `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}`;
 }
 
-export default function QuoteEditor({ clients }: { clients: ClientOption[] }) {
+type QuoteEditorProps = {
+  clients: ClientOption[];
+  taxRate?: number;
+  taxRounding?: string;
+};
+
+export default function QuoteEditor({ clients, taxRate = 10, taxRounding = "floor" }: QuoteEditorProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isNewClient, setIsNewClient] = useState(false);
@@ -49,10 +55,10 @@ export default function QuoteEditor({ clients }: { clients: ClientOption[] }) {
         (parseFloat(item.quantity) || 0) * (parseFloat(item.unitPrice) || 0),
       0,
     );
-    const taxAmount = Math.round(subtotal * 0.1);
+    const taxAmount = calcTaxAmount(subtotal, taxRate, taxRounding as TaxRounding);
     const totalAmount = subtotal + taxAmount;
     return { subtotal, taxAmount, totalAmount };
-  }, [items]);
+  }, [items, taxRate, taxRounding]);
 
   const updateItem = (index: number, key: keyof ItemRow, value: string) => {
     setItems((prev) =>

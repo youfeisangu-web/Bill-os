@@ -27,10 +27,12 @@ type SettingsFormProps = {
       accountHolder: string;
     } | null;
     settings: {
+      defaultPaymentTerm: string;
       defaultPaymentTerms: number;
       invoiceNumberPrefix: string;
       invoiceNumberStart: number;
       taxRate: number;
+      taxRounding: string;
       invoiceDesign: string;
       bankName: string | null;
       bankBranch: string | null;
@@ -252,17 +254,23 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 pt-4 border-t border-slate-200">
-              <div className="space-y-2">
+              <div className="space-y-2 md:col-span-2">
                 <label className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                  支払い期限（日数）
+                  支払期限のデフォルト
                 </label>
-                <input
-                  name="defaultPaymentTerms"
-                  type="number"
-                  min={1}
-                  defaultValue={initialData.settings.defaultPaymentTerms}
+                <p className="text-sm text-slate-600">
+                  請求書作成画面を開いたときの、発行日・支払期限の初期値です。
+                </p>
+                <select
+                  name="defaultPaymentTerm"
+                  defaultValue={initialData.settings.defaultPaymentTerm}
                   className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                />
+                >
+                  <option value="end_of_next_month">当月末締め・翌月末払い</option>
+                  <option value="10th_of_next_month">当月末締め・翌月10日払い</option>
+                  <option value="20th_of_next_month">当月末締め・翌月20日払い</option>
+                  <option value="days_after_issue">発行日から14日後</option>
+                </select>
               </div>
               <div className="space-y-2">
                 <label className="text-xs uppercase tracking-[0.3em] text-slate-500">
@@ -276,6 +284,20 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
                   defaultValue={initialData.settings.taxRate}
                   className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                  消費税の端数処理
+                </label>
+                <select
+                  name="taxRounding"
+                  defaultValue={initialData.settings.taxRounding}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                >
+                  <option value="floor">切り捨て（標準）</option>
+                  <option value="round">四捨五入</option>
+                  <option value="ceil">切り上げ</option>
+                </select>
               </div>
             </div>
           </div>

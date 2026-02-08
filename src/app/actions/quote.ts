@@ -4,13 +4,12 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { calcTaxAmount, type TaxRounding } from "@/lib/utils";
 
 type SubmitResult = {
   success: boolean;
   message: string;
 };
-
-const TAX_RATE = 0.1;
 
 const getValue = (formData: FormData, key: string) => {
   const value = formData.get(key);
@@ -98,7 +97,13 @@ export async function createQuote(formData: FormData): Promise<SubmitResult> {
       (sum, item) => sum + item.quantity * item.unitPrice,
       0,
     );
-    const taxAmount = Math.round(subtotal * TAX_RATE);
+    const user = await prisma.userProfile.findUnique({
+      where: { id: userId },
+      select: { taxRate: true, taxRounding: true },
+    });
+    const taxRatePercent = user?.taxRate ?? 10;
+    const taxRounding = (user?.taxRounding ?? "floor") as TaxRounding;
+    const taxAmount = calcTaxAmount(subtotal, taxRatePercent, taxRounding);
     const totalAmount = subtotal + taxAmount;
 
     const yyyymm = `${issueDate.getFullYear()}${String(issueDate.getMonth() + 1).padStart(2, "0")}`;

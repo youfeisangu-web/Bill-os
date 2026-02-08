@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { STORAGE_KEY } from "../read-invoice-ocr-button";
 import type { InvoiceOCRData } from "@/app/actions/ocr";
 import { createInvoice } from "@/app/actions/invoice";
-import { normalizeToHalfWidthNumeric } from "@/lib/utils";
+import { normalizeToHalfWidthNumeric, calcTaxAmount, type TaxRounding } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
@@ -41,6 +41,66 @@ function endOfNextMonthString() {
   const d = new Date();
   const end = new Date(d.getFullYear(), d.getMonth() + 2, 0);
   return `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}`;
+}
+
+/** 当月末の日付を YYYY-MM-DD で返す */
+function endOfCurrentMonthString() {
+  const d = new Date();
+  const end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+  return `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}`;
+}
+
+/** 翌月の指定日の日付を YYYY-MM-DD で返す */
+function nthOfNextMonthString(day: number) {
+  const d = new Date();
+  const next = new Date(d.getFullYear(), d.getMonth() + 1, Math.min(day, new Date(d.getFullYear(), d.getMonth() + 2, 0).getDate()));
+  return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}-${String(next.getDate()).padStart(2, "0")}`;
+}
+
+/** 今日から days 日後の日付を YYYY-MM-DD で返す */
+function daysAfterString(days: number) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+export type DefaultPaymentTermType =
+  | "end_of_next_month"
+  | "10th_of_next_month"
+  | "20th_of_next_month"
+  | "days_after_issue";
+
+function getDefaultDates(
+  term: DefaultPaymentTermType,
+  daysAfterIssue: number
+): { issueDate: string; dueDate: string } {
+  switch (term) {
+    case "end_of_next_month":
+      return {
+        issueDate: endOfCurrentMonthString(),
+        dueDate: endOfNextMonthString(),
+      };
+    case "10th_of_next_month":
+      return {
+        issueDate: endOfCurrentMonthString(),
+        dueDate: nthOfNextMonthString(10),
+      };
+    case "20th_of_next_month":
+      return {
+        issueDate: endOfCurrentMonthString(),
+        dueDate: nthOfNextMonthString(20),
+      };
+    case "days_after_issue":
+      return {
+        issueDate: todayString(),
+        dueDate: daysAfterString(daysAfterIssue),
+      };
+    default:
+      return {
+        issueDate: endOfCurrentMonthString(),
+        dueDate: endOfNextMonthString(),
+      };
+  }
 }
 
 /** 日付を YYYY-MM-DD で返す */
@@ -104,7 +164,21 @@ const BILLING_DAYS = [
   { value: "5日", label: "5日" },
 ] as const;
 
-export default function InvoiceEditor({ clients }: { clients: ClientOption[] }) {
+type InvoiceEditorProps = {
+  clients: ClientOption[];
+  defaultPaymentTerm?: DefaultPaymentTermType;
+  defaultPaymentTermsDays?: number;
+  taxRate?: number;
+  taxRounding?: string;
+};
+
+export default function InvoiceEditor({
+  clients,
+  defaultPaymentTerm = "end_of_next_month",
+  defaultPaymentTermsDays = 30,
+  taxRate = 10,
+  taxRounding = "floor",
+}: InvoiceEditorProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -112,8 +186,14 @@ export default function InvoiceEditor({ clients }: { clients: ClientOption[] }) 
   const [items, setItems] = useState<ItemRow[]>([
     { name: "", quantity: "1", unitPrice: "0" },
   ]);
-  const defaultIssueDate = useMemo(() => todayString(), []);
-  const defaultDueDate = useMemo(() => endOfNextMonthString(), []);
+  const { issueDate: defaultIssueDate, dueDate: defaultDueDate } = useMemo(
+    () =>
+      getDefaultDates(
+        defaultPaymentTerm as DefaultPaymentTermType,
+        defaultPaymentTerm === "days_after_issue" ? 14 : defaultPaymentTermsDays
+      ),
+    [defaultPaymentTerm, defaultPaymentTermsDays]
+  );
 
   const [issueDate, setIssueDate] = useState(defaultIssueDate);
   const [dueDate, setDueDate] = useState(defaultDueDate);
@@ -168,10 +248,10 @@ export default function InvoiceEditor({ clients }: { clients: ClientOption[] }) 
         (parseFloat(item.quantity) || 0) * (parseFloat(item.unitPrice) || 0),
       0,
     );
-    const taxAmount = Math.round(subtotal * 0.1);
+    const taxAmount = calcTaxAmount(subtotal, taxRate, taxRounding as TaxRounding);
     const totalAmount = subtotal + taxAmount;
     return { subtotal, taxAmount, totalAmount };
-  }, [items]);
+  }, [items, taxRate, taxRounding]);
 
   const updateItem = (index: number, key: keyof ItemRow, value: string) => {
     setItems((prev) =>

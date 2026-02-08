@@ -13,3 +13,24 @@ export function normalizeToHalfWidthNumeric(value: string): string {
     .replace(/，|、/g, ",")
     .trim();
 }
+
+/** 消費税の端数処理: 切り捨て(floor) / 四捨五入(round) / 切り上げ(ceil) */
+export type TaxRounding = "floor" | "round" | "ceil";
+
+export function calcTaxAmount(
+  subtotal: number,
+  taxRatePercent: number,
+  rounding: TaxRounding = "floor"
+): number {
+  const raw = subtotal * (taxRatePercent / 100);
+  switch (rounding) {
+    case "floor":
+      return Math.floor(raw);
+    case "round":
+      return Math.round(raw);
+    case "ceil":
+      return Math.ceil(raw);
+    default:
+      return Math.floor(raw);
+  }
+}

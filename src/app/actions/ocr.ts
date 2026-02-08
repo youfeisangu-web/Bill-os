@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { generateContentWithImage } from "@/lib/gemini";
+import { calcTaxAmount, type TaxRounding } from "@/lib/utils";
 import { createClient } from "@supabase/supabase-js";
 
 /** エラーメッセージを適切にフォーマットする（シリアライズ可能な形式に変換） */
@@ -46,7 +47,6 @@ function formatErrorMessage(error: unknown, defaultMessage: string): string {
   return cleanMessage || defaultMessage;
 }
 
-const TAX_RATE = 0.1;
 
 const formatInvoiceId = (date: Date, sequence: number) => {
   const year = date.getFullYear().toString();
@@ -1150,7 +1150,13 @@ export async function importDocumentAndCreateInvoice(formData: FormData): Promis
     }
 
     const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
-    const taxAmount = Math.round(subtotal * TAX_RATE);
+    const ocrUser = await prisma.userProfile.findUnique({
+      where: { id: userId },
+      select: { taxRate: true, taxRounding: true },
+    });
+    const taxRatePercent = ocrUser?.taxRate ?? 10;
+    const taxRounding = (ocrUser?.taxRounding ?? "floor") as TaxRounding;
+    const taxAmount = calcTaxAmount(subtotal, taxRatePercent, taxRounding);
     const totalAmount = subtotal + taxAmount;
 
     const yyyymm = `${issueDate.getFullYear()}${String(issueDate.getMonth() + 1).padStart(2, "0")}`;
@@ -1250,8 +1256,14 @@ export async function importDocumentAndCreateQuote(formData: FormData): Promise<
     }
 
     const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
-    const taxAmount = Math.round(subtotal * TAX_RATE);
-    const totalAmount = subtotal + taxAmount;
+    const ocrUserQuote = await prisma.userProfile.findUnique({
+      where: { id: userId },
+      select: { taxRate: true, taxRounding: true },
+    });
+    const taxRatePercentQuote = ocrUserQuote?.taxRate ?? 10;
+    const taxRoundingQuote = (ocrUserQuote?.taxRounding ?? "floor") as TaxRounding;
+    const taxAmountQuote = calcTaxAmount(subtotal, taxRatePercentQuote, taxRoundingQuote);
+    const totalAmount = subtotal + taxAmountQuote;
 
     const yyyymm = `${issueDate.getFullYear()}${String(issueDate.getMonth() + 1).padStart(2, "0")}`;
     const latest = await prisma.quote.findFirst({
@@ -1271,7 +1283,7 @@ export async function importDocumentAndCreateQuote(formData: FormData): Promise<
         issueDate,
         validUntil,
         subtotal,
-        taxAmount,
+        taxAmount: taxAmountQuote,
         totalAmount,
         items: {
           create: items.map((item) => ({

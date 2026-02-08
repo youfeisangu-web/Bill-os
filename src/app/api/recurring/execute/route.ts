@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createInvoice } from "@/app/actions/invoice";
+import { calcTaxAmount, type TaxRounding } from "@/lib/utils";
 
 /**
  * 定期請求の自動実行API
@@ -87,8 +88,13 @@ export async function POST(request: NextRequest) {
           (sum, item) => sum + item.quantity * item.unitPrice,
           0
         );
-        const taxRate = items[0]?.taxRate || 10;
-        const taxAmount = Math.floor(subtotal * (taxRate / 100));
+        const user = await prisma.userProfile.findUnique({
+          where: { id: template.client!.userId },
+          select: { taxRate: true, taxRounding: true, invoiceNumberPrefix: true, invoiceNumberStart: true },
+        });
+        const taxRatePercent = user?.taxRate ?? items[0]?.taxRate ?? 10;
+        const taxRounding = (user?.taxRounding ?? "floor") as TaxRounding;
+        const taxAmount = calcTaxAmount(subtotal, taxRatePercent, taxRounding);
         const totalAmount = subtotal + taxAmount;
 
         // 発行日と支払期限を計算
@@ -97,9 +103,6 @@ export async function POST(request: NextRequest) {
         dueDate.setDate(dueDate.getDate() + 30); // デフォルト30日後
 
         // 請求書番号を生成
-        const user = await prisma.userProfile.findUnique({
-          where: { id: template.client!.userId },
-        });
 
         const invoiceNumberPrefix = user?.invoiceNumberPrefix || "INV-";
         const invoiceNumberStart = user?.invoiceNumberStart || 1;

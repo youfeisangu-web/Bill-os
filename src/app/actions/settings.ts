@@ -34,18 +34,20 @@ export async function updateSettings(formData: FormData): Promise<SubmitResult> 
     const bankAccountNumber = (formData.get("bankAccountNumber") as string)?.trim() || "";
     const bankAccountHolder = (formData.get("bankAccountHolder") as string)?.trim() || "";
 
+    const defaultPaymentTerm = (formData.get("defaultPaymentTerm") as string)?.trim() || "end_of_next_month";
     const defaultPaymentTermsRaw = formData.get("defaultPaymentTerms");
     const invoiceNumberPrefix = (formData.get("invoiceNumberPrefix") as string)?.trim() || "INV-";
     const invoiceNumberStartRaw = formData.get("invoiceNumberStart");
     const taxRateRaw = formData.get("taxRate");
+    const taxRounding = (formData.get("taxRounding") as string)?.trim() || "floor";
     const invoiceDesign = (formData.get("invoiceDesign") as string)?.trim() || "classic";
     const logoUrl = (formData.get("logoUrl") as string)?.trim() || "";
     const stampUrl = (formData.get("stampUrl") as string)?.trim() || "";
 
-    // 数値フィールドのサニタイズ
+    // 数値フィールドのサニタイズ（発行日からN日後のときの日数）
     const defaultPaymentTerms = defaultPaymentTermsRaw
       ? parseInt(String(defaultPaymentTermsRaw))
-      : 30;
+      : defaultPaymentTerm === "days_after_issue" ? 14 : 30;
     const invoiceNumberStart = invoiceNumberStartRaw
       ? parseInt(String(invoiceNumberStartRaw))
       : 1;
@@ -67,10 +69,12 @@ export async function updateSettings(formData: FormData): Promise<SubmitResult> 
         bankAccountType: bankAccountType ?? "",
         bankAccountNumber: bankAccountNumber ?? "",
         bankAccountHolder: bankAccountHolder ?? "",
+        defaultPaymentTerm: defaultPaymentTerm ?? "end_of_next_month",
         defaultPaymentTerms,
         invoiceNumberPrefix: invoiceNumberPrefix ?? "INV-",
         invoiceNumberStart,
         taxRate,
+        taxRounding: taxRounding ?? "floor",
         invoiceDesign: invoiceDesign ?? "classic",
         logoUrl: logoUrl ?? "",
         stampUrl: stampUrl ?? "",

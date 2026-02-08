@@ -31,10 +31,12 @@ model UserProfile {
   bankAccountHolder String?
 
   // システム設定
-  defaultPaymentTerms Int?    @default(30) // 支払い期限（日数）
+  defaultPaymentTerm   String? @default("end_of_next_month") // 支払期限のデフォルト: end_of_next_month, 10th_of_next_month, 20th_of_next_month, days_after_issue
+  defaultPaymentTerms Int?    @default(30) // 支払い期限（日数）※days_after_issueのときの日数
   invoiceNumberPrefix String? @default("INV-") // 請求書番号接頭辞
   invoiceNumberStart  Int?    @default(1) // 開始番号
   taxRate             Int?    @default(10) // デフォルト税率（%）
+  taxRounding         String? @default("floor") // 消費税端数処理: floor, round, ceil
   invoiceDesign       String? @default("classic") // 請求書デザイン: classic, modern, minimal, elegant, professional
 
   // ★ LINE Messaging API用ID (将来用)
