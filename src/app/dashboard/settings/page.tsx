@@ -66,5 +66,9 @@ export default async function SettingsPage() {
     },
   };
 
-  return <SettingsForm userId={userId} initialData={initialData} />;
+  return (
+    <div className="p-8">
+      <SettingsForm userId={userId} initialData={initialData} />
+    </div>
+  );
 }

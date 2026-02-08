@@ -10,9 +10,9 @@ export default function DashboardLayout({
   return (
     <div className="flex h-screen glass-bg min-h-0">
       <DashboardSidebar />
-      <div className="flex flex-1 flex-col min-w-0">
+      <div className="flex flex-1 flex-col min-w-0 pl-0">
         <DashboardHeader />
-        <main className="flex-1 overflow-y-auto relative z-10">{children}</main>
+        <main className="flex-1 overflow-y-auto relative z-10 pr-8">{children}</main>
       </div>
       <NavigationLoader />
     </div>

@@ -12,15 +12,12 @@ export default function Home() {
   const [isFadingOut, setIsFadingOut] = useState(false);
 
   useEffect(() => {
-    // フェードイン開始
     setIsVisible(true);
 
-    // 2.5秒後にフェードアウト開始
     const fadeOutTimer = setTimeout(() => {
       setIsFadingOut(true);
     }, 2500);
 
-    // 3秒後にリダイレクト
     const redirectTimer = setTimeout(() => {
       if (isSignedIn) {
         router.push("/dashboard");
@@ -36,19 +33,19 @@ export default function Home() {
   }, [router, isSignedIn]);
 
   return (
-    <div className="fixed inset-0 bg-black flex items-center justify-center">
+    <div className="fixed inset-0 bg-white flex items-center justify-center">
       <div
         className={`flex flex-col items-center justify-center transition-all duration-1000 ${
           isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
         } ${isFadingOut ? "opacity-0 scale-110" : ""}`}
       >
         {/* ロゴアイコン */}
-        <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-billio-blue to-billio-green flex items-center justify-center mb-6">
-          <Sparkles className="h-12 w-12 text-white" />
+        <div className="w-20 h-20 rounded-2xl bg-billio-blue/10 flex items-center justify-center mb-6 ring-1 ring-billio-blue/20">
+          <Sparkles className="h-12 w-12 text-billio-blue" />
         </div>
-        
+
         {/* ロゴテキスト */}
-        <h1 className="text-6xl font-bold text-white tracking-wider">
+        <h1 className="text-5xl font-semibold text-billio-text tracking-tight">
           Billio
         </h1>
       </div>

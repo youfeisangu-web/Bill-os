@@ -84,7 +84,7 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-6 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-xl bg-billio-blue px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
           {isPending ? "保存中..." : "変更を保存"}

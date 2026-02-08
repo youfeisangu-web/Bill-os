@@ -32,7 +32,7 @@ export default function DashboardHeader() {
   }, [pathname]);
 
   return (
-    <header className="shrink-0 h-[60px] flex items-center border-b border-billio-border-subtle bg-billio-card px-6">
+    <header className="shrink-0 h-[60px] flex items-center glass-panel px-6">
       <div className="flex items-center justify-between gap-4 w-full">
         <div className="flex items-center gap-4 min-w-0">
           <div className="relative flex items-center gap-2 rounded-lg border border-billio-border-subtle bg-billio-bg px-4 py-2.5 text-sm text-billio-text min-w-[200px]">
@@ -75,8 +75,8 @@ export default function DashboardHeader() {
             <Bell className="w-5 h-5" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-500 pointer-events-none" />
           </button>
-          <div className="w-9 h-9 rounded-xl bg-billio-sidebar flex items-center justify-center ring-1 ring-billio-border-subtle">
-            <User className="w-5 h-5 text-white" />
+          <div className="w-9 h-9 rounded-xl bg-billio-blue/10 flex items-center justify-center ring-1 ring-billio-blue/20">
+            <User className="w-5 h-5 text-billio-blue" />
           </div>
         </div>
       </div>

@@ -46,18 +46,18 @@ export default function DashboardSidebar() {
   }, []);
 
   return (
-    <aside className="w-[280px] flex flex-col shrink-0 bg-billio-sidebar border-r border-white/[0.06]">
+    <aside className="w-[260px] flex flex-col shrink-0 glass-sidebar mr-8">
       {/* ロゴエリア */}
-      <div className="px-6 pt-8 pb-6 border-b border-white/[0.08]">
+      <div className="px-5 pt-8 pb-6 border-b border-black/[0.06]">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center ring-1 ring-white/10">
-            <Sparkles className="h-5 w-5 text-amber-400/90" />
+          <div className="w-10 h-10 rounded-xl bg-billio-blue/10 flex items-center justify-center ring-1 ring-billio-blue/20">
+            <Sparkles className="h-5 w-5 text-billio-blue" />
           </div>
           <div>
-            <span className="text-lg font-semibold tracking-tight text-white">
+            <span className="text-lg font-semibold tracking-tight text-billio-text">
               Billio
             </span>
-            <p className="text-[11px] text-slate-400 tracking-wide mt-0.5">
+            <p className="text-[11px] text-billio-text-muted tracking-wide mt-0.5">
               請求管理
             </p>
           </div>
@@ -65,8 +65,8 @@ export default function DashboardSidebar() {
       </div>
 
       {/* メインナビ */}
-      <nav className="flex-1 overflow-y-auto py-5 px-4">
-        <p className="billio-label px-3 mb-3 text-slate-500">メニュー</p>
+      <nav className="flex-1 overflow-y-auto py-5 px-3">
+        <p className="billio-label px-3 mb-3 text-billio-text-muted">メニュー</p>
         <ul className="space-y-0.5">
           {navItems.map(({ href, label, icon: Icon }) => {
             const isActive =
@@ -78,17 +78,17 @@ export default function DashboardSidebar() {
                 <Link
                   href={href}
                   className={`
-                    flex items-center gap-3 px-3 py-2.5 rounded-lg text-[15px] transition-colors duration-150
+                    flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] transition-colors duration-150
                     ${
                       isActive
-                        ? "bg-white/10 text-white font-medium"
-                        : "text-slate-400 hover:bg-white/[0.06] hover:text-slate-200"
+                        ? "bg-billio-blue/10 text-billio-blue font-medium"
+                        : "text-billio-text-muted hover:bg-black/[0.04] hover:text-billio-text"
                     }
                   `}
                 >
                   <Icon
                     className={`w-5 h-5 shrink-0 ${
-                      isActive ? "text-amber-400/90" : "text-slate-500"
+                      isActive ? "text-billio-blue" : "text-billio-text-muted"
                     }`}
                   />
                   <span>{label}</span>
@@ -98,24 +98,24 @@ export default function DashboardSidebar() {
           })}
         </ul>
 
-        <div className="mt-6 pt-4 border-t border-white/[0.08]">
-          <p className="billio-label px-3 mb-3 text-slate-500">アカウント</p>
+        <div className="mt-6 pt-4 border-t border-black/[0.06]">
+          <p className="billio-label px-3 mb-3 text-billio-text-muted">アカウント</p>
           <Link
             href="/dashboard/settings"
             className={`
-              flex items-center gap-3 px-3 py-2.5 rounded-lg text-[15px] transition-colors duration-150
+              flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] transition-colors duration-150
               ${
                 pathname?.startsWith("/dashboard/settings")
-                  ? "bg-white/10 text-white font-medium"
-                  : "text-slate-400 hover:bg-white/[0.06] hover:text-slate-200"
+                  ? "bg-billio-blue/10 text-billio-blue font-medium"
+                  : "text-billio-text-muted hover:bg-black/[0.04] hover:text-billio-text"
               }
             `}
           >
             <Settings
               className={`w-5 h-5 shrink-0 ${
                 pathname?.startsWith("/dashboard/settings")
-                  ? "text-amber-400/90"
-                  : "text-slate-500"
+                  ? "text-billio-blue"
+                  : "text-billio-text-muted"
               }`}
             />
             <span>設定</span>
