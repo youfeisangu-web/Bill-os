@@ -28,20 +28,20 @@ export default async function InvoicesPage() {
   }));
 
   return (
-    <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-1">
-          <p className="text-xs uppercase tracking-[0.4em] text-slate-400">
-            請求書
-          </p>
-          <h1 className="text-2xl font-semibold text-slate-900">請求書一覧</h1>
-        </div>
-        <p className="text-sm text-slate-600">
+    <div className="flex flex-col gap-8 p-8">
+      <header className="flex flex-col gap-2">
+        <p className="billio-label">請求書</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-billio-text">
+          請求書一覧
+        </h1>
+        <p className="text-sm text-billio-text-muted mt-1">
           登録済みの請求書を一覧で管理できます。
         </p>
       </header>
 
-      <InvoicesTableWithBulkStatus invoices={invoicesForClient} />
+      <div className="billio-card overflow-hidden p-6">
+        <InvoicesTableWithBulkStatus invoices={invoicesForClient} />
+      </div>
     </div>
   );
 }

@@ -170,41 +170,42 @@ export default function DashboardClientView({
 
   return (
     <>
-      <div className="p-6 space-y-6">
+      <div className="p-8 space-y-8">
         {/* 1. KPI エリア（最上部） */}
-        <section className="glass-card p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <section className="billio-card-elevated p-8">
+          <p className="billio-label mb-4">今月のサマリー</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <p className="text-sm text-slate-500 mb-1">今月の請求額</p>
-              <p className="text-3xl md:text-4xl font-bold text-slate-900">
+              <p className="text-sm text-billio-text-muted mb-2">今月の請求額</p>
+              <p className="text-3xl md:text-4xl font-semibold tracking-tight text-billio-text">
                 ¥{currentMonthInvoiceAmount.toLocaleString()}
               </p>
             </div>
             <div>
-              <p className="text-sm text-slate-500 mb-1">未入金（重要）</p>
+              <p className="text-sm text-billio-text-muted mb-2">未入金</p>
               <Link
                 href="/dashboard/invoices"
-                className="text-3xl md:text-4xl font-bold text-red-600 hover:text-red-700 hover:underline block"
+                className="text-3xl md:text-4xl font-semibold tracking-tight text-red-600 hover:text-red-700 transition-colors block"
               >
                 ¥{invoiceStats.unpaidAmount.toLocaleString()}
               </Link>
-              <p className="text-xs text-slate-500 mt-1">クリックで未払い一覧へ</p>
+              <p className="text-xs text-billio-text-muted mt-2">未払い一覧へ</p>
             </div>
             <div>
-              <p className="text-sm text-slate-500 mb-1">今月の経費</p>
-              <p className="text-3xl md:text-4xl font-bold text-slate-900">
+              <p className="text-sm text-billio-text-muted mb-2">今月の経費</p>
+              <p className="text-3xl md:text-4xl font-semibold tracking-tight text-billio-text">
                 ¥{totalExpenses.toLocaleString()}
               </p>
-              <p className="text-xs text-slate-500 mt-1">{currentMonthYear}</p>
+              <p className="text-xs text-billio-text-muted mt-2">{currentMonthYear}</p>
             </div>
           </div>
         </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* 2. クイックアクション（右側・目立つ場所） */}
           <section className="lg:col-span-1 order-2 lg:order-1">
-            <div className="glass-card p-6 space-y-4">
-              <p className="text-sm font-semibold text-slate-700">クイックアクション</p>
+            <div className="billio-card p-6 space-y-5">
+              <p className="billio-label">クイックアクション</p>
               <div
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -213,10 +214,10 @@ export default function DashboardClientView({
                 onDragLeave={() => setIsDragOver(false)}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
-                className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
+                className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
                   isDragOver
                     ? "border-billio-blue bg-billio-blue/5"
-                    : "border-slate-200 hover:border-billio-blue/50 hover:bg-slate-50/80"
+                    : "border-billio-border hover:border-billio-blue/40 hover:bg-billio-bg"
                 } ${isProcessingOCR ? "pointer-events-none opacity-70" : ""}`}
               >
                 <input
@@ -240,7 +241,7 @@ export default function DashboardClientView({
               </div>
               <Link
                 href="/dashboard/invoices/new"
-                className="flex items-center justify-center gap-2 w-full rounded-xl bg-billio-blue text-white py-3 px-4 font-semibold hover:bg-billio-blue-dark transition-colors"
+                className="flex items-center justify-center gap-2 w-full rounded-xl bg-billio-sidebar text-white py-3.5 px-4 font-medium hover:opacity-95 transition-opacity"
               >
                 <PenLine className="w-5 h-5" />
                 請求書作成
@@ -248,17 +249,17 @@ export default function DashboardClientView({
             </div>
           </section>
 
-          {/* 3. タスク・通知エリア（左側：AIアシスタント風） */}
+          {/* 3. タスク・通知エリア（左側） */}
           <section className="lg:col-span-2 order-1 lg:order-2">
-            <div className="glass-card p-6">
-              <p className="text-sm font-semibold text-slate-700 mb-4">タスク・通知</p>
+            <div className="billio-card p-6">
+              <p className="billio-label mb-4">タスク・通知</p>
               <ul className="space-y-3">
                 {overdueInvoices.length > 0 &&
                   overdueInvoices.slice(0, 3).map((inv) => (
                     <li key={inv.id}>
                       <Link
                         href="/dashboard/invoices"
-                        className="flex items-center gap-3 p-3 rounded-xl bg-red-50 border border-red-100 text-red-800 hover:bg-red-100/80 transition-colors"
+                        className="flex items-center gap-3 p-3.5 rounded-lg bg-red-50/80 border border-red-100/80 text-red-800 hover:bg-red-50 transition-colors"
                       >
                         <AlertTriangle className="w-5 h-5 shrink-0" />
                         <span className="text-sm">
@@ -270,7 +271,7 @@ export default function DashboardClientView({
                 <li>
                   <Link
                     href="/dashboard/expenses"
-                    className="flex items-center gap-3 p-3 rounded-xl bg-amber-50 border border-amber-100 text-amber-800 hover:bg-amber-100/80 transition-colors"
+                    className="flex items-center gap-3 p-3.5 rounded-lg bg-amber-50/80 border border-amber-100/80 text-amber-800 hover:bg-amber-50 transition-colors"
                   >
                     <Lightbulb className="w-5 h-5 shrink-0" />
                     <span className="text-sm">
@@ -280,7 +281,7 @@ export default function DashboardClientView({
                 </li>
                 {currentMonthPayments.slice(0, 3).map((p) => (
                   <li key={p.id}>
-                    <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-800">
+                    <div className="flex items-center gap-3 p-3.5 rounded-lg bg-emerald-50/80 border border-emerald-100/80 text-emerald-800">
                       <DollarSign className="w-5 h-5 shrink-0 text-emerald-600" />
                       <span className="text-sm">
                         💰 {p.tenant.name}から{p.amount.toLocaleString()}円の入金がありました（消込完了）
@@ -289,7 +290,7 @@ export default function DashboardClientView({
                   </li>
                 ))}
                 {overdueInvoices.length === 0 && currentMonthPayments.length === 0 && (
-                  <li className="text-sm text-slate-500 p-3">通知はありません</li>
+                  <li className="text-sm text-billio-text-muted p-3.5">通知はありません</li>
                 )}
               </ul>
             </div>
@@ -297,16 +298,17 @@ export default function DashboardClientView({
         </div>
 
         {/* 4. 推移グラフ（下部：入出金レポート） */}
-        <section className="glass-card p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">入出金レポート（過去6ヶ月）</h2>
+        <section className="billio-card p-8">
+          <p className="billio-label mb-2">入出金レポート</p>
+          <h2 className="text-lg font-semibold text-billio-text mb-6">過去6ヶ月</h2>
           <div className="flex items-center gap-6 mb-4">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-billio-blue" />
-              <span className="text-sm text-slate-600">請求</span>
+              <div className="w-3.5 h-3.5 rounded-sm bg-billio-blue" />
+              <span className="text-sm text-billio-text-muted">請求</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-red-500" />
-              <span className="text-sm text-slate-600">経費</span>
+              <div className="w-3.5 h-3.5 rounded-sm bg-red-500/90" />
+              <span className="text-sm text-billio-text-muted">経費</span>
             </div>
           </div>
           <div className="h-52 flex items-end justify-between gap-2">
@@ -335,7 +337,7 @@ export default function DashboardClientView({
                       title={`経費: ¥${data.expenseAmount.toLocaleString()}`}
                     />
                   </div>
-                  <span className="text-xs text-slate-500">{month}月</span>
+                  <span className="text-xs text-billio-text-muted">{month}月</span>
                 </div>
               );
             })}
@@ -346,13 +348,13 @@ export default function DashboardClientView({
       {/* OCR 種類選択モーダル */}
       <Dialog open={showOcrChoice} onOpenChange={setShowOcrChoice}>
         <DialogContent className="sm:max-w-sm">
-          <p className="font-semibold text-slate-900 mb-4">どの書類として読み込みますか？</p>
+          <p className="font-semibold text-billio-text mb-4">どの書類として読み込みますか？</p>
           <div className="flex gap-3">
             <button
               type="button"
               onClick={() => runOcrAs("invoice")}
               disabled={isProcessingOCR}
-              className="flex-1 py-3 px-4 rounded-xl bg-billio-blue text-white font-medium hover:bg-billio-blue-dark transition-colors disabled:opacity-50"
+              className="flex-1 py-3 px-4 rounded-xl bg-billio-sidebar text-white font-medium hover:opacity-95 transition-opacity disabled:opacity-50"
             >
               請求書
             </button>
@@ -360,7 +362,7 @@ export default function DashboardClientView({
               type="button"
               onClick={() => runOcrAs("receipt")}
               disabled={isProcessingOCR}
-              className="flex-1 py-3 px-4 rounded-xl bg-billio-green text-white font-medium hover:bg-billio-green-dark transition-colors disabled:opacity-50"
+              className="flex-1 py-3 px-4 rounded-xl bg-billio-green text-white font-medium hover:opacity-95 transition-opacity disabled:opacity-50"
             >
               領収書
             </button>
@@ -371,18 +373,18 @@ export default function DashboardClientView({
       {/* 請求書プレビューモーダル */}
       <Dialog open={selectedInvoiceId !== null} onOpenChange={(open) => !open && setSelectedInvoiceId(null)}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
-          <div className="flex items-center justify-end p-2 border-b border-slate-200 shrink-0">
+          <div className="flex items-center justify-end p-2 border-b border-billio-border-subtle shrink-0">
             <DialogClose asChild>
               <button
                 type="button"
                 aria-label="閉じる"
-                className="p-2 rounded-lg hover:bg-slate-100 text-slate-600"
+                className="p-2 rounded-lg hover:bg-billio-bg text-billio-text-muted"
               >
                 <X className="w-5 h-5" />
               </button>
             </DialogClose>
           </div>
-          <div className="overflow-auto flex-1 p-4 bg-slate-100">
+          <div className="overflow-auto flex-1 p-4 bg-billio-bg">
             {invoiceDetailLoading && (
               <div className="flex items-center justify-center min-h-[200px]">
                 <Loader2 className="w-8 h-8 animate-spin text-billio-blue" />

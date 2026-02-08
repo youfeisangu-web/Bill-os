@@ -32,12 +32,12 @@ export default function DashboardHeader() {
   }, [pathname]);
 
   return (
-    <header className="glass-panel shrink-0 border-b border-slate-200/80 px-6 py-3">
-      <div className="flex items-center justify-between gap-4">
+    <header className="shrink-0 h-[60px] flex items-center border-b border-billio-border-subtle bg-billio-card px-6">
+      <div className="flex items-center justify-between gap-4 w-full">
         <div className="flex items-center gap-4 min-w-0">
-          <div className="relative flex items-center gap-2 rounded-xl border border-slate-200/80 bg-white/60 px-4 py-2 text-sm text-slate-700 shadow-sm min-w-[200px]">
-            <span className="truncate">プロジェクト: {selectedName}</span>
-            <ChevronDown className="w-4 h-4 shrink-0 text-slate-400" />
+          <div className="relative flex items-center gap-2 rounded-lg border border-billio-border-subtle bg-billio-bg px-4 py-2.5 text-sm text-billio-text min-w-[200px]">
+            <span className="truncate text-stone-700">プロジェクト: {selectedName}</span>
+            <ChevronDown className="w-4 h-4 shrink-0 text-stone-400" />
             <select
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               value={selectedGroupId ?? ""}
@@ -57,25 +57,25 @@ export default function DashboardHeader() {
               ))}
             </select>
           </div>
-          <div className="hidden sm:flex items-center gap-2 rounded-xl border border-slate-200/80 bg-white/60 px-4 py-2 text-slate-400 min-w-[180px]">
+          <div className="hidden sm:flex items-center gap-2.5 rounded-lg border border-billio-border-subtle bg-billio-bg px-4 py-2.5 text-stone-400 min-w-[200px]">
             <Search className="w-4 h-4 shrink-0" />
             <input
               type="search"
               placeholder="検索"
-              className="w-full bg-transparent text-sm text-slate-700 placeholder-slate-400 outline-none"
+              className="w-full bg-transparent text-sm text-stone-700 placeholder-stone-400 outline-none"
             />
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
           <button
             type="button"
-            className="relative p-2 rounded-lg text-slate-600 hover:bg-white/60 transition-colors"
+            className="relative p-2.5 rounded-lg text-stone-500 hover:bg-billio-bg hover:text-stone-700 transition-colors"
             aria-label="通知"
           >
             <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-500 pointer-events-none" />
           </button>
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-billio-blue to-billio-green flex items-center justify-center shadow-sm">
+          <div className="w-9 h-9 rounded-xl bg-billio-sidebar flex items-center justify-center ring-1 ring-billio-border-subtle">
             <User className="w-5 h-5 text-white" />
           </div>
         </div>

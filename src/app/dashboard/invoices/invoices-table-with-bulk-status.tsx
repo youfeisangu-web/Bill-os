@@ -81,11 +81,11 @@ export default function InvoicesTableWithBulkStatus({
   };
 
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-6">
+    <div>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">請求書一覧</h2>
-          <p className="text-sm text-slate-500">
+          <p className="billio-label mb-1">一覧</p>
+          <p className="text-sm text-billio-text-muted">
             発行日・金額・ステータスを確認できます。チェックして一括でステータスを変更できます。
           </p>
         </div>
@@ -94,7 +94,7 @@ export default function InvoicesTableWithBulkStatus({
           <ReadInvoiceOcrButton />
           <Link
             href="/dashboard/invoices/new"
-            className="inline-flex rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+            className="inline-flex rounded-xl bg-billio-sidebar px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-95"
           >
             請求書を作成
           </Link>
@@ -102,12 +102,12 @@ export default function InvoicesTableWithBulkStatus({
       </div>
 
       {invoices.length > 0 && (
-        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-          <span className="text-sm font-medium text-slate-700">一括操作：</span>
+        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-billio-border-subtle bg-billio-bg px-4 py-3">
+          <span className="text-sm font-medium text-billio-text-muted">一括操作：</span>
           <select
             value={bulkStatus}
             onChange={(e) => setBulkStatus(e.target.value)}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            className="rounded-lg border border-billio-border bg-white px-3 py-2 text-sm text-billio-text"
           >
             {STATUS_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -119,16 +119,16 @@ export default function InvoicesTableWithBulkStatus({
             type="button"
             onClick={handleBulkStatusChange}
             disabled={isPending}
-            className="inline-flex rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50"
+            className="inline-flex rounded-xl bg-billio-green px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-95 disabled:opacity-50"
           >
             {isPending ? "更新中..." : "選択した請求書のステータスを変更"}
           </button>
         </div>
       )}
 
-      <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200">
+      <div className="mt-6 overflow-hidden rounded-xl border border-billio-border-subtle">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase tracking-[0.2em] text-slate-500">
+          <thead className="bg-billio-bg billio-label">
             <tr>
               <th className="w-10 px-4 py-3">
                 {invoices.length > 0 ? (
@@ -147,19 +147,19 @@ export default function InvoicesTableWithBulkStatus({
               <th className="px-4 py-3">ステータス</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200">
+          <tbody className="divide-y divide-billio-border-subtle">
             {invoices.length === 0 ? (
               <tr>
                 <td
                   colSpan={6}
-                  className="px-4 py-10 text-center text-sm text-slate-500"
+                  className="px-4 py-10 text-center text-sm text-billio-text-muted"
                 >
                   まだ請求書が登録されていません。作成ボタンから追加してください。
                 </td>
               </tr>
             ) : (
               invoices.map((invoice) => (
-                <tr key={invoice.id} className="text-slate-700">
+                <tr key={invoice.id} className="text-billio-text-muted">
                   <td className="px-4 py-4">
                     <input
                       name="invoice-select"
@@ -169,7 +169,7 @@ export default function InvoicesTableWithBulkStatus({
                       className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                     />
                   </td>
-                  <td className="px-4 py-4 font-medium text-blue-600">
+                  <td className="px-4 py-4 font-medium text-billio-blue">
                     <Link href={`/dashboard/invoices/${invoice.id}`}>
                       {invoice.id}
                     </Link>
@@ -182,7 +182,7 @@ export default function InvoicesTableWithBulkStatus({
                   <td className="px-4 py-4">
                     <span
                       className={`font-medium ${
-                        statusTone[invoice.status] ?? "text-slate-600"
+                        statusTone[invoice.status] ?? "text-billio-text-muted"
                       }`}
                     >
                       {invoice.status}
@@ -194,6 +194,6 @@ export default function InvoicesTableWithBulkStatus({
           </tbody>
         </table>
       </div>
-    </section>
+    </div>
   );
 }
