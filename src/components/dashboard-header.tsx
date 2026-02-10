@@ -32,7 +32,10 @@ export default function DashboardHeader() {
   }, [pathname]);
 
   return (
-    <header className="shrink-0 h-[60px] flex items-center glass-panel px-6">
+    <header
+      className="shrink-0 h-[60px] flex items-center px-6 backdrop-blur-xl border-b border-white/50 shadow-sm"
+      style={{ background: "rgba(255,255,255,0.72)" }}
+    >
       <div className="flex items-center justify-between gap-4 w-full">
         <div className="flex items-center gap-4 min-w-0">
           <div className="relative flex items-center gap-2 rounded-lg border border-billio-border-subtle bg-billio-bg px-4 py-2.5 text-sm text-billio-text min-w-[200px]">

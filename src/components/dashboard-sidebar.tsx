@@ -46,7 +46,10 @@ export default function DashboardSidebar() {
   }, []);
 
   return (
-    <aside className="w-[260px] flex flex-col shrink-0 glass-sidebar mr-8">
+    <aside
+      className="w-[260px] flex flex-col shrink-0 mr-8 backdrop-blur-xl rounded-r-2xl border-r border-white/50 shadow-[2px_0_24px_-4px_rgba(0,0,0,0.08)]"
+      style={{ background: "rgba(255,255,255,0.72)" }}
+    >
       {/* ロゴエリア */}
       <div className="px-5 pt-8 pb-6 border-b border-black/[0.06]">
         <Link href="/dashboard" className="flex items-center gap-3">
