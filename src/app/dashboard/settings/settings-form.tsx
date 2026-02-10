@@ -108,8 +108,8 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
         </TabsList>
 
         <TabsContent value="company" className="mt-6">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-            <h2 className="text-lg font-semibold text-slate-900">
+          <div className="glass-card rounded-2xl p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-billio-text">
               会社情報
             </h2>
             <div className="grid gap-4 md:grid-cols-2">
@@ -189,8 +189,8 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
         </TabsContent>
 
         <TabsContent value="bank" className="mt-6">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-            <h2 className="text-lg font-semibold text-slate-900">
+          <div className="glass-card rounded-2xl p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-billio-text">
               銀行口座・支払設定
             </h2>
             <div className="grid gap-4 md:grid-cols-2">
@@ -304,11 +304,11 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
         </TabsContent>
 
         <TabsContent value="branding" className="mt-6">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
-            <h2 className="text-lg font-semibold text-slate-900">
+          <div className="glass-card rounded-2xl p-6 space-y-6">
+            <h2 className="text-lg font-semibold text-billio-text">
               ブランディング
             </h2>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-billio-text-muted">
               会社ロゴと角印をアップロードして、請求書に使用できます。
             </p>
 
@@ -335,8 +335,8 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
         </TabsContent>
 
         <TabsContent value="system" className="mt-6">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
-            <h2 className="text-lg font-semibold text-slate-900">
+          <div className="glass-card rounded-2xl p-6 space-y-6">
+            <h2 className="text-lg font-semibold text-billio-text">
               システム設定
             </h2>
             <div className="grid gap-4 md:grid-cols-2">
