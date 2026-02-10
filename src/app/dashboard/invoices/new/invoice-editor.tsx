@@ -2,8 +2,9 @@
 
 import { useMemo, useState, useTransition, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { STORAGE_KEY } from "../read-invoice-ocr-button";
 import type { InvoiceOCRData } from "@/app/actions/ocr";
+
+const INVOICE_OCR_STORAGE_KEY = "invoiceOcrPrefill";
 import { createInvoice } from "@/app/actions/invoice";
 import { normalizeToHalfWidthNumeric, calcTaxAmount, type TaxRounding } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
@@ -206,10 +207,10 @@ export default function InvoiceEditor({
   useEffect(() => {
     if (searchParams.get("fromOcr") !== "1") return;
     try {
-      const raw = sessionStorage.getItem(STORAGE_KEY);
+      const raw = sessionStorage.getItem(INVOICE_OCR_STORAGE_KEY);
       if (!raw) return;
       const prefill = JSON.parse(raw) as InvoiceOCRData;
-      sessionStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem(INVOICE_OCR_STORAGE_KEY);
       setIsNewClient(true);
       setClientName(prefill.clientName ?? "");
       setClientEmail(prefill.clientEmail ?? "");

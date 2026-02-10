@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition, useState } from "react";
 import { updateInvoiceStatusBulk } from "@/app/actions/invoice";
-import ReadInvoiceOcrButton from "./read-invoice-ocr-button";
 import ImportDocumentButton from "./import-document-button";
 
 const formatDate = (date: Date | string) =>
@@ -91,7 +90,6 @@ export default function InvoicesTableWithBulkStatus({
         </div>
         <div className="flex items-center gap-2">
           <ImportDocumentButton />
-          <ReadInvoiceOcrButton />
           <Link
             href="/dashboard/invoices/new"
             className="inline-flex rounded-xl bg-billio-sidebar px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-95"

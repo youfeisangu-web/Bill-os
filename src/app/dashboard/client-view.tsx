@@ -17,8 +17,9 @@ import {
 import { readInvoiceImage, readReceiptImage } from "@/app/actions/ocr";
 import { translateErrorMessage } from "@/lib/error-translator";
 import { RECEIPT_OCR_PREFILL_KEY } from "@/app/dashboard/expenses/read-receipt-ocr-button";
-import { STORAGE_KEY as INVOICE_OCR_STORAGE_KEY } from "@/app/dashboard/invoices/read-invoice-ocr-button";
 import { getInvoiceByIdForDisplay } from "@/app/actions/invoice";
+
+const INVOICE_OCR_STORAGE_KEY = "invoiceOcrPrefill";
 import { InvoiceTemplate } from "@/components/invoice-template";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 
