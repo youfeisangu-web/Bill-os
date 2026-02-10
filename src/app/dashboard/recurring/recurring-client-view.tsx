@@ -51,12 +51,29 @@ type RecurringTemplate = {
   updatedAt: Date;
 };
 
+type GeneratedInvoice = {
+  id: string;
+  issueDate: string;
+  totalAmount: number;
+  clientName: string;
+  clientEmail: string;
+};
+
 type RecurringClientViewProps = {
   templates: RecurringTemplate[];
+  generatedInvoices: GeneratedInvoice[];
 };
+
+function buildMailto(to: string, subject: string, body: string): string {
+  const u = new URL("mailto:" + encodeURIComponent(to));
+  u.searchParams.set("subject", subject);
+  u.searchParams.set("body", body);
+  return u.toString();
+}
 
 export default function RecurringClientView({
   templates: initialTemplates,
+  generatedInvoices = [],
 }: RecurringClientViewProps) {
   const [templates, setTemplates] = useState(initialTemplates);
   const [showDialog, setShowDialog] = useState(false);
@@ -254,6 +271,95 @@ export default function RecurringClientView({
           新規作成
         </button>
       </div>
+
+      {/* 今月・定期請求で作成した請求書（送付用） */}
+      {generatedInvoices.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-billio-text">
+              今月作成した請求書（送付）
+            </h2>
+            <p className="text-sm text-billio-text-muted mt-0.5">
+              定期請求で自動作成された請求書です。メールで送付する場合はボタンから起動してください。
+            </p>
+          </div>
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-billio-text">
+                  請求書番号
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-billio-text">
+                  取引先
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-billio-text">
+                  発行日
+                </th>
+                <th className="px-4 py-3 text-right text-sm font-semibold text-billio-text">
+                  金額
+                </th>
+                <th className="px-4 py-3 text-right text-sm font-semibold text-billio-text">
+                  操作
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {generatedInvoices.map((inv) => {
+                const subject = `請求書 ${inv.id}`;
+                const body = [
+                  "お世話になっております。",
+                  "",
+                  "下記の請求書をご確認ください。",
+                  "",
+                  `請求書番号: ${inv.id}`,
+                  `発行日: ${inv.issueDate}`,
+                  `合計金額: ¥${inv.totalAmount.toLocaleString()}`,
+                  "",
+                  "よろしくお願いいたします。",
+                ].join("\n");
+                const mailto = inv.clientEmail
+                  ? buildMailto(inv.clientEmail, subject, body)
+                  : null;
+                return (
+                  <tr key={inv.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      <a
+                        href={`/dashboard/invoices/${inv.id}`}
+                        className="text-billio-blue hover:underline font-medium"
+                      >
+                        {inv.id}
+                      </a>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-billio-text">
+                      {inv.clientName}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-billio-text">
+                      {inv.issueDate}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-billio-text text-right">
+                      ¥{inv.totalAmount.toLocaleString()}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {mailto ? (
+                        <a
+                          href={mailto}
+                          className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-800 hover:bg-blue-100"
+                        >
+                          📧 メールで送付
+                        </a>
+                      ) : (
+                        <span className="text-xs text-billio-text-muted">
+                          メール未設定
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* テンプレート一覧 */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">

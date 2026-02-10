@@ -13,11 +13,7 @@ export default function ImportDocumentButton() {
   const [isDragOver, setIsDragOver] = useState(false);
 
   const handleClick = () => {
-    if (inputRef.current) {
-      // accept属性を削除して、すべてのファイルを受け入れる
-      inputRef.current.removeAttribute("accept");
-      inputRef.current.click();
-    }
+    inputRef.current?.click();
   };
 
   const processFile = async (file: File) => {
@@ -86,6 +82,7 @@ export default function ImportDocumentButton() {
       <input
         ref={inputRef}
         type="file"
+        accept=".pdf,.xlsx,.xls,.docx,.doc,.txt,.csv,image/*,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,text/*"
         className="hidden"
         onChange={handleFileChange}
       />

@@ -27,7 +27,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   const tenantWhere = selectedGroupId ? { groupId: selectedGroupId } : undefined;
 
   // 並列で一括取得（待ち時間を短縮）
-  const [groups, tenants, currentMonthPaymentsRaw, currentMonthExpenses, unpaidCount, quotesForGraph, paymentsForGraph, expensesForGraph, invoicesForGraph, invoiceStats, paidInvoices, unpaidInvoices, overdueInvoices] = await Promise.all([
+  const [groups, tenants, currentMonthPaymentsRaw, nextMonthPayments, currentMonthExpenses, unpaidCount, quotesForGraph, paymentsForGraph, expensesForGraph, invoicesForGraph, invoiceStats, paidInvoices, unpaidInvoices] = await Promise.all([
     getTenantGroups(),
     getTenantsByGroup(selectedGroupId),
     prisma.payment.findMany({
@@ -38,6 +38,14 @@ export default async function DashboardPage({ searchParams }: Props) {
       include: { tenant: true },
       orderBy: { date: "desc" },
       take: 10,
+    }),
+    prisma.paymentStatus.findMany({
+      where: {
+        targetMonth: `${now.getFullYear()}-${String(now.getMonth() + 2).padStart(2, "0")}`,
+        tenant: tenantWhere,
+        status: { in: ["PAID", "PARTIAL"] },
+      },
+      include: { tenant: true },
     }),
     prisma.expense.findMany({
       where: {
@@ -104,29 +112,8 @@ export default async function DashboardPage({ searchParams }: Props) {
     }),
     prisma.invoice.findMany({
       where: { userId, status: { in: ["未払い", "部分払い"] } },
-      select: {
-        id: true,
-        totalAmount: true,
-        dueDate: true,
-        issueDate: true,
-        client: { select: { name: true } },
-      },
+      select: { id: true, totalAmount: true, client: { select: { name: true } } },
       orderBy: { issueDate: "desc" },
-    }),
-    prisma.invoice.findMany({
-      where: {
-        userId,
-        status: { in: ["未払い", "部分払い"] },
-        dueDate: { lt: now },
-      },
-      select: {
-        id: true,
-        totalAmount: true,
-        dueDate: true,
-        issueDate: true,
-        client: { select: { name: true } },
-      },
-      orderBy: { dueDate: "asc" },
     }),
   ]);
 
@@ -146,6 +133,12 @@ export default async function DashboardPage({ searchParams }: Props) {
   const paidPercentage =
     monthlyARR > 0 ? Math.round((totalPaid / monthlyARR) * 100) : 0;
   const clientCount = tenants.length;
+
+  // 来月の入金予定額を計算
+  const nextMonthExpected = nextMonthPayments.reduce(
+    (sum, ps) => sum + ps.paidAmount,
+    0
+  );
 
   // 今月の経費合計を計算
   const totalExpenses = currentMonthExpenses.reduce(
@@ -186,17 +179,6 @@ export default async function DashboardPage({ searchParams }: Props) {
     });
   }
 
-  const overdueInvoicesSerialized = overdueInvoices.map((inv) => ({
-    ...inv,
-    dueDate: inv.dueDate.toISOString(),
-    issueDate: inv.issueDate.toISOString(),
-  }));
-
-  const currentMonthInvoiceAmount =
-    monthlyData.length > 0
-      ? monthlyData[monthlyData.length - 1]!.invoiceAmount
-      : 0;
-
   return (
     <DashboardClientView
       groups={groups}
@@ -209,14 +191,13 @@ export default async function DashboardPage({ searchParams }: Props) {
       unpaidAmount={unpaidAmount}
       paidPercentage={paidPercentage}
       clientCount={clientCount}
+      nextMonthExpected={nextMonthExpected}
       totalExpenses={totalExpenses}
       unpaidCount={unpaidCount}
       monthlyData={monthlyData}
       invoiceStats={invoiceStats}
       paidInvoices={paidInvoices}
       unpaidInvoices={unpaidInvoices}
-      overdueInvoices={overdueInvoicesSerialized}
-      currentMonthInvoiceAmount={currentMonthInvoiceAmount}
     />
   );
 }

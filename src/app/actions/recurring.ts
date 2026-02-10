@@ -373,3 +373,35 @@ export async function getRecurringTemplateById(templateId: string) {
     return null;
   }
 }
+
+/** 今月に定期請求で作成された請求書一覧（送付用） */
+export async function getRecurringGeneratedInvoicesThisMonth() {
+  try {
+    const { userId } = await auth();
+    if (!userId) return [];
+
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const invoices = await prisma.invoice.findMany({
+      where: {
+        userId,
+        recurringTemplateId: { not: null },
+        issueDate: { gte: startOfMonth },
+      },
+      orderBy: { issueDate: "desc" },
+      include: { client: { select: { name: true, email: true } } },
+    });
+
+    return invoices.map((inv) => ({
+      id: inv.id,
+      issueDate: inv.issueDate.toISOString().slice(0, 10),
+      totalAmount: inv.totalAmount,
+      clientName: inv.client.name,
+      clientEmail: inv.client.email ?? "",
+    }));
+  } catch (error) {
+    console.error("Error getting recurring invoices:", error);
+    return [];
+  }
+}

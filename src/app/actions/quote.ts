@@ -152,3 +152,87 @@ export async function createQuote(formData: FormData): Promise<SubmitResult> {
     return { success: false, message };
   }
 }
+
+/** 承諾リンク用トークンを発行（未発行なら生成して保存）し、URLを返す */
+export async function ensureAcceptToken(quoteId: string): Promise<
+  { success: true; acceptUrl: string } | { success: false; message: string }
+> {
+  try {
+    const { userId } = await auth();
+    if (!userId) return { success: false, message: "ログインしてください。" };
+
+    const quote = await prisma.quote.findFirst({
+      where: { id: quoteId, userId },
+      select: { acceptToken: true },
+    });
+    if (!quote) return { success: false, message: "見積書が見つかりません。" };
+
+    let token = quote.acceptToken;
+    if (!token) {
+      token = crypto.randomUUID().replace(/-/g, "");
+      await prisma.quote.update({
+        where: { id: quoteId },
+        data: { acceptToken: token },
+      });
+    }
+
+    const base = process.env.NEXT_PUBLIC_APP_URL ?? "";
+    const acceptUrl = `${base}/accept/${token}`;
+    return { success: true, acceptUrl };
+  } catch (e) {
+    return {
+      success: false,
+      message: e instanceof Error ? e.message : "トークンの発行に失敗しました。",
+    };
+  }
+}
+
+/** 承諾ページ用：トークンで見積を取得（認証不要） */
+export async function getQuoteByAcceptToken(token: string) {
+  if (!token) return null;
+  const quote = await prisma.quote.findUnique({
+    where: { acceptToken: token },
+    include: { client: { select: { name: true } }, items: true },
+  });
+  if (!quote) return null;
+  return {
+    id: quote.id,
+    quoteNumber: quote.quoteNumber,
+    status: quote.status,
+    validUntil: quote.validUntil.toISOString().slice(0, 10),
+    totalAmount: quote.totalAmount,
+    clientName: quote.client.name,
+    items: quote.items.map((i) => ({
+      name: i.name,
+      quantity: i.quantity,
+      unitPrice: i.unitPrice,
+    })),
+  };
+}
+
+/** 承諾ページから「承諾する」実行（認証不要） */
+export async function acceptQuoteByToken(token: string): Promise<
+  { success: true } | { success: false; message: string }
+> {
+  try {
+    const quote = await prisma.quote.findUnique({
+      where: { acceptToken: token },
+      select: { id: true, status: true },
+    });
+    if (!quote) return { success: false, message: "見積書が見つかりません。" };
+    if (quote.status === "受注")
+      return { success: false, message: "すでに承諾済みです。" };
+
+    await prisma.quote.update({
+      where: { id: quote.id },
+      data: { status: "受注" },
+    });
+    revalidatePath(`/accept/${token}`);
+    return { success: true };
+  } catch (e) {
+    return {
+      success: false,
+      message: e instanceof Error ? e.message : "承諾の処理に失敗しました。",
+    };
+  }
+}

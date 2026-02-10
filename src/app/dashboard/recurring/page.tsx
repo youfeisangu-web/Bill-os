@@ -1,6 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { getRecurringTemplates } from "@/app/actions/recurring";
+import {
+  getRecurringTemplates,
+  getRecurringGeneratedInvoicesThisMonth,
+} from "@/app/actions/recurring";
 import RecurringClientView from "./recurring-client-view";
 
 export default async function RecurringPage() {
@@ -9,7 +12,15 @@ export default async function RecurringPage() {
     redirect("/");
   }
 
-  const templates = await getRecurringTemplates();
+  const [templates, generatedInvoices] = await Promise.all([
+    getRecurringTemplates(),
+    getRecurringGeneratedInvoicesThisMonth(),
+  ]);
 
-  return <RecurringClientView templates={templates} />;
+  return (
+    <RecurringClientView
+      templates={templates}
+      generatedInvoices={generatedInvoices}
+    />
+  );
 }

@@ -73,6 +73,37 @@ export default async function InvoiceDetailPage({
     })),
   };
 
+  const clientEmail = invoice.client.email ?? "";
+  const mailSubject = `請求書 ${invoice.id}`;
+  const mailBody = [
+    "お世話になっております。",
+    "",
+    "下記の請求書をご確認ください。",
+    "このメールにPDFを添付のうえ、お送りください。",
+    "",
+    `請求書番号: ${invoice.id}`,
+    `お支払い期限: ${invoice.dueDate.toISOString().slice(0, 10)}`,
+    `合計金額: ¥${invoice.totalAmount.toLocaleString()}`,
+    "",
+    "よろしくお願いいたします。",
+  ].join("\n");
+
+  const isUnpaid = ["未払い", "部分払い"].includes(invoice.status);
+  const reminderSubject = `【お支払いのご案内】請求書 ${invoice.id}`;
+  const reminderBody = [
+    "お世話になっております。",
+    "",
+    "下記の請求書のお支払いがまだお済みでないようです。",
+    "ご確認のうえ、お支払いいただけますと幸いです。",
+    "",
+    `請求書番号: ${invoice.id}`,
+    `取引先: ${invoice.client.name}`,
+    `お支払い期限: ${invoice.dueDate.toISOString().slice(0, 10)}`,
+    `合計: ¥${invoice.totalAmount.toLocaleString()}`,
+    "",
+    "よろしくお願いいたします。",
+  ].join("\n");
+
   return (
     <div className="flex flex-col">
       <DocumentActionBar
@@ -80,9 +111,16 @@ export default async function InvoiceDetailPage({
         editUrl={`/dashboard/invoices/${invoice.id}/edit`}
         receiptUrl={`/dashboard/invoices/${invoice.id}/receipt`}
         deliveryUrl={`/dashboard/invoices/${invoice.id}/delivery`}
+        sendMailTo={clientEmail || undefined}
+        sendMailSubject={mailSubject}
+        sendMailBody={mailBody}
+        sendMailLabel="メールで送付"
+        sendReminderTo={isUnpaid && clientEmail ? clientEmail : undefined}
+        sendReminderSubject={reminderSubject}
+        sendReminderBody={reminderBody}
       />
       <div className="print-content">
-        <InvoiceTemplate data={data} design={invoice.user.invoiceDesign || "classic"} />
+        <InvoiceTemplate data={data} />
       </div>
     </div>
   );

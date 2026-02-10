@@ -489,3 +489,57 @@ export async function convertQuotesToInvoices(
     return { success: false, message };
   }
 }
+
+export type AgingBucket = "0-30" | "31-60" | "61-90" | "90超";
+
+export type AgingRow = {
+  id: string;
+  clientName: string;
+  issueDate: string;
+  dueDate: string;
+  totalAmount: number;
+  status: string;
+  daysOverdue: number;
+  bucket: AgingBucket;
+};
+
+/** 未収のエイジングレポート用データ（0-30 / 31-60 / 61-90 / 90超） */
+export async function getAgingReport(): Promise<AgingRow[]> {
+  const { userId } = await auth();
+  if (!userId) return [];
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const list = await prisma.invoice.findMany({
+    where: {
+      userId,
+      status: { in: ["未払い", "部分払い"] },
+    },
+    orderBy: { dueDate: "asc" },
+    include: { client: { select: { name: true } } },
+  });
+
+  const toBucket = (days: number): AgingBucket => {
+    if (days <= 30) return "0-30";
+    if (days <= 60) return "31-60";
+    if (days <= 90) return "61-90";
+    return "90超";
+  };
+
+  return list.map((inv) => {
+    const due = new Date(inv.dueDate);
+    due.setHours(0, 0, 0, 0);
+    const daysOverdue = Math.max(0, Math.floor((today.getTime() - due.getTime()) / (24 * 60 * 60 * 1000)));
+    return {
+      id: inv.id,
+      clientName: inv.client.name,
+      issueDate: inv.issueDate.toISOString().slice(0, 10),
+      dueDate: inv.dueDate.toISOString().slice(0, 10),
+      totalAmount: inv.totalAmount,
+      status: inv.status,
+      daysOverdue,
+      bucket: toBucket(daysOverdue),
+    };
+  });
+}

@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { InvoiceTemplate } from "@/components/invoice-template";
 import DocumentActionBar from "@/components/document-action-bar";
 import ConvertToInvoiceButton from "./convert-button";
+import AcceptLinkButton from "./accept-link-button";
 
 export default async function QuoteDetailPage({
   params,
@@ -74,18 +75,40 @@ export default async function QuoteDetailPage({
     })),
   };
 
+  const clientEmail = quote.client.email ?? "";
+  const quoteMailSubject = `見積書 ${quote.quoteNumber}`;
+  const quoteMailBody = [
+    "お世話になっております。",
+    "",
+    "下記の見積書をご確認ください。",
+    "このメールにPDFを添付のうえ、お送りください。",
+    "",
+    `見積番号: ${quote.quoteNumber}`,
+    `有効期限: ${quote.validUntil.toISOString().slice(0, 10)}`,
+    `合計金額: ¥${quote.totalAmount.toLocaleString()}`,
+    "",
+    "よろしくお願いいたします。",
+  ].join("\n");
+
   return (
     <div className="flex flex-col">
-      <DocumentActionBar 
-        backUrl="/dashboard/quotes" 
-        editUrl={`/dashboard/quotes/${quote.id}/edit`} 
+      <DocumentActionBar
+        backUrl="/dashboard/quotes"
+        editUrl={`/dashboard/quotes/${quote.id}/edit`}
+        sendMailTo={clientEmail || undefined}
+        sendMailSubject={quoteMailSubject}
+        sendMailBody={quoteMailBody}
+        sendMailLabel="メールで送付"
       >
         {quote.status !== "受注" && (
-          <ConvertToInvoiceButton quoteId={quote.id} />
+          <>
+            <AcceptLinkButton quoteId={quote.id} />
+            <ConvertToInvoiceButton quoteId={quote.id} />
+          </>
         )}
       </DocumentActionBar>
       <div className="print-content">
-        <InvoiceTemplate data={data} design={quote.user.invoiceDesign || "classic"} />
+        <InvoiceTemplate data={data} />
       </div>
     </div>
   );

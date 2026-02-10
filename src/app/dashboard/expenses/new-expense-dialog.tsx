@@ -15,26 +15,9 @@ import {
 
 const categories = ["通信費", "外注費", "消耗品", "旅費交通費", "地代家賃", "広告宣伝費", "その他"];
 
-export type ExpenseInitialValues = {
-  title?: string;
-  amount?: number;
-  date?: string; // YYYY-MM-DD
-  category?: string;
-};
-
-export default function NewExpenseDialog({
-  open: controlledOpen,
-  onOpenChange,
-  initialValues,
-}: {
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  initialValues?: ExpenseInitialValues | null;
-} = {}) {
+export default function NewExpenseDialog() {
   const router = useRouter();
-  const [internalOpen, setInternalOpen] = useState(false);
-  const open = controlledOpen ?? internalOpen;
-  const setOpen = onOpenChange ?? setInternalOpen;
+  const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -53,18 +36,14 @@ export default function NewExpenseDialog({
     });
   };
 
-  const isControlled = onOpenChange !== undefined;
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {!isControlled && (
-        <DialogTrigger asChild>
-          <button className="inline-flex items-center rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700">
-            経費を登録
-          </button>
-        </DialogTrigger>
-      )}
-      <DialogContent key={initialValues ? "prefill" : "empty"}>
+      <DialogTrigger asChild>
+        <button className="inline-flex items-center rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700">
+          経費を登録
+        </button>
+      </DialogTrigger>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>経費を登録</DialogTitle>
           <DialogDescription>
@@ -81,7 +60,6 @@ export default function NewExpenseDialog({
               type="text"
               required
               placeholder="サーバー代"
-              defaultValue={initialValues?.title}
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
             />
           </div>
@@ -95,7 +73,6 @@ export default function NewExpenseDialog({
                 type="number"
                 required
                 placeholder="1000"
-                defaultValue={initialValues?.amount}
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
               />
             </div>
@@ -107,7 +84,7 @@ export default function NewExpenseDialog({
                 name="date"
                 type="date"
                 required
-                defaultValue={initialValues?.date ?? new Date().toISOString().split("T")[0]}
+                defaultValue={new Date().toISOString().split("T")[0]}
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
               />
             </div>
@@ -119,7 +96,6 @@ export default function NewExpenseDialog({
             <select
               name="category"
               required
-              defaultValue={initialValues?.category ?? ""}
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
             >
               <option value="">選択してください</option>

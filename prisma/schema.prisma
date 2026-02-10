@@ -110,6 +110,7 @@ model Quote {
   totalAmount   Int
   initialAmount Int? // 交渉前の金額
   password      String?
+  acceptToken   String?       @unique // 承諾リンク用トークン（/accept/[token]）
   items         QuoteItem[]
   logs          ActivityLog[]
   createdAt     DateTime      @default(now())

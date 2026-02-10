@@ -30,13 +30,23 @@ export default async function InvoicesPage() {
   return (
     <div className="flex flex-col gap-8 p-8">
       <header className="flex flex-col gap-2">
-        <p className="billio-label">請求書</p>
-        <h1 className="text-2xl font-semibold tracking-tight text-billio-text">
-          請求書一覧
-        </h1>
-        <p className="text-sm text-billio-text-muted mt-1">
-          登録済みの請求書を一覧で管理できます。
-        </p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="billio-label">請求書</p>
+            <h1 className="text-2xl font-semibold tracking-tight text-billio-text">
+              請求書一覧
+            </h1>
+            <p className="text-sm text-billio-text-muted mt-1">
+              登録済みの請求書を一覧で管理できます。
+            </p>
+          </div>
+          <a
+            href="/api/export/invoices"
+            className="shrink-0 inline-flex items-center rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-medium text-billio-text shadow-sm transition hover:bg-black/[0.04]"
+          >
+            CSVエクスポート
+          </a>
+        </div>
       </header>
 
       <div className="billio-card overflow-hidden p-6">

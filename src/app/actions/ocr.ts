@@ -970,50 +970,178 @@ export async function importDocument(
       size: file.size,
     });
 
-    // ファイルタイプの検証（PDF、画像）
-    const allowedImageTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
-    const fileName = file.name.toLowerCase();
-    const isImage = allowedImageTypes.includes(file.type) || 
-                     fileName.endsWith(".jpg") || 
-                     fileName.endsWith(".jpeg") || 
-                     fileName.endsWith(".png") || 
-                     fileName.endsWith(".gif") || 
-                     fileName.endsWith(".webp");
-    const isPdf = file.type === "application/pdf" || fileName.endsWith(".pdf");
-    const isExcel = fileName.endsWith(".xlsx") || fileName.endsWith(".xls");
+    // ファイルタイプの検証（経費読み込みと同じ仕組み）
+    const fileNameLower = file.name.toLowerCase();
+    const fileTypeLower = (file.type || "").toLowerCase();
     
-    if (isExcel) {
-      return {
-        success: false,
-        message: "Excelファイルは現在サポートされていません。PDFまたは画像ファイル（JPEG、PNG、GIF、WebP）を選択してください",
-      };
-    }
+    // 対応する画像形式を拡張
+    const allowedImageTypes = [
+      "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp",
+      "image/bmp", "image/tiff", "image/tif", "image/heic", "image/heif",
+      "image/svg+xml", "image/x-icon"
+    ];
+    const imageExtensions = /\.(jpg|jpeg|png|gif|webp|bmp|tiff|tif|heic|heif|svg|ico)$/i;
+    const isImage = allowedImageTypes.includes(file.type) || imageExtensions.test(fileNameLower);
     
-    if (!isImage && !isPdf) {
-      return {
-        success: false,
-        message: `PDFまたは画像ファイル（JPEG、PNG、GIF、WebP）を選択してください。選択されたファイル: ${file.name} (タイプ: ${file.type || "不明"})`,
-      };
+    // PDF形式
+    const isPdf = file.type === "application/pdf" || fileNameLower.endsWith(".pdf");
+    
+    // Office文書形式（Excel, Word）
+    const officeExtensions = /\.(xlsx|xls|docx|doc)$/i;
+    const officeMimeTypes = [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+      "application/vnd.ms-excel", // .xls
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+      "application/msword" // .doc
+    ];
+    const isOffice = officeMimeTypes.includes(file.type) || officeExtensions.test(fileNameLower);
+    
+    // テキストファイル
+    const textExtensions = /\.(txt|csv)$/i;
+    const isText = file.type.startsWith("text/") || textExtensions.test(fileNameLower);
+    
+    // ファイル形式がサポートされていない場合
+    if (!isImage && !isPdf && !isOffice && !isText) {
+      // ファイルタイプが空の場合は拡張子で判定を試みる
+      if (!file.type || file.type === "application/octet-stream") {
+        // 拡張子がある場合は許可（多くの場合、ブラウザが正しくMIMEタイプを判定できない）
+        if (fileNameLower.includes(".")) {
+          console.log("File type unknown, but has extension. Allowing:", file.name);
+        } else {
+          return { 
+            success: false, 
+            message: `対応していないファイル形式です。\n\n対応形式: 画像（JPEG、PNG、GIF、WebP、BMP、TIFF、HEICなど）、PDF、Excel（.xlsx、.xls）、Word（.docx、.doc）、テキスト（.txt、.csv）\n\n選択されたファイル: ${file.name}` 
+          };
+        }
+      } else {
+        return { 
+          success: false, 
+          message: `対応していないファイル形式です（${fileTypeLower}）。\n\n対応形式: 画像（JPEG、PNG、GIF、WebP、BMP、TIFF、HEICなど）、PDF、Excel（.xlsx、.xls）、Word（.docx、.doc）、テキスト（.txt、.csv）\n\n選択されたファイル: ${file.name}` 
+        };
+      }
     }
 
-    const MAX_SIZE = 20 * 1024 * 1024; // 20MB
+    // ファイルサイズ制限を緩和（50MBまで、経費読み込みと同じ）
+    const MAX_SIZE = 50 * 1024 * 1024; // 50MB
     if (file.size > MAX_SIZE) {
-      return { success: false, message: "ファイルサイズは20MB以下にしてください" };
+      return { 
+        success: false, 
+        message: `ファイルサイズが大きすぎます（${Math.round(file.size / 1024 / 1024)}MB）。\n\n最大サイズ: 50MB\n\nファイルサイズを小さくするか、画像の解像度を下げて再試行してください。` 
+      };
+    }
+    
+    // Office文書やテキストファイルは、Gemini APIが直接サポートしないため、エラーメッセージを返す
+    if (isOffice || isText) {
+      return {
+        success: false,
+        message: `Office文書（.xlsx、.xls、.docx、.doc）やテキストファイル（.txt、.csv）は、現在画像やPDFに変換してからアップロードしてください。\n\n選択されたファイル: ${file.name}`,
+      };
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const base64Data = buffer.toString("base64");
-    const mimeType = isPdf ? "application/pdf" : file.type || "image/jpeg";
+    // ファイル処理（経費読み込みと同じロジック）
+    let buffer: Buffer;
+    let base64Data: string;
+    let mimeType: string;
+    
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      buffer = Buffer.from(arrayBuffer);
+      base64Data = buffer.toString("base64");
+      
+      // MIMEタイプの決定（Gemini APIがサポートする形式に合わせる）
+      if (isPdf) {
+        mimeType = "application/pdf";
+      } else if (isImage) {
+        // 画像形式のMIMEタイプを正規化
+        if (file.type.startsWith("image/")) {
+          mimeType = file.type;
+        } else if (fileNameLower.match(/\.(jpg|jpeg)$/i)) {
+          mimeType = "image/jpeg";
+        } else if (fileNameLower.match(/\.png$/i)) {
+          mimeType = "image/png";
+        } else if (fileNameLower.match(/\.gif$/i)) {
+          mimeType = "image/gif";
+        } else if (fileNameLower.match(/\.webp$/i)) {
+          mimeType = "image/webp";
+        } else if (fileNameLower.match(/\.(bmp|tiff|tif)$/i)) {
+          // BMPやTIFFはPNGとして扱う（Geminiが直接サポートしない場合がある）
+          mimeType = "image/png";
+        } else {
+          mimeType = "image/jpeg"; // デフォルト
+        }
+      } else {
+        mimeType = file.type || "image/jpeg";
+      }
+    } catch (fileError: any) {
+      console.error("File processing error:", fileError);
+      return {
+        success: false,
+        message: `ファイルの読み込みに失敗しました: ${fileError?.message || String(fileError)}`,
+      };
+    }
 
     const prompt = `${DOCUMENT_IMPORT_PROMPT}\n\nこの書類は${documentType === "invoice" ? "請求書" : "見積書"}です。`;
 
-    const responseText = await generateContentWithImage(
-      prompt,
-      base64Data,
-      mimeType,
-      { maxTokens: 2000, temperature: 0.1 }
-    );
-    if (!responseText) return { success: false, message: "AIからの応答がありませんでした" };
+    // Gemini API呼び出し（タイムアウト対策、経費読み込みと同じ）
+    let responseText: string;
+    try {
+      console.log("🔍 Calling Gemini API for document import...", {
+        fileName: file.name,
+        fileSize: file.size,
+        fileSizeMB: Math.round(file.size / 1024 / 1024 * 100) / 100,
+        mimeType: mimeType,
+      });
+      
+      // タイムアウトを設定（VercelのServerless Functionの制限を考慮）
+      const TIMEOUT_MS = 60000; // 60秒
+      const apiStartTime = Date.now();
+      
+      const apiCallPromise = generateContentWithImage(
+        prompt,
+        base64Data,
+        mimeType,
+        { maxTokens: 2000, temperature: 0.1 }
+      );
+      
+      // 60秒でタイムアウト
+      const timeoutPromise = new Promise<string>((_, reject) => {
+        setTimeout(() => {
+          const elapsed = Date.now() - apiStartTime;
+          console.error(`⏱️ TIMEOUT: API呼び出しが${TIMEOUT_MS}ms（${TIMEOUT_MS / 1000}秒）でタイムアウトしました。経過時間: ${elapsed}ms`);
+          reject(new Error(`API呼び出しがタイムアウトしました（${TIMEOUT_MS / 1000}秒）。ファイルサイズが大きすぎる可能性があります。`));
+        }, TIMEOUT_MS);
+      });
+      
+      responseText = await Promise.race([apiCallPromise, timeoutPromise]);
+      const elapsed = Date.now() - apiStartTime;
+      console.log(`✅ API呼び出し成功: ${elapsed}ms（${elapsed / 1000}秒）で完了`);
+      
+      // レスポンスの検証
+      if (!responseText || typeof responseText !== "string") {
+        throw new Error("APIからの応答が無効です");
+      }
+    } catch (apiError: any) {
+      console.error("Gemini API error:", apiError);
+      
+      // タイムアウトエラーの場合
+      if (apiError?.message?.includes("タイムアウト") || apiError?.message?.includes("timeout")) {
+        return {
+          success: false,
+          message: "処理に時間がかかりすぎました。ファイルサイズを小さくするか、画像の解像度を下げて再試行してください。",
+        };
+      }
+      
+      // フォーマットされたエラーメッセージを返す
+      const formattedMessage = formatErrorMessage(apiError, "AIによる解析に失敗しました。しばらく待ってから再試行してください。");
+      return {
+        success: false,
+        message: formattedMessage,
+      };
+    }
+    
+    if (!responseText || responseText.trim().length === 0) {
+      return { success: false, message: "AIからの応答がありませんでした。もう一度お試しください。" };
+    }
 
     let jsonText = responseText.trim();
     if (jsonText.startsWith("```")) {
