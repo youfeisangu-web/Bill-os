@@ -200,6 +200,8 @@ export default function InvoiceEditor({
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [clientAddress, setClientAddress] = useState("");
+  const [customMarkupPercent, setCustomMarkupPercent] = useState("");
+  const fromOcr = searchParams.get("fromOcr") === "1";
 
   useEffect(() => {
     if (searchParams.get("fromOcr") !== "1") return;
@@ -276,6 +278,19 @@ export default function InvoiceEditor({
     setItems((prev) => prev.filter((_, idx) => idx !== index));
   };
 
+  /** 単価に割り増し率（%）を適用して明細を更新 */
+  const applyMarkup = (ratePercent: number) => {
+    if (ratePercent <= 0) return;
+    setItems((prev) =>
+      prev.map((item) => {
+        const current = parseFloat(item.unitPrice) || 0;
+        const newPrice = Math.round(current * (1 + ratePercent / 100));
+        return { ...item, unitPrice: String(newPrice) };
+      }),
+    );
+    setCustomMarkupPercent("");
+  };
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
@@ -293,6 +308,12 @@ export default function InvoiceEditor({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {fromOcr && (
+        <section className="rounded-xl border border-blue-200 bg-blue-50/80 px-4 py-3 text-sm text-blue-800">
+          <strong>他社の請求書を取り込みました。</strong>
+          必要に応じて下の「割り増し」で単価を一括してから、またはそのまま金額を直接編集して自社の請求書として保存できます。
+        </section>
+      )}
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -413,7 +434,7 @@ export default function InvoiceEditor({
         </div>
 
         <div className="mt-8 space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <h2 className="text-lg font-semibold text-slate-900">明細</h2>
             <button
               type="button"
@@ -422,6 +443,51 @@ export default function InvoiceEditor({
             >
               行を追加
             </button>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50/60 px-4 py-3">
+            <p className="text-xs font-medium text-slate-600 mb-2">単価に割り増し（他社請求書から転用するときに便利）</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => applyMarkup(10)}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+              >
+                1割上乗せ (10%)
+              </button>
+              <button
+                type="button"
+                onClick={() => applyMarkup(20)}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+              >
+                2割上乗せ (20%)
+              </button>
+              <span className="inline-flex items-center gap-1.5 text-xs">
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={0.5}
+                  placeholder="例: 15"
+                  value={customMarkupPercent}
+                  onChange={(e) => setCustomMarkupPercent(e.target.value)}
+                  className="w-16 rounded border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-900"
+                />
+                <span className="text-slate-500">%</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const n = parseFloat(customMarkupPercent);
+                    if (!Number.isNaN(n) && n > 0) applyMarkup(n);
+                  }}
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+                >
+                  適用
+                </button>
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-1.5">
+              押すと全明細の単価が一括で更新されます。個別の数字はいつでも直接編集できます。
+            </p>
           </div>
 
           <div className="space-y-3">

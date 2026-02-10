@@ -52,9 +52,10 @@ export default function ReadInvoiceOcrButton() {
         type="button"
         onClick={handleClick}
         disabled={isProcessing}
+        title="他社の請求書画像を読み込み、編集画面で割り増しや修正をして自社の請求書として保存できます"
         className="inline-flex rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
       >
-        {isProcessing ? "読み込み中..." : "請求書を読み込み"}
+        {isProcessing ? "読み込み中..." : "他社請求書を読み込み"}
       </button>
     </>
   );
