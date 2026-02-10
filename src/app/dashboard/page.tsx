@@ -179,6 +179,40 @@ export default async function DashboardPage({ searchParams }: Props) {
     });
   }
 
+  // 今月の請求書合計額を計算
+  const currentMonthInvoiceAmount = invoicesForGraph
+    .filter((inv) => {
+      const invDate = new Date(inv.issueDate);
+      return invDate >= firstDayOfMonth && invDate <= lastDayOfMonth;
+    })
+    .reduce((sum, inv) => sum + inv.totalAmount, 0);
+
+  // 期限超過の請求書を取得
+  const overdueInvoicesData = await prisma.invoice.findMany({
+    where: {
+      userId,
+      status: { in: ["未払い", "部分払い"] },
+      dueDate: { lt: now },
+    },
+    select: {
+      id: true,
+      totalAmount: true,
+      issueDate: true,
+      dueDate: true,
+      client: { select: { name: true } },
+    },
+    orderBy: { dueDate: "asc" },
+    take: 10,
+  });
+
+  const overdueInvoicesFormatted = overdueInvoicesData.map((inv) => ({
+    id: inv.id,
+    totalAmount: inv.totalAmount,
+    client: inv.client,
+    issueDate: inv.issueDate.toISOString().slice(0, 10),
+    dueDate: inv.dueDate.toISOString().slice(0, 10),
+  }));
+
   return (
     <DashboardClientView
       groups={groups}
@@ -198,6 +232,8 @@ export default async function DashboardPage({ searchParams }: Props) {
       invoiceStats={invoiceStats}
       paidInvoices={paidInvoices}
       unpaidInvoices={unpaidInvoices}
+      overdueInvoices={overdueInvoicesFormatted}
+      currentMonthInvoiceAmount={currentMonthInvoiceAmount}
     />
   );
 }
