@@ -19,7 +19,7 @@ export default function Home() {
       } else {
         router.push("/sign-in");
       }
-    }, 2600);
+    }, 2700);
 
     return () => {
       clearTimeout(t1);
@@ -30,7 +30,7 @@ export default function Home() {
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center"
+      className="fixed inset-0 flex items-center justify-center overflow-hidden"
       style={{ backgroundColor: "#080808" }}
     >
       <style>{`
@@ -41,33 +41,37 @@ export default function Home() {
         }
         @keyframes logoExit {
           0%   { transform: scale(1); opacity: 1; }
-          100% { transform: scale(0.9); opacity: 0; }
+          100% { transform: scale(1.5); opacity: 0; }
         }
         @keyframes shineSwipe {
-          0%   { left: -80%; }
-          100% { left: 160%; }
+          0%   { left: -60%; }
+          100% { left: 120%; }
         }
         .logo-wrap {
           animation: logoEnter 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         .logo-wrap.exiting {
-          animation: logoExit 0.55s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+          animation: logoExit 0.65s cubic-bezier(0.4, 0, 0.6, 1) forwards;
         }
         .shine {
-          position: absolute;
+          position: fixed;
           top: 0; bottom: 0;
-          width: 55%;
+          left: -60%;
+          width: 60%;
           background: linear-gradient(
             90deg,
             transparent 0%,
-            rgba(255, 255, 255, 0.18) 50%,
+            rgba(255, 255, 255, 0.12) 50%,
             transparent 100%
           );
-          filter: blur(10px);
-          animation: shineSwipe 0.65s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+          filter: blur(20px);
+          animation: shineSwipe 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
           pointer-events: none;
         }
       `}</style>
+
+      {/* 画面全体のシャインエフェクト */}
+      {phase === "shine" && <div className="shine" />}
 
       <div
         className={`relative logo-wrap${phase === "exit" ? " exiting" : ""}`}
@@ -81,13 +85,6 @@ export default function Home() {
           className="object-contain w-full h-full"
           priority
         />
-
-        {/* シャインエフェクト */}
-        {phase === "shine" && (
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="shine" />
-          </div>
-        )}
       </div>
     </div>
   );
