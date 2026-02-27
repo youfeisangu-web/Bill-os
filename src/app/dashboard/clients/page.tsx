@@ -20,7 +20,7 @@ export default async function ClientsPage() {
   });
 
   return (
-    <div className="flex flex-col gap-8 p-8">
+    <div className="flex flex-col gap-6 md:gap-8 px-4 py-6 md:p-8">
       <header className="flex flex-col gap-2">
         <p className="billia-label">取引先</p>
         <h1 className="text-2xl font-semibold tracking-tight text-billia-text">
@@ -31,8 +31,8 @@ export default async function ClientsPage() {
         </p>
       </header>
 
-      <section className="billia-card p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+      <section className="billia-card p-4 md:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 md:gap-4">
           <div>
             <p className="billia-label mb-1">登録済み取引先</p>
             <p className="text-sm text-billia-text-muted">
@@ -42,49 +42,99 @@ export default async function ClientsPage() {
           <NewClientDialog />
         </div>
 
-        <div className="mt-6 overflow-hidden rounded-xl border border-billia-border-subtle">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-billia-bg billia-label">
-              <tr>
-                <th className="px-4 py-3">会社名 / 氏名</th>
-                <th className="px-4 py-3">メールアドレス</th>
-                <th className="px-4 py-3">住所</th>
-                <th className="px-4 py-3">登録日</th>
-                <th className="px-4 py-3">操作</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-billia-border-subtle">
-              {clients.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="px-4 py-10 text-center text-sm text-billia-text-muted"
-                  >
-                    まだ取引先が登録されていません。新規作成から追加してください。
-                  </td>
-                </tr>
-              ) : (
-                clients.map((client) => (
-                  <tr key={client.id} className="text-billia-text-muted">
-                    <td className="px-4 py-4 font-medium text-billia-text">
+        <div className="mt-4 md:mt-6">
+          {/* モバイル: カードレイアウト */}
+          <div className="space-y-3 md:hidden">
+            {clients.length === 0 ? (
+              <div className="rounded-xl border border-billia-border-subtle bg-billia-bg px-4 py-6 text-sm text-billia-text-muted text-center">
+                まだ取引先が登録されていません。新規作成から追加してください。
+              </div>
+            ) : (
+              clients.map((client) => (
+                <div
+                  key={client.id}
+                  className="rounded-xl border border-billia-border-subtle bg-billia-bg px-4 py-3 text-sm space-y-2"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-semibold text-billia-text truncate">
                       {client.name}
-                    </td>
-                    <td className="px-4 py-4">{client.email ?? "-"}</td>
-                    <td className="px-4 py-4">{client.address ?? "-"}</td>
-                    <td className="px-4 py-4">
+                    </p>
+                    <span className="text-[11px] text-billia-text-muted shrink-0">
                       {formatDate(client.createdAt)}
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-2">
-                        <EditClientDialog client={client} />
-                        <DeleteClientButton clientId={client.id} clientName={client.name} />
-                      </div>
+                    </span>
+                  </div>
+                  <div className="text-[12px] leading-relaxed space-y-1">
+                    <p className="text-billia-text">
+                      <span className="text-billia-text-muted">メール: </span>
+                      {client.email ?? "-"}
+                    </p>
+                    {client.address && (
+                      <p className="text-billia-text">
+                        <span className="text-billia-text-muted">住所: </span>
+                        {client.address}
+                      </p>
+                    )}
+                  </div>
+                  <div className="pt-2 flex items-center justify-end gap-2">
+                    <EditClientDialog client={client} />
+                    <DeleteClientButton
+                      clientId={client.id}
+                      clientName={client.name}
+                    />
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* PC: テーブルレイアウト */}
+          <div className="hidden md:block overflow-hidden rounded-xl border border-billia-border-subtle">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-billia-bg billia-label">
+                <tr>
+                  <th className="px-4 py-3">会社名 / 氏名</th>
+                  <th className="px-4 py-3">メールアドレス</th>
+                  <th className="px-4 py-3">住所</th>
+                  <th className="px-4 py-3">登録日</th>
+                  <th className="px-4 py-3">操作</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-billia-border-subtle">
+                {clients.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="px-4 py-10 text-center text-sm text-billia-text-muted"
+                    >
+                      まだ取引先が登録されていません。新規作成から追加してください。
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  clients.map((client) => (
+                    <tr key={client.id} className="text-billia-text-muted">
+                      <td className="px-4 py-4 font-medium text-billia-text">
+                        {client.name}
+                      </td>
+                      <td className="px-4 py-4">{client.email ?? "-"}</td>
+                      <td className="px-4 py-4">{client.address ?? "-"}</td>
+                      <td className="px-4 py-4">
+                        {formatDate(client.createdAt)}
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-2">
+                          <EditClientDialog client={client} />
+                          <DeleteClientButton
+                            clientId={client.id}
+                            clientName={client.name}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
     </div>

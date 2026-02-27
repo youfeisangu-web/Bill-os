@@ -236,13 +236,15 @@ export default function TenantsClientView({
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div className="flex flex-col gap-5 md:gap-6">
+      <header className="flex flex-col gap-3 md:gap-4 rounded-3xl border border-slate-200 bg-white p-4 md:p-6 shadow-sm">
         <div className="flex flex-col gap-1">
           <p className="text-xs uppercase tracking-[0.4em] text-slate-400">
             月額管理
           </p>
-          <h1 className="text-2xl font-semibold text-slate-900">月額管理</h1>
+          <h1 className="text-xl md:text-2xl font-semibold text-slate-900">
+            月額管理
+          </h1>
         </div>
         <p className="text-sm text-slate-600">
           月額請求を管理する取引先を登録・管理できます。
@@ -250,48 +252,48 @@ export default function TenantsClientView({
       </header>
 
       {/* 統計情報カード */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {/* 集金金額 */}
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-billia-green/20 to-billia-blue/20 flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-billia-green" />
+        <div className="rounded-xl border border-slate-200 bg-white p-4 md:p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-3 md:mb-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-billia-green/20 to-billia-blue/20 flex items-center justify-center">
+              <DollarSign className="w-5 h-5 md:w-6 md:h-6 text-billia-green" />
             </div>
           </div>
-          <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">
+          <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1.5 md:mb-2">
             {formatMonth(currentMonth)}分 集金金額
           </p>
-          <p className="text-3xl font-bold text-slate-900">
+          <p className="text-2xl md:text-3xl font-bold text-slate-900">
             ¥{collectedAmount.toLocaleString()}
           </p>
         </div>
 
         {/* 未収金額 */}
-        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center">
-              <AlertTriangle className="w-6 h-6 text-orange-600" />
+        <div className="rounded-xl border border-slate-200 bg-white p-4 md:p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-3 md:mb-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center">
+              <AlertTriangle className="w-5 h-5 md:w-6 md:h-6 text-orange-600" />
             </div>
           </div>
-          <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">
+          <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1.5 md:mb-2">
             未収金額
           </p>
-          <p className="text-3xl font-bold text-orange-600">
+          <p className="text-2xl md:text-3xl font-bold text-orange-600">
             ¥{unpaidAmount.toLocaleString()}
           </p>
         </div>
 
         {/* 期限すぎ件数 */}
-        <div className="rounded-xl border border-red-200 bg-red-50 p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-red-600" />
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 md:p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-3 md:mb-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-red-100 flex items-center justify-center">
+              <Calendar className="w-5 h-5 md:w-6 md:h-6 text-red-600" />
             </div>
           </div>
-          <p className="text-xs uppercase tracking-wider text-red-700 mb-2">
+          <p className="text-[11px] uppercase tracking-wider text-red-700 mb-1.5 md:mb-2">
             期限すぎ件数
           </p>
-          <p className="text-3xl font-bold text-red-700">
+          <p className="text-2xl md:text-3xl font-bold text-red-700">
             {overdueCount}件
           </p>
         </div>
@@ -395,7 +397,7 @@ export default function TenantsClientView({
 
         {/* 右メインエリア：取引先一覧 */}
         <div className="lg:col-span-3">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-3xl border border-slate-200 bg-white p-4 md:p-6 shadow-sm">
             <div className="mb-6 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">
@@ -496,71 +498,124 @@ export default function TenantsClientView({
               </div>
             )}
 
-            {/* 取引先テーブル */}
-            <div className="overflow-hidden rounded-2xl border border-slate-200">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-xs uppercase tracking-[0.2em] text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3">契約者名</th>
-                    <th className="px-4 py-3">フリガナ</th>
-                    <th className="px-4 py-3">月額請求額</th>
-                    <th className="px-4 py-3">操作</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {!selectedGroupId ? (
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="px-4 py-10 text-center text-sm text-slate-500"
-                      >
-                        左のプロジェクトを選択してください。
-                      </td>
-                    </tr>
-                  ) : tenants.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="px-4 py-10 text-center text-sm text-slate-500"
-                      >
-                        まだ取引先が登録されていません。取引先を追加してください。
-                      </td>
-                    </tr>
-                  ) : (
-                    tenants.map((tenant) => (
-                      <tr key={tenant.id} className="text-slate-700">
-                        <td className="px-4 py-4 font-medium text-slate-900">
+            {/* 取引先一覧：モバイルはカード、PCはテーブル */}
+            <div className="mt-4">
+              {/* モバイルカード */}
+              <div className="space-y-3 md:hidden">
+                {!selectedGroupId ? (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+                    左のプロジェクトを選択してください。
+                  </div>
+                ) : tenants.length === 0 ? (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+                    まだ取引先が登録されていません。取引先を追加してください。
+                  </div>
+                ) : (
+                  tenants.map((tenant) => (
+                    <div
+                      key={tenant.id}
+                      className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm space-y-1.5"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-semibold text-slate-900 truncate">
                           {tenant.name}
-                        </td>
-                        <td className="px-4 py-4">{tenant.nameKana}</td>
-                        <td className="px-4 py-4">
+                        </p>
+                        <p className="text-xs text-slate-500 shrink-0">
                           ¥{tenant.amount.toLocaleString()}
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => startEdit(tenant)}
-                              className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm transition hover:bg-gray-50"
-                            >
-                              <Pencil className="w-3 h-3" />
-                              編集
-                            </button>
-                            <button
-                              onClick={() =>
-                                handleDeleteTenant(tenant.id, tenant.name)
-                              }
-                              className="inline-flex items-center gap-1 rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-medium text-red-700 shadow-sm transition hover:bg-red-50"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                              削除
-                            </button>
-                          </div>
+                        </p>
+                      </div>
+                      <p className="text-[12px] text-slate-500">
+                        {tenant.nameKana}
+                      </p>
+                      <div className="pt-2 flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => startEdit(tenant)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm transition hover:bg-gray-50"
+                        >
+                          <Pencil className="w-3 h-3" />
+                          編集
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleDeleteTenant(tenant.id, tenant.name)
+                          }
+                          className="inline-flex items-center gap-1 rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-medium text-red-700 shadow-sm transition hover:bg-red-50"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          削除
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* PCテーブル */}
+              <div className="hidden md:block overflow-hidden rounded-2xl border border-slate-200">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-50 text-xs uppercase tracking-[0.2em] text-slate-500">
+                    <tr>
+                      <th className="px-4 py-3">契約者名</th>
+                      <th className="px-4 py-3">フリガナ</th>
+                      <th className="px-4 py-3">月額請求額</th>
+                      <th className="px-4 py-3">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {!selectedGroupId ? (
+                      <tr>
+                        <td
+                          colSpan={4}
+                          className="px-4 py-10 text-center text-sm text-slate-500"
+                        >
+                          左のプロジェクトを選択してください。
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : tenants.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={4}
+                          className="px-4 py-10 text-center text-sm text-slate-500"
+                        >
+                          まだ取引先が登録されていません。取引先を追加してください。
+                        </td>
+                      </tr>
+                    ) : (
+                      tenants.map((tenant) => (
+                        <tr key={tenant.id} className="text-slate-700">
+                          <td className="px-4 py-4 font-medium text-slate-900">
+                            {tenant.name}
+                          </td>
+                          <td className="px-4 py-4">{tenant.nameKana}</td>
+                          <td className="px-4 py-4">
+                            ¥{tenant.amount.toLocaleString()}
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => startEdit(tenant)}
+                                className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm transition hover:bg-gray-50"
+                              >
+                                <Pencil className="w-3 h-3" />
+                                編集
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleDeleteTenant(tenant.id, tenant.name)
+                                }
+                                className="inline-flex items-center gap-1 rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-medium text-red-700 shadow-sm transition hover:bg-red-50"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                削除
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
