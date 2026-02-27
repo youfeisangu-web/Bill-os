@@ -3,55 +3,91 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
+import Image from "next/image";
 
 export default function Home() {
   const router = useRouter();
   const { isSignedIn } = useAuth();
-  const [isVisible, setIsVisible] = useState(false);
-  const [isFadingOut, setIsFadingOut] = useState(false);
+  const [phase, setPhase] = useState<"enter" | "shine" | "exit">("enter");
 
   useEffect(() => {
-    setIsVisible(true);
-
-    const fadeOutTimer = setTimeout(() => {
-      setIsFadingOut(true);
-    }, 2500);
-
-    const redirectTimer = setTimeout(() => {
+    const t1 = setTimeout(() => setPhase("shine"), 700);
+    const t2 = setTimeout(() => setPhase("exit"), 2000);
+    const t3 = setTimeout(() => {
       if (isSignedIn) {
         router.push("/dashboard");
       } else {
         router.push("/sign-in");
       }
-    }, 3000);
+    }, 2600);
 
     return () => {
-      clearTimeout(fadeOutTimer);
-      clearTimeout(redirectTimer);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
     };
   }, [router, isSignedIn]);
 
   return (
-    <div className="fixed inset-0 bg-white flex items-center justify-center">
-      <div
-        className={`flex flex-col items-center justify-center transition-all duration-1000 ${
-          isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
-        } ${isFadingOut ? "opacity-0 scale-110" : ""}`}
-      >
-        {/* ロゴアイコン */}
-        <div className="w-32 h-32 flex items-center justify-center mb-6" style={{ background: 'transparent' }}>
-          <img
-            src="/logo.png"
-            alt="Billia"
-            className="w-full h-full object-contain"
-            style={{ background: 'transparent', mixBlendMode: 'normal' }}
-          />
-        </div>
+    <div
+      className="fixed inset-0 flex items-center justify-center"
+      style={{ backgroundColor: "#080808" }}
+    >
+      <style>{`
+        @keyframes logoEnter {
+          0%   { transform: scale(1.6); opacity: 0; filter: blur(12px); }
+          50%  { opacity: 1; filter: blur(0px); }
+          100% { transform: scale(1); opacity: 1; filter: blur(0px); }
+        }
+        @keyframes logoExit {
+          0%   { transform: scale(1); opacity: 1; }
+          100% { transform: scale(0.9); opacity: 0; }
+        }
+        @keyframes shineSwipe {
+          0%   { left: -80%; }
+          100% { left: 160%; }
+        }
+        .logo-wrap {
+          animation: logoEnter 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .logo-wrap.exiting {
+          animation: logoExit 0.55s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+        }
+        .shine {
+          position: absolute;
+          top: 0; bottom: 0;
+          width: 55%;
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.18) 50%,
+            transparent 100%
+          );
+          filter: blur(10px);
+          animation: shineSwipe 0.65s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+          pointer-events: none;
+        }
+      `}</style>
 
-        {/* ロゴテキスト */}
-        <h1 className="text-5xl font-semibold text-billia-text tracking-tight">
-          Billia
-        </h1>
+      <div
+        className={`relative logo-wrap${phase === "exit" ? " exiting" : ""}`}
+        style={{ width: 220, height: 220 }}
+      >
+        <Image
+          src="/logo.png"
+          alt="Billia"
+          width={220}
+          height={220}
+          className="object-contain w-full h-full"
+          priority
+        />
+
+        {/* シャインエフェクト */}
+        {phase === "shine" && (
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="shine" />
+          </div>
+        )}
       </div>
     </div>
   );
