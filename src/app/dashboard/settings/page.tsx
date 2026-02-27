@@ -67,7 +67,7 @@ export default async function SettingsPage() {
   };
 
   return (
-    <div className="p-8">
+    <div className="py-5 md:py-8">
       <SettingsForm userId={userId} initialData={initialData} />
     </div>
   );

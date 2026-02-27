@@ -293,15 +293,15 @@ export default function ExpensesPage() {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto space-y-8">
+    <div className="py-5 max-w-4xl mx-auto space-y-5 md:py-8 md:space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">経費管理</h1>
-        <p className="text-gray-500 mt-2">領収書をアップロードして、AIに自動入力させましょう。</p>
+        <h1 className="text-xl font-bold tracking-tight text-gray-900 md:text-3xl">経費管理</h1>
+        <p className="text-sm text-gray-500 mt-1">領収書をアップロードして、AIに自動入力させましょう。</p>
       </div>
 
       {/* アップロードエリア */}
       <div
-        className="bg-white border-2 border-dashed border-indigo-200 rounded-2xl p-10 text-center hover:bg-indigo-50 transition cursor-pointer relative group"
+        className="bg-white border-2 border-dashed border-indigo-200 rounded-2xl p-6 text-center hover:bg-indigo-50 transition cursor-pointer relative group md:p-10"
         onClick={() => {
           if (!isScanning && fileInputRef.current) {
             fileInputRef.current.click();
@@ -324,11 +324,11 @@ export default function ExpensesPage() {
           </div>
         ) : (
           <div className="flex flex-col items-center group-hover:scale-105 transition-transform">
-            <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-4">
-              <UploadCloud className="w-8 h-8" />
+            <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-3 md:w-16 md:h-16 md:mb-4">
+              <UploadCloud className="w-6 h-6 md:w-8 md:h-8" />
             </div>
-            <p className="text-xl font-bold text-gray-700">ここをクリックして領収書を選択</p>
-            <p className="text-sm text-gray-400 mt-2">またはドラッグ＆ドロップ (JPG, PNG, PDF)</p>
+            <p className="text-base font-bold text-gray-700 md:text-xl">ここをクリックして領収書を選択</p>
+            <p className="text-xs text-gray-400 mt-1.5 md:text-sm md:mt-2">またはドラッグ＆ドロップ (JPG, PNG, PDF)</p>
           </div>
         )}
       </div>

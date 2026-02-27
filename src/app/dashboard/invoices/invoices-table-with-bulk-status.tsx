@@ -34,6 +34,12 @@ const statusTone: Record<string, string> = {
   支払済: "text-emerald-600",
 };
 
+const statusBg: Record<string, string> = {
+  未払い: "bg-amber-50",
+  部分払い: "bg-orange-50",
+  支払済: "bg-emerald-50",
+};
+
 export default function InvoicesTableWithBulkStatus({
   invoices,
 }: {
@@ -81,32 +87,34 @@ export default function InvoicesTableWithBulkStatus({
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      {/* ヘッダー：ボタン群 */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div>
-          <p className="billia-label mb-1">一覧</p>
-          <p className="text-sm text-billia-text-muted">
+          <p className="billia-label mb-0.5">一覧</p>
+          <p className="text-xs text-billia-text-muted hidden md:block">
             発行日・金額・ステータスを確認できます。チェックして一括でステータスを変更できます。
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <ImportDocumentButton />
           <Link
             href="/dashboard/invoices/new?tab=memo"
-            className="inline-flex rounded-xl border border-billia-blue bg-white px-4 py-2.5 text-sm font-medium text-billia-blue transition-colors hover:bg-billia-blue/5"
+            className="inline-flex rounded-xl border border-billia-blue bg-white px-3 py-2 text-xs font-medium text-billia-blue transition-colors hover:bg-billia-blue/5 md:px-4 md:py-2.5 md:text-sm"
           >
             メモから作成
           </Link>
           <Link
             href="/dashboard/invoices/new"
-            className="inline-flex rounded-xl bg-billia-sidebar px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-95"
+            className="inline-flex rounded-xl bg-billia-sidebar px-3 py-2 text-xs font-medium text-white transition-opacity hover:opacity-95 md:px-4 md:py-2.5 md:text-sm"
           >
             請求書を作成
           </Link>
         </div>
       </div>
 
+      {/* 一括操作バー（デスクトップのみ） */}
       {invoices.length > 0 && (
-        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-billia-border-subtle bg-billia-bg px-4 py-3">
+        <div className="mt-4 hidden md:flex flex-wrap items-center gap-3 rounded-lg border border-billia-border-subtle bg-billia-bg px-4 py-3">
           <span className="text-sm font-medium text-billia-text-muted">一括操作：</span>
           <select
             value={bulkStatus}
@@ -130,7 +138,45 @@ export default function InvoicesTableWithBulkStatus({
         </div>
       )}
 
-      <div className="mt-6 overflow-hidden rounded-xl border border-billia-border-subtle">
+      {/* モバイル：カード表示 */}
+      <div className="mt-4 space-y-2 md:hidden">
+        {invoices.length === 0 ? (
+          <p className="py-8 text-center text-sm text-billia-text-muted">
+            まだ請求書が登録されていません。作成ボタンから追加してください。
+          </p>
+        ) : (
+          invoices.map((invoice) => (
+            <Link
+              key={invoice.id}
+              href={`/dashboard/invoices/${invoice.id}`}
+              className="block rounded-xl border border-billia-border-subtle bg-white p-4 hover:bg-billia-bg transition-colors"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-billia-blue truncate">{invoice.id}</p>
+                  <p className="text-sm text-billia-text mt-0.5 truncate">
+                    {invoice.client?.name ?? "-"}
+                  </p>
+                </div>
+                <span
+                  className={`text-xs font-medium shrink-0 px-2 py-0.5 rounded-full ${statusTone[invoice.status] ?? "text-billia-text-muted"} ${statusBg[invoice.status] ?? "bg-gray-50"}`}
+                >
+                  {invoice.status}
+                </span>
+              </div>
+              <div className="flex items-center justify-between mt-2.5">
+                <p className="text-xs text-billia-text-muted">{formatDate(invoice.issueDate)}</p>
+                <p className="text-sm font-semibold text-billia-text">
+                  ¥{formatCurrency(invoice.totalAmount)}
+                </p>
+              </div>
+            </Link>
+          ))
+        )}
+      </div>
+
+      {/* デスクトップ：テーブル表示 */}
+      <div className="mt-6 hidden overflow-hidden rounded-xl border border-billia-border-subtle md:block">
         <table className="w-full text-left text-sm">
           <thead className="bg-billia-bg billia-label">
             <tr>
@@ -180,14 +226,10 @@ export default function InvoicesTableWithBulkStatus({
                   </td>
                   <td className="px-4 py-4">{invoice.client?.name ?? "-"}</td>
                   <td className="px-4 py-4">{formatDate(invoice.issueDate)}</td>
-                  <td className="px-4 py-4">
-                    ¥{formatCurrency(invoice.totalAmount)}
-                  </td>
+                  <td className="px-4 py-4">¥{formatCurrency(invoice.totalAmount)}</td>
                   <td className="px-4 py-4">
                     <span
-                      className={`font-medium ${
-                        statusTone[invoice.status] ?? "text-billia-text-muted"
-                      }`}
+                      className={`font-medium ${statusTone[invoice.status] ?? "text-billia-text-muted"}`}
                     >
                       {invoice.status}
                     </span>

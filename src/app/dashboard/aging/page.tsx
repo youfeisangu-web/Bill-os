@@ -30,32 +30,32 @@ export default async function AgingPage() {
   const grandTotal = rows.reduce((sum, r) => sum + r.totalAmount, 0);
 
   return (
-    <div className="flex flex-col gap-8 p-8">
-      <header className="flex flex-col gap-2">
+    <div className="flex flex-col gap-5 py-5 md:gap-8 md:py-8">
+      <header className="flex flex-col gap-1">
         <p className="billia-label">未収管理</p>
-        <h1 className="text-2xl font-semibold tracking-tight text-billia-text">
+        <h1 className="text-xl font-semibold tracking-tight text-billia-text md:text-2xl">
           エイジングレポート
         </h1>
-        <p className="text-sm text-billia-text-muted mt-1">
+        <p className="text-xs text-billia-text-muted hidden md:block">
           未払い・部分払いの請求を支払期限経過日数で集計しています。
         </p>
       </header>
 
-      <div className="billia-card overflow-hidden p-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="billia-card overflow-hidden p-4 md:p-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 md:gap-4 md:mb-6">
           {byBucket.map(({ bucket, label, total }) => (
             <div
               key={bucket}
-              className="rounded-xl border border-black/[0.06] bg-white p-4"
+              className="rounded-xl border border-black/[0.06] bg-white p-3 md:p-4"
             >
-              <p className="text-xs text-billia-text-muted mb-1">{label}</p>
-              <p className="text-xl font-semibold text-billia-text">
+              <p className="text-[11px] text-billia-text-muted mb-1 md:text-xs">{label}</p>
+              <p className="text-base font-semibold text-billia-text md:text-xl">
                 ¥{total.toLocaleString()}
               </p>
             </div>
           ))}
         </div>
-        <p className="text-sm font-medium text-billia-text mb-2">
+        <p className="text-xs font-medium text-billia-text mb-3 md:text-sm md:mb-2">
           合計未収: ¥{grandTotal.toLocaleString()}
         </p>
 
