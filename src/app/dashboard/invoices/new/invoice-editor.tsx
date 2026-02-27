@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { InvoiceOCRData } from "@/app/actions/ocr";
+import type { InvoiceOCRData } from "@/app/actions/ocr-document";
 
 const INVOICE_OCR_STORAGE_KEY = "invoiceOcrPrefill";
 import { createInvoice } from "@/app/actions/invoice";
@@ -16,6 +16,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { parseMemoToInvoice } from "@/app/actions/memo-parser";
+import { Loader2 } from "lucide-react";
 
 type ClientOption = {
   id: string;
@@ -184,6 +187,7 @@ export default function InvoiceEditor({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [isNewClient, setIsNewClient] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState("");
   const [items, setItems] = useState<ItemRow[]>([
     { name: "", quantity: "1", unitPrice: "0" },
   ]);
@@ -202,6 +206,10 @@ export default function InvoiceEditor({
   const [clientEmail, setClientEmail] = useState("");
   const [clientAddress, setClientAddress] = useState("");
   const [customMarkupPercent, setCustomMarkupPercent] = useState("");
+  const [memoText, setMemoText] = useState("");
+  const [isParsingMemo, setIsParsingMemo] = useState(false);
+  const [memoError, setMemoError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") === "memo" ? "memo" : "form");
   const fromOcr = searchParams.get("fromOcr") === "1";
 
   useEffect(() => {
@@ -292,6 +300,61 @@ export default function InvoiceEditor({
     setCustomMarkupPercent("");
   };
 
+  const handleParseMemo = async () => {
+    if (!memoText.trim()) {
+      setMemoError("メモテキストを入力してください");
+      return;
+    }
+
+    setIsParsingMemo(true);
+    setMemoError(null);
+
+    try {
+      const result = await parseMemoToInvoice(memoText);
+      if (result.success && result.data) {
+        const parsedName = result.data.clientName.trim();
+        const matched = clients.find(
+          (c) =>
+            c.name.trim() === parsedName ||
+            c.name.trim().replace(/\s+/g, "") === parsedName.replace(/\s+/g, "")
+        );
+        if (matched) {
+          setIsNewClient(false);
+          setSelectedClientId(matched.id);
+          setClientName("");
+          setClientEmail("");
+          setClientAddress("");
+        } else {
+          setIsNewClient(true);
+          setSelectedClientId("");
+          setClientName(result.data.clientName);
+          setClientEmail(result.data.clientEmail || "");
+          setClientAddress(result.data.clientAddress || "");
+        }
+        setIssueDate(result.data.issueDate || defaultIssueDate);
+        setDueDate(result.data.dueDate || defaultDueDate);
+        if (result.data.items && result.data.items.length > 0) {
+          setItems(
+            result.data.items.map((i) => ({
+              name: i.name,
+              quantity: String(i.quantity),
+              unitPrice: String(i.unitPrice),
+            }))
+          );
+        }
+        setMemoText("");
+        setMemoError(null);
+        setActiveTab("form");
+      } else {
+        setMemoError(result.message || "解析に失敗しました");
+      }
+    } catch (error: any) {
+      setMemoError(error?.message || "解析中にエラーが発生しました");
+    } finally {
+      setIsParsingMemo(false);
+    }
+  };
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
@@ -316,6 +379,52 @@ export default function InvoiceEditor({
         </section>
       )}
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="form">通常入力</TabsTrigger>
+            <TabsTrigger value="memo">メモから作成</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="memo" className="space-y-4">
+            <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4">
+              <p className="text-sm text-blue-800 mb-3">
+                <strong>メモ形式で入力してください。</strong> 話し言葉でもOKです。Gemini（AI）が解析してフォームに入力します。取引先に同じ名前があれば、その取引先宛の請求書として紐づきます。
+              </p>
+              <p className="text-xs text-blue-700 mb-4">
+                例: 「株式会社ABC、システム開発費10万円、2025年2月15日発行、支払期限3月末」<br />
+                例: 「山田さんに、ホームページ制作50,000円と、SEO対策30,000円、合計8万円で請求して」
+              </p>
+              <textarea
+                value={memoText}
+                onChange={(e) => {
+                  setMemoText(e.target.value);
+                  setMemoError(null);
+                }}
+                placeholder="メモを入力してください..."
+                className="w-full min-h-[200px] rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              />
+              {memoError && (
+                <p className="mt-2 text-sm text-red-600">{memoError}</p>
+              )}
+              <button
+                type="button"
+                onClick={handleParseMemo}
+                disabled={isParsingMemo || !memoText.trim()}
+                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+              >
+                {isParsingMemo ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    解析中...
+                  </>
+                ) : (
+                  "解析してフォームに入力"
+                )}
+              </button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="form" className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-slate-400">請求書</p>
@@ -365,6 +474,8 @@ export default function InvoiceEditor({
               <select
                 name="clientId"
                 required={!isNewClient}
+                value={selectedClientId}
+                onChange={(e) => setSelectedClientId(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
               >
                 <option value="">選択してください</option>
@@ -638,6 +749,8 @@ export default function InvoiceEditor({
             )}
           </div>
         </div>
+          </TabsContent>
+        </Tabs>
       </section>
     </form>
   );

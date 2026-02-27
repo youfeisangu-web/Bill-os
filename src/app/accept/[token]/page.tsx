@@ -12,16 +12,16 @@ export default async function AcceptQuotePage({ params }: Props) {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-lg rounded-2xl border border-black/10 bg-white shadow-sm p-6">
-        <h1 className="text-xl font-semibold text-billio-text mb-2">
+        <h1 className="text-xl font-semibold text-billia-text mb-2">
           見積書のご確認
         </h1>
-        <p className="text-sm text-billio-text-muted mb-4">
+        <p className="text-sm text-billia-text-muted mb-4">
           見積番号: {quote.quoteNumber} / 取引先: {quote.clientName}
         </p>
         <dl className="grid grid-cols-2 gap-2 text-sm mb-4">
-          <dt className="text-billio-text-muted">有効期限</dt>
+          <dt className="text-billia-text-muted">有効期限</dt>
           <dd>{quote.validUntil}</dd>
-          <dt className="text-billio-text-muted">合計金額</dt>
+          <dt className="text-billia-text-muted">合計金額</dt>
           <dd className="font-medium">¥{quote.totalAmount.toLocaleString()}</dd>
         </dl>
         <ul className="border-t border-black/10 pt-3 mb-6 text-sm">

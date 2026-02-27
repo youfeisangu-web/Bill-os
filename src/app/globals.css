@@ -4,157 +4,106 @@
   --font-sans: var(--font-inter), var(--font-noto-sans-jp), ui-sans-serif,
     system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans",
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  
-  /* Billio Luxury Palette */
-  --color-billio-blue-light: #60a5fa;
-  --color-billio-blue: #2563eb;
-  --color-billio-blue-dark: #1d4ed8;
-  --color-billio-green-light: #4ade80;
-  --color-billio-green: #16a34a;
-  --color-billio-green-dark: #15803d;
-  --color-billio-bg: #fafaf9;
-  --color-billio-card: #ffffff;
-  --color-billio-text: #1c1917;
-  --color-billio-text-muted: #57534e;
-  --color-billio-sidebar: #0f172a;
-  --color-billio-sidebar-hover: rgba(255, 255, 255, 0.06);
-  --color-billio-sidebar-active: rgba(255, 255, 255, 0.1);
-  --color-billio-accent: #2563eb;
-  --color-billio-accent-gold: #b45309;
-  --color-billio-border: #e7e5e4;
-  --color-billio-border-subtle: #f5f5f4;
+
+  /* Billia White Palette */
+  --color-billia-blue-light: #60a5fa;
+  --color-billia-blue: #2563eb;
+  --color-billia-blue-dark: #1d4ed8;
+  --color-billia-green-light: #4ade80;
+  --color-billia-green: #16a34a;
+  --color-billia-green-dark: #15803d;
+  --color-billia-bg: #ffffff;
+  --color-billia-card: #ffffff;
+  --color-billia-text: #111827;
+  --color-billia-text-muted: #6b7280;
+  --color-billia-sidebar: #0f172a;
+  --color-billia-sidebar-hover: rgba(255, 255, 255, 0.06);
+  --color-billia-sidebar-active: rgba(255, 255, 255, 0.1);
+  --color-billia-accent: #2563eb;
+  --color-billia-accent-gold: #b45309;
+  --color-billia-border: #e5e7eb;
+  --color-billia-border-subtle: #f3f4f6;
 }
 
 /* Tailwind 4用のカスタムカラークラス */
 @layer utilities {
-  .bg-billio-bg { background-color: var(--color-billio-bg); }
-  .bg-billio-card { background-color: var(--color-billio-card); }
-  .text-billio-text { color: var(--color-billio-text); }
-  .text-billio-text-muted { color: var(--color-billio-text-muted); }
-  .bg-billio-blue { background-color: var(--color-billio-blue); }
-  .bg-billio-blue-light { background-color: var(--color-billio-blue-light); }
-  .bg-billio-blue-dark { background-color: var(--color-billio-blue-dark); }
-  .bg-billio-green { background-color: var(--color-billio-green); }
-  .bg-billio-green-light { background-color: var(--color-billio-green-light); }
-  .bg-billio-green-dark { background-color: var(--color-billio-green-dark); }
-  .text-billio-blue { color: var(--color-billio-blue); }
-  .text-billio-green { color: var(--color-billio-green); }
-  .border-billio-blue { border-color: var(--color-billio-blue); }
-  .from-billio-blue { --tw-gradient-from: var(--color-billio-blue); }
-  .to-billio-green { --tw-gradient-to: var(--color-billio-green); }
-  .from-billio-blue-dark { --tw-gradient-from: var(--color-billio-blue-dark); }
-  .to-billio-green-dark { --tw-gradient-to: var(--color-billio-green-dark); }
-  .bg-billio-sidebar { background-color: var(--color-billio-sidebar); }
-  .border-billio-border { border-color: var(--color-billio-border); }
-  .border-billio-border-subtle { border-color: var(--color-billio-border-subtle); }
-  .divide-billio-border-subtle > :not([hidden]) ~ :not([hidden]) { border-color: var(--color-billio-border-subtle); }
-  .bg-billio-border-subtle { background-color: var(--color-billio-border-subtle); }
+  .bg-billia-bg { background-color: var(--color-billia-bg); }
+  .bg-billia-card { background-color: var(--color-billia-card); }
+  .text-billia-text { color: var(--color-billia-text); }
+  .text-billia-text-muted { color: var(--color-billia-text-muted); }
+  .bg-billia-blue { background-color: var(--color-billia-blue); }
+  .bg-billia-blue-light { background-color: var(--color-billia-blue-light); }
+  .bg-billia-blue-dark { background-color: var(--color-billia-blue-dark); }
+  .bg-billia-green { background-color: var(--color-billia-green); }
+  .bg-billia-green-light { background-color: var(--color-billia-green-light); }
+  .bg-billia-green-dark { background-color: var(--color-billia-green-dark); }
+  .text-billia-blue { color: var(--color-billia-blue); }
+  .text-billia-green { color: var(--color-billia-green); }
+  .border-billia-blue { border-color: var(--color-billia-blue); }
+  .from-billia-blue { --tw-gradient-from: var(--color-billia-blue); }
+  .to-billia-green { --tw-gradient-to: var(--color-billia-green); }
+  .from-billia-blue-dark { --tw-gradient-from: var(--color-billia-blue-dark); }
+  .to-billia-green-dark { --tw-gradient-to: var(--color-billia-green-dark); }
+  .bg-billia-sidebar { background-color: var(--color-billia-sidebar); }
+  .border-billia-border { border-color: var(--color-billia-border); }
+  .border-billia-border-subtle { border-color: var(--color-billia-border-subtle); }
+  .divide-billia-border-subtle > :not([hidden]) ~ :not([hidden]) { border-color: var(--color-billia-border-subtle); }
+  .bg-billia-border-subtle { background-color: var(--color-billia-border-subtle); }
 }
 
-/* 浮くガラス板: カード・入力エリア（半透明・すりガラス・光沢） */
-.billio-card {
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.35);
+/* カード */
+.billia-card {
+  background: #ffffff;
+  border: 1px solid var(--color-billia-border);
   border-radius: 1rem;
-  box-shadow:
-    0 8px 32px 0 rgba(31, 38, 135, 0.1),
-    0 2px 8px 0 rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.5);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
 }
-.billio-card-elevated {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+.billia-card-elevated {
+  background: #ffffff;
+  border: 1px solid var(--color-billia-border);
   border-radius: 1.25rem;
-  box-shadow:
-    0 12px 40px 0 rgba(31, 38, 135, 0.12),
-    0 4px 12px 0 rgba(0, 0, 0, 0.05),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.07), 0 1px 3px 0 rgba(0, 0, 0, 0.04);
 }
 
-/* 全体背景: ガラス越しに透ける「深み」のあるグラデーション（左上→右下） */
-.glass-bg {
-  background: linear-gradient(135deg, #eef2ff 0%, #ffffff 45%, #ffffff 55%, #eff6ff 100%);
-  position: relative;
-  min-height: 100%;
-}
-.glass-bg::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image: radial-gradient(ellipse 80% 50% at 20% 0%, rgba(129, 140, 248, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(59, 130, 246, 0.06) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* すりガラス: サイドバー（半透明・ぼかし・ガラスの縁） */
-.glass-sidebar {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-right: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 1px 0 2px rgba(0, 0, 0, 0.04);
-}
-/* すりガラス: ヘッダー */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-}
-
-/* 浮くガラスカード: 半透明・ぼかし・細い白縁・柔らかい影・光沢 */
+.glass-bg { background: #ffffff; }
+.glass-sidebar { background: #ffffff; border-right: 1px solid var(--color-billia-border); }
+.glass-panel { background: #ffffff; border-bottom: 1px solid var(--color-billia-border); }
 .glass-card {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: #ffffff;
+  border: 1px solid var(--color-billia-border);
   border-radius: 1rem;
-  box-shadow:
-    0 8px 32px 0 rgba(31, 38, 135, 0.1),
-    0 2px 8px 0 rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
 
 @layer base {
   :root {
-    /* Primary Color - 信頼感のある青 */
     --primary: 210 100% 50%;
     --primary-foreground: 0 0% 100%;
-    
-    /* Light Mode - 白ベース（強制） */
-    --background: 0 0% 100%; /* 完全な白 */
-    --foreground: 222.2 84% 4.9%; /* slate-900 - 濃いグレー */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --input: 0 0% 100%;
     --input-foreground: 222.2 84% 4.9%;
-    --border: 214 32% 91%; /* slate-200 */
+    --border: 214 32% 91%;
     --ring: 210 100% 50%;
   }
-  
-  /* .dark クラスを完全に削除 - ダークモードを無効化 */
-  
+
   body {
-    @apply bg-billio-bg text-billio-text antialiased;
+    @apply bg-billia-bg text-billia-text antialiased;
     letter-spacing: 0.01em;
   }
 
   /* セクションラベル（小さい大文字） */
-  .billio-label {
+  .billia-label {
     font-size: 0.6875rem;
     font-weight: 500;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--color-billio-text-muted);
+    color: var(--color-billia-text-muted);
   }
 
-  /* 入力フォームのスタイル - 常に白背景・黒文字 */
+  /* 入力フォームのスタイル */
   input[type="text"],
   input[type="email"],
   input[type="tel"],
@@ -169,16 +118,14 @@
   textarea:focus,
   select:focus {
     outline: none;
-    box-shadow: 0 0 0 2px var(--color-billio-accent);
+    box-shadow: 0 0 0 2px var(--color-billia-accent);
   }
 
-  /* プレースホルダーの色 */
   input::placeholder,
   textarea::placeholder {
     @apply text-stone-400;
   }
 
-  /* 数値入力のスピナー（上下矢印）を非表示 → キーボード入力用 */
   input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;

@@ -43,15 +43,47 @@ model UserProfile {
   lineUserId String? @unique
 
   // リレーション
-  bankAccounts BankAccount[]
-  clients      Client[]
-  itemMasters  ItemMaster[]
-  quotes       Quote[]
-  invoices     Invoice[]
-  expenses     Expense[]
+  bankAccounts      BankAccount[]
+  clients           Client[]
+  itemMasters       ItemMaster[]
+  quotes            Quote[]
+  invoices          Invoice[]
+  expenses          Expense[]
+  salesCategories   SalesCategory[]
+  categorySales     CategorySalesEntry[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// 売上カテゴリ（ユーザーが定義：食品、日用品など）
+model SalesCategory {
+  id          String   @id @default(uuid())
+  userId      String
+  user        UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String   // カテゴリ名（例: 食品、日用品）
+  displayOrder Int     @default(0) // 表示順
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  entries CategorySalesEntry[]
+
+  @@unique([userId, name])
+}
+
+// 月別・カテゴリ別売上（手入力 or AI振り分け結果）
+model CategorySalesEntry {
+  id         String   @id @default(uuid())
+  userId     String
+  user       UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId String
+  category   SalesCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  amount     Int      // 金額（円）
+  month      String   // "YYYY-MM"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, categoryId, month])
 }
 
 // 銀行口座 (複数登録・デフォルト設定可)

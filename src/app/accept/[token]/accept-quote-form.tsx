@@ -24,7 +24,7 @@ export default function AcceptQuoteForm({ token }: { token: string }) {
         type="button"
         onClick={handleAccept}
         disabled={isPending}
-        className="w-full rounded-xl bg-billio-blue text-white font-medium py-3 px-4 hover:opacity-90 disabled:opacity-60 transition"
+        className="w-full rounded-xl bg-billia-blue text-white font-medium py-3 px-4 hover:opacity-90 disabled:opacity-60 transition"
       >
         {isPending ? "処理中…" : "承諾する"}
       </button>

@@ -70,7 +70,7 @@ export const InvoiceTemplate = ({ data }: { data: DocumentData }) => {
           <p className="text-sm mb-6">発行日：{formatDate(data.issueDate)}</p>
           
           <div className="mt-4">
-            <p className="text-lg font-bold text-slate-900">{data.user.companyName || "Bill OS"}</p>
+            <p className="text-lg font-bold text-slate-900">{data.user.companyName || "Billia"}</p>
             {data.user.invoiceRegNumber && (
               <p className="text-xs text-slate-500 mt-1">登録番号：{data.user.invoiceRegNumber}</p>
             )}
@@ -81,7 +81,7 @@ export const InvoiceTemplate = ({ data }: { data: DocumentData }) => {
           <div className="absolute right-0 top-10 opacity-60 pointer-events-none">
             <div className="w-14 h-14 border-2 border-rose-500 rounded-full flex items-center justify-center text-rose-500 font-bold rotate-12 select-none text-[10px]">
               <div className="text-center">
-                <p className="leading-none border-b border-rose-500 pb-0.5 mb-0.5">Bill OS</p>
+                <p className="leading-none border-b border-rose-500 pb-0.5 mb-0.5">Billia</p>
                 <p className="leading-none">印</p>
               </div>
             </div>

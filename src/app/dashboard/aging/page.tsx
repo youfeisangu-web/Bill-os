@@ -32,37 +32,37 @@ export default async function AgingPage() {
   return (
     <div className="flex flex-col gap-8 p-8">
       <header className="flex flex-col gap-2">
-        <p className="billio-label">未収管理</p>
-        <h1 className="text-2xl font-semibold tracking-tight text-billio-text">
+        <p className="billia-label">未収管理</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-billia-text">
           エイジングレポート
         </h1>
-        <p className="text-sm text-billio-text-muted mt-1">
+        <p className="text-sm text-billia-text-muted mt-1">
           未払い・部分払いの請求を支払期限経過日数で集計しています。
         </p>
       </header>
 
-      <div className="billio-card overflow-hidden p-6">
+      <div className="billia-card overflow-hidden p-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           {byBucket.map(({ bucket, label, total }) => (
             <div
               key={bucket}
               className="rounded-xl border border-black/[0.06] bg-white p-4"
             >
-              <p className="text-xs text-billio-text-muted mb-1">{label}</p>
-              <p className="text-xl font-semibold text-billio-text">
+              <p className="text-xs text-billia-text-muted mb-1">{label}</p>
+              <p className="text-xl font-semibold text-billia-text">
                 ¥{total.toLocaleString()}
               </p>
             </div>
           ))}
         </div>
-        <p className="text-sm font-medium text-billio-text mb-2">
+        <p className="text-sm font-medium text-billia-text mb-2">
           合計未収: ¥{grandTotal.toLocaleString()}
         </p>
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-black/10 text-left text-billio-text-muted">
+              <tr className="border-b border-black/10 text-left text-billia-text-muted">
                 <th className="py-3 px-2">取引先</th>
                 <th className="py-3 px-2">請求書番号</th>
                 <th className="py-3 px-2">発行日</th>
@@ -79,7 +79,7 @@ export default async function AgingPage() {
                   <td className="py-3 px-2">
                     <Link
                       href={`/dashboard/invoices/${r.id}`}
-                      className="text-billio-blue hover:underline"
+                      className="text-billia-blue hover:underline"
                     >
                       {r.id}
                     </Link>
@@ -97,7 +97,7 @@ export default async function AgingPage() {
           </table>
         </div>
         {rows.length === 0 && (
-          <p className="text-center text-billio-text-muted py-8">
+          <p className="text-center text-billia-text-muted py-8">
             未払い・部分払いの請求はありません。
           </p>
         )}

@@ -1,9 +1,15 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState, useTransition, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createQuote } from "@/app/actions/quote";
 import { normalizeToHalfWidthNumeric, calcTaxAmount, type TaxRounding } from "@/lib/utils";
+import type { DocumentImportData } from "@/app/actions/ocr-document";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { parseMemoToQuote } from "@/app/actions/memo-parser";
+import { Loader2 } from "lucide-react";
+
+const QUOTE_OCR_STORAGE_KEY = "quoteOcrPrefill";
 
 type ClientOption = {
   id: string;
@@ -40,13 +46,52 @@ type QuoteEditorProps = {
 
 export default function QuoteEditor({ clients, taxRate = 10, taxRounding = "floor" }: QuoteEditorProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [isNewClient, setIsNewClient] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState("");
   const [items, setItems] = useState<ItemRow[]>([
     { name: "", quantity: "1", unitPrice: "0" },
   ]);
   const defaultIssueDate = useMemo(() => todayString(), []);
-  const defaultDueDate = useMemo(() => endOfNextMonthString(), []);
+  const defaultValidUntil = useMemo(() => endOfNextMonthString(), []);
+  const [issueDate, setIssueDate] = useState(defaultIssueDate);
+  const [validUntil, setValidUntil] = useState(defaultValidUntil);
+  const [clientName, setClientName] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [clientAddress, setClientAddress] = useState("");
+  const [memoText, setMemoText] = useState("");
+  const [isParsingMemo, setIsParsingMemo] = useState(false);
+  const [memoError, setMemoError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") === "memo" ? "memo" : "form");
+  const fromOcr = searchParams.get("fromOcr") === "1";
+
+  useEffect(() => {
+    if (searchParams.get("fromOcr") !== "1") return;
+    try {
+      const raw = sessionStorage.getItem(QUOTE_OCR_STORAGE_KEY);
+      if (!raw) return;
+      const prefill = JSON.parse(raw) as DocumentImportData;
+      sessionStorage.removeItem(QUOTE_OCR_STORAGE_KEY);
+      setIsNewClient(true);
+      setClientName(prefill.clientName ?? "");
+      setClientEmail(prefill.clientEmail ?? "");
+      setClientAddress(prefill.clientAddress ?? "");
+      setIssueDate(prefill.issueDate ?? defaultIssueDate);
+      setValidUntil(prefill.validUntil ?? defaultValidUntil);
+      if (prefill.items?.length) {
+        setItems(
+          prefill.items.map((i) => ({
+            name: i.name,
+            quantity: String(i.quantity),
+            unitPrice: String(i.unitPrice),
+          })),
+        );
+      }
+    } catch {
+      // ignore
+    }
+  }, [searchParams, defaultIssueDate, defaultValidUntil]);
 
   const totals = useMemo(() => {
     const subtotal = items.reduce(
@@ -83,6 +128,61 @@ export default function QuoteEditor({ clients, taxRate = 10, taxRounding = "floo
     setItems((prev) => prev.filter((_, idx) => idx !== index));
   };
 
+  const handleParseMemo = async () => {
+    if (!memoText.trim()) {
+      setMemoError("メモテキストを入力してください");
+      return;
+    }
+
+    setIsParsingMemo(true);
+    setMemoError(null);
+
+    try {
+      const result = await parseMemoToQuote(memoText);
+      if (result.success && result.data) {
+        const parsedName = result.data.clientName.trim();
+        const matched = clients.find(
+          (c) =>
+            c.name.trim() === parsedName ||
+            c.name.trim().replace(/\s+/g, "") === parsedName.replace(/\s+/g, "")
+        );
+        if (matched) {
+          setIsNewClient(false);
+          setSelectedClientId(matched.id);
+          setClientName("");
+          setClientEmail("");
+          setClientAddress("");
+        } else {
+          setIsNewClient(true);
+          setSelectedClientId("");
+          setClientName(result.data.clientName);
+          setClientEmail(result.data.clientEmail || "");
+          setClientAddress(result.data.clientAddress || "");
+        }
+        setIssueDate(result.data.issueDate || defaultIssueDate);
+        setValidUntil(result.data.validUntil || defaultValidUntil);
+        if (result.data.items && result.data.items.length > 0) {
+          setItems(
+            result.data.items.map((i) => ({
+              name: i.name,
+              quantity: String(i.quantity),
+              unitPrice: String(i.unitPrice),
+            }))
+          );
+        }
+        setMemoText("");
+        setMemoError(null);
+        setActiveTab("form");
+      } else {
+        setMemoError(result.message || "解析に失敗しました");
+      }
+    } catch (error: any) {
+      setMemoError(error?.message || "解析中にエラーが発生しました");
+    } finally {
+      setIsParsingMemo(false);
+    }
+  };
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
@@ -117,6 +217,52 @@ export default function QuoteEditor({ clients, taxRate = 10, taxRounding = "floo
       </section>
 
       <section className="mx-auto w-full max-w-4xl rounded-[32px] border border-slate-200 bg-white p-8 shadow-lg">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="form">通常入力</TabsTrigger>
+            <TabsTrigger value="memo">メモから作成</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="memo" className="space-y-4">
+            <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4">
+              <p className="text-sm text-blue-800 mb-3">
+                <strong>メモ形式で入力してください。</strong> 話し言葉でもOKです。Gemini（AI）が解析してフォームに入力します。取引先に同じ名前があれば、その取引先宛の見積書として紐づきます。
+              </p>
+              <p className="text-xs text-blue-700 mb-4">
+                例: 「株式会社XYZに、ウェブサイト制作見積もり、50万円で提案して」<br />
+                例: 「田中さん、アプリ開発の見積もり、開発費100万、保守費月5万、3ヶ月分」
+              </p>
+              <textarea
+                value={memoText}
+                onChange={(e) => {
+                  setMemoText(e.target.value);
+                  setMemoError(null);
+                }}
+                placeholder="メモを入力してください..."
+                className="w-full min-h-[200px] rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              />
+              {memoError && (
+                <p className="mt-2 text-sm text-red-600">{memoError}</p>
+              )}
+              <button
+                type="button"
+                onClick={handleParseMemo}
+                disabled={isParsingMemo || !memoText.trim()}
+                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+              >
+                {isParsingMemo ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    解析中...
+                  </>
+                ) : (
+                  "解析してフォームに入力"
+                )}
+              </button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="form" className="space-y-6">
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
             <div className="flex items-center gap-4">
@@ -150,6 +296,8 @@ export default function QuoteEditor({ clients, taxRate = 10, taxRounding = "floo
               <select
                 name="clientId"
                 required={!isNewClient}
+                value={selectedClientId}
+                onChange={(e) => setSelectedClientId(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
               >
                 <option value="">選択してください</option>
@@ -166,18 +314,24 @@ export default function QuoteEditor({ clients, taxRate = 10, taxRounding = "floo
                   type="text"
                   placeholder="取引先名（必須）"
                   required={isNewClient}
+                  value={clientName}
+                  onChange={(e) => setClientName(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 />
                 <input
                   name="clientEmail"
                   type="email"
                   placeholder="メールアドレス（任意）"
+                  value={clientEmail}
+                  onChange={(e) => setClientEmail(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 />
                 <input
                   name="clientAddress"
                   type="text"
                   placeholder="住所（任意）"
+                  value={clientAddress}
+                  onChange={(e) => setClientAddress(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 />
               </div>
@@ -192,19 +346,21 @@ export default function QuoteEditor({ clients, taxRate = 10, taxRounding = "floo
                 name="issueDate"
                 type="date"
                 required
-                defaultValue={defaultIssueDate}
+                value={issueDate}
+                onChange={(e) => setIssueDate(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
               />
             </div>
             <div className="space-y-2">
               <label className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                支払い期限
+                有効期限
               </label>
               <input
                 name="validUntil"
                 type="date"
                 required
-                defaultValue={defaultDueDate}
+                value={validUntil}
+                onChange={(e) => setValidUntil(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
               />
             </div>
@@ -288,6 +444,8 @@ export default function QuoteEditor({ clients, taxRate = 10, taxRounding = "floo
             </div>
           </div>
         </div>
+          </TabsContent>
+        </Tabs>
       </section>
     </form>
   );

@@ -18,9 +18,9 @@ const notoSansJp = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: "Billio | 次世代クラウド請求管理プラットフォーム",
+  title: "Billia | 次世代クラウド請求管理プラットフォーム",
   description:
-    "Billioは、組織の請求業務を統合管理するクラウドERPです。インボイス制度・電帳法に完全対応。承認フローの標準化、ガバナンス強化、経理DXを強力に推進します。",
+    "Billiaは、組織の請求業務を統合管理するクラウドERPです。インボイス制度・電帳法に完全対応。承認フローの標準化、ガバナンス強化、経理DXを強力に推進します。",
   keywords: [
     "請求管理システム",
     "クラウドERP",
@@ -39,9 +39,9 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "ja_JP",
-    url: "https://billio.com",
-    siteName: "Billio",
-    title: "Billio | 次世代クラウド請求管理プラットフォーム",
+    url: "https://billia.com",
+    siteName: "Billia",
+    title: "Billia | 次世代クラウド請求管理プラットフォーム",
     description:
       "組織の請求業務を統合管理するクラウドERP。インボイス制度・電帳法に完全対応。承認フロー標準化、ガバナンス強化、経理DXを推進。",
     images: [
@@ -49,13 +49,13 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Billio - 次世代クラウド請求管理プラットフォーム",
+        alt: "Billia - 次世代クラウド請求管理プラットフォーム",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Billio | 次世代クラウド請求管理プラットフォーム",
+    title: "Billia | 次世代クラウド請求管理プラットフォーム",
     description:
       "組織の請求業務を統合管理するクラウドERP。インボイス制度・電帳法に完全対応。承認フロー標準化、ガバナンス強化、経理DXを推進。",
     images: ["/og-image.png"],
@@ -72,8 +72,14 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://bill-os.com",
+    canonical: "https://billia.com",
   },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -85,7 +91,7 @@ export default function RootLayout({
     <ClerkProvider localization={jaJP}>
       <html lang="ja" className="light" style={{ colorScheme: 'light' }} suppressHydrationWarning>
         <body
-          className={`${inter.variable} ${notoSansJp.variable} font-sans bg-billio-bg text-billio-text`}
+          className={`${inter.variable} ${notoSansJp.variable} font-sans bg-billia-bg text-billia-text`}
         >
           <ThemeProvider attribute="class" forcedTheme="light" enableSystem={false}>
             {children}

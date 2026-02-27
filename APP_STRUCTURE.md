@@ -1,8 +1,8 @@
-# Billio アプリケーション構成と機能一覧
+# Billia アプリケーション構成と機能一覧
 
 ## 📱 アプリケーション概要
 
-**アプリ名**: Billio（旧Bill OS）  
+**アプリ名**: Billia（旧Bill OS）  
 **種類**: 企業向けクラウド請求管理プラットフォーム  
 **デザイン**: モダンなUI（青と緑のグラデーション、カード型レイアウト）
 
@@ -14,7 +14,7 @@
 - **Next.js 16.1.2** (App Router)
 - **React 19.2.3**
 - **TypeScript 5**
-- **Tailwind CSS 4** (カスタムカラー: Billio Blue/Green)
+- **Tailwind CSS 4** (カスタムカラー: Billia Blue/Green)
 - **Shadcn UI** (UIコンポーネント)
 - **Lucide React** (アイコン)
 
@@ -38,7 +38,7 @@
 ## 📂 プロジェクト構造
 
 ```
-Billio/
+Billia/
 ├── prisma/
 │   └── schema.prisma          # データベーススキーマ定義
 ├── src/
@@ -242,12 +242,12 @@ Billio/
 
 ## 🎨 デザインシステム
 
-### カラーパレット（Billio）
-- **Billio Blue**: `#3b82f6` (メイン)
-- **Billio Green**: `#22c55e` (アクセント)
-- **Billio Background**: `#f8fafc` (背景)
-- **Billio Card**: `#ffffff` (カード背景)
-- **Billio Text**: `#1e293b` (テキスト)
+### カラーパレット（Billia）
+- **Billia Blue**: `#3b82f6` (メイン)
+- **Billia Green**: `#22c55e` (アクセント)
+- **Billia Background**: `#f8fafc` (背景)
+- **Billia Card**: `#ffffff` (カード背景)
+- **Billia Text**: `#1e293b` (テキスト)
 
 ### UIコンポーネント
 - カード型レイアウト（角丸、シャドウ）

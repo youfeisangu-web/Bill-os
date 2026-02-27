@@ -258,14 +258,14 @@ export default function RecurringClientView({
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-billio-text">定期請求</h1>
-          <p className="text-sm text-billio-text-muted mt-1">
+          <h1 className="text-2xl font-bold text-billia-text">定期請求</h1>
+          <p className="text-sm text-billia-text-muted mt-1">
             毎月自動で請求書を作成する設定を管理します
           </p>
         </div>
         <button
           onClick={() => handleOpenDialog()}
-          className="flex items-center gap-2 bg-gradient-to-r from-billio-blue to-billio-green text-white px-4 py-2 rounded-lg font-semibold hover:from-billio-blue-dark hover:to-billio-green-dark transition-all shadow-sm"
+          className="flex items-center gap-2 bg-gradient-to-r from-billia-blue to-billia-green text-white px-4 py-2 rounded-lg font-semibold hover:from-billia-blue-dark hover:to-billia-green-dark transition-all shadow-sm"
         >
           <Plus className="w-4 h-4" />
           新規作成
@@ -276,29 +276,29 @@ export default function RecurringClientView({
       {generatedInvoices.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-billio-text">
+            <h2 className="text-lg font-semibold text-billia-text">
               今月作成した請求書（送付）
             </h2>
-            <p className="text-sm text-billio-text-muted mt-0.5">
+            <p className="text-sm text-billia-text-muted mt-0.5">
               定期請求で自動作成された請求書です。メールで送付する場合はボタンから起動してください。
             </p>
           </div>
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-billio-text">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-billia-text">
                   請求書番号
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-billio-text">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-billia-text">
                   取引先
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-billio-text">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-billia-text">
                   発行日
                 </th>
-                <th className="px-4 py-3 text-right text-sm font-semibold text-billio-text">
+                <th className="px-4 py-3 text-right text-sm font-semibold text-billia-text">
                   金額
                 </th>
-                <th className="px-4 py-3 text-right text-sm font-semibold text-billio-text">
+                <th className="px-4 py-3 text-right text-sm font-semibold text-billia-text">
                   操作
                 </th>
               </tr>
@@ -325,18 +325,18 @@ export default function RecurringClientView({
                     <td className="px-4 py-3">
                       <a
                         href={`/dashboard/invoices/${inv.id}`}
-                        className="text-billio-blue hover:underline font-medium"
+                        className="text-billia-blue hover:underline font-medium"
                       >
                         {inv.id}
                       </a>
                     </td>
-                    <td className="px-4 py-3 text-sm text-billio-text">
+                    <td className="px-4 py-3 text-sm text-billia-text">
                       {inv.clientName}
                     </td>
-                    <td className="px-4 py-3 text-sm text-billio-text">
+                    <td className="px-4 py-3 text-sm text-billia-text">
                       {inv.issueDate}
                     </td>
-                    <td className="px-4 py-3 text-sm text-billio-text text-right">
+                    <td className="px-4 py-3 text-sm text-billia-text text-right">
                       ¥{inv.totalAmount.toLocaleString()}
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -348,7 +348,7 @@ export default function RecurringClientView({
                           📧 メールで送付
                         </a>
                       ) : (
-                        <span className="text-xs text-billio-text-muted">
+                        <span className="text-xs text-billia-text-muted">
                           メール未設定
                         </span>
                       )}
@@ -364,7 +364,7 @@ export default function RecurringClientView({
       {/* テンプレート一覧 */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         {templates.length === 0 ? (
-          <div className="p-12 text-center text-billio-text-muted">
+          <div className="p-12 text-center text-billia-text-muted">
             <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
             <p>定期請求テンプレートがありません</p>
             <p className="text-sm mt-2">新規作成ボタンから追加してください</p>
@@ -373,19 +373,19 @@ export default function RecurringClientView({
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-billio-text">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-billia-text">
                   入居者
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-billio-text">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-billia-text">
                   作成日
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-billio-text">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-billia-text">
                   次回実行日
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-billio-text">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-billia-text">
                   状態
                 </th>
-                <th className="px-4 py-3 text-right text-sm font-semibold text-billio-text">
+                <th className="px-4 py-3 text-right text-sm font-semibold text-billia-text">
                   操作
                 </th>
               </tr>
@@ -394,17 +394,17 @@ export default function RecurringClientView({
               {templates.map((template) => (
                 <tr key={template.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
-                    <div className="font-medium text-billio-text">
+                    <div className="font-medium text-billia-text">
                       {template.tenant.name}
                     </div>
-                    <div className="text-sm text-billio-text-muted">
+                    <div className="text-sm text-billia-text-muted">
                       {template.tenant.nameKana}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-billio-text">
+                  <td className="px-4 py-3 text-sm text-billia-text">
                     毎月{template.creationDay}日
                   </td>
-                  <td className="px-4 py-3 text-sm text-billio-text">
+                  <td className="px-4 py-3 text-sm text-billia-text">
                     {formatDate(template.nextExecutionDate)}
                   </td>
                   <td className="px-4 py-3">
@@ -422,7 +422,7 @@ export default function RecurringClientView({
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => handleToggle(template.id, template.isActive)}
-                        className="p-2 text-gray-600 hover:text-billio-blue transition-colors"
+                        className="p-2 text-gray-600 hover:text-billia-blue transition-colors"
                         title={template.isActive ? "無効化" : "有効化"}
                       >
                         <Power
@@ -431,7 +431,7 @@ export default function RecurringClientView({
                       </button>
                       <button
                         onClick={() => handleOpenDialog(template)}
-                        className="p-2 text-gray-600 hover:text-billio-blue transition-colors"
+                        className="p-2 text-gray-600 hover:text-billia-blue transition-colors"
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
@@ -466,7 +466,7 @@ export default function RecurringClientView({
           <form onSubmit={handleSubmit} className="space-y-6">
               {/* 入居者選択 */}
               <div>
-                <label className="block text-sm font-medium text-billio-text mb-2">
+                <label className="block text-sm font-medium text-billia-text mb-2">
                   入居者 <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -474,7 +474,7 @@ export default function RecurringClientView({
                   onChange={(e) => handleTenantChange(e.target.value)}
                   required
                   disabled={!!editingTemplate}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billio-blue"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billia-blue"
                 >
                   <option value="">選択してください</option>
                   {tenants.map((tenant) => (
@@ -487,14 +487,14 @@ export default function RecurringClientView({
 
               {/* 間隔 */}
               <div>
-                <label className="block text-sm font-medium text-billio-text mb-2">
+                <label className="block text-sm font-medium text-billia-text mb-2">
                   間隔 <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={interval}
                   onChange={(e) => setInterval(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billio-blue"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billia-blue"
                 >
                   <option value="MONTHLY">毎月</option>
                   <option value="WEEKLY">毎週</option>
@@ -504,7 +504,7 @@ export default function RecurringClientView({
 
               {/* 作成日 */}
               <div>
-                <label className="block text-sm font-medium text-billio-text mb-2">
+                <label className="block text-sm font-medium text-billia-text mb-2">
                   作成日（毎月何日） <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -514,16 +514,16 @@ export default function RecurringClientView({
                   value={creationDay}
                   onChange={(e) => setCreationDay(parseInt(e.target.value) || 1)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billio-blue"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billia-blue"
                 />
-                <p className="text-xs text-billio-text-muted mt-1">
+                <p className="text-xs text-billia-text-muted mt-1">
                   1-31の範囲で指定してください
                 </p>
               </div>
 
               {/* 送信日（オプション） */}
               <div>
-                <label className="block text-sm font-medium text-billio-text mb-2">
+                <label className="block text-sm font-medium text-billia-text mb-2">
                   送信日（毎月何日、オプション）
                 </label>
                 <input
@@ -534,16 +534,16 @@ export default function RecurringClientView({
                   onChange={(e) =>
                     setSendDay(e.target.value ? parseInt(e.target.value) : null)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billio-blue"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billia-blue"
                 />
-                <p className="text-xs text-billio-text-muted mt-1">
+                <p className="text-xs text-billia-text-muted mt-1">
                   将来のメール送信用（現在は未使用）
                 </p>
               </div>
 
               {/* 開始日 */}
               <div>
-                <label className="block text-sm font-medium text-billio-text mb-2">
+                <label className="block text-sm font-medium text-billia-text mb-2">
                   開始日 <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -551,29 +551,29 @@ export default function RecurringClientView({
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billio-blue"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billia-blue"
                 />
               </div>
 
               {/* 終了日 */}
               <div>
-                <label className="block text-sm font-medium text-billio-text mb-2">
+                <label className="block text-sm font-medium text-billia-text mb-2">
                   終了日（オプション）
                 </label>
                 <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billio-blue"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billia-blue"
                 />
-                <p className="text-xs text-billio-text-muted mt-1">
+                <p className="text-xs text-billia-text-muted mt-1">
                   未指定の場合は無期限で実行されます
                 </p>
               </div>
 
               {/* 明細 */}
               <div>
-                <label className="block text-sm font-medium text-billio-text mb-2">
+                <label className="block text-sm font-medium text-billia-text mb-2">
                   請求明細 <span className="text-red-500">*</span>
                 </label>
                 <div className="space-y-3">
@@ -588,7 +588,7 @@ export default function RecurringClientView({
                             updateItem(index, "name", e.target.value)
                           }
                           required
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billio-blue"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billia-blue"
                         />
                       </div>
                       <div className="w-24">
@@ -601,7 +601,7 @@ export default function RecurringClientView({
                             updateItem(index, "quantity", parseInt(e.target.value) || 1)
                           }
                           required
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billio-blue"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billia-blue"
                         />
                       </div>
                       <div className="w-32">
@@ -614,7 +614,7 @@ export default function RecurringClientView({
                             updateItem(index, "unitPrice", parseInt(e.target.value) || 0)
                           }
                           required
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billio-blue"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billia-blue"
                         />
                       </div>
                       <div className="w-24">
@@ -627,7 +627,7 @@ export default function RecurringClientView({
                           onChange={(e) =>
                             updateItem(index, "taxRate", parseInt(e.target.value) || 10)
                           }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billio-blue"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billia-blue"
                         />
                       </div>
                       {items.length > 1 && (
@@ -645,7 +645,7 @@ export default function RecurringClientView({
                 <button
                   type="button"
                   onClick={addItem}
-                  className="mt-2 text-sm text-billio-blue hover:text-billio-blue-dark"
+                  className="mt-2 text-sm text-billia-blue hover:text-billia-blue-dark"
                 >
                   + 明細を追加
                 </button>
@@ -653,14 +653,14 @@ export default function RecurringClientView({
 
               {/* 備考 */}
               <div>
-                <label className="block text-sm font-medium text-billio-text mb-2">
+                <label className="block text-sm font-medium text-billia-text mb-2">
                   備考
                 </label>
                 <textarea
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billio-blue"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billia-blue"
                 />
               </div>
 
@@ -669,14 +669,14 @@ export default function RecurringClientView({
               <button
                 type="button"
                 onClick={() => handleCloseDialog(false)}
-                className="px-4 py-2 text-billio-text-muted hover:text-billio-text transition-colors"
+                className="px-4 py-2 text-billia-text-muted hover:text-billia-text transition-colors"
               >
                 キャンセル
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2 bg-gradient-to-r from-billio-blue to-billio-green text-white rounded-lg font-semibold hover:from-billio-blue-dark hover:to-billio-green-dark transition-all shadow-sm disabled:opacity-50"
+                className="px-6 py-2 bg-gradient-to-r from-billia-blue to-billia-green text-white rounded-lg font-semibold hover:from-billia-blue-dark hover:to-billia-green-dark transition-all shadow-sm disabled:opacity-50"
               >
                 {loading ? "保存中..." : editingTemplate ? "更新" : "作成"}
               </button>

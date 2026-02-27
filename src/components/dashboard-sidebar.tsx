@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   Sparkles,
@@ -9,13 +10,14 @@ import {
   ClipboardList,
   Users,
   DollarSign,
-  Calendar,
   Settings,
   Receipt,
   BarChart3,
+  X,
 } from "lucide-react";
 import { getTenantGroups } from "@/app/actions/tenant-group";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 type TenantGroup = {
   id: string;
@@ -24,18 +26,25 @@ type TenantGroup = {
 };
 
 const navItems = [
-  { href: "/dashboard", label: "ダッシュボード", icon: LayoutDashboard },
+  { href: "/dashboard", label: "ホーム", icon: LayoutDashboard },
   { href: "/dashboard/invoices", label: "請求書", icon: FileText },
   { href: "/dashboard/quotes", label: "見積書", icon: ClipboardList },
   { href: "/dashboard/clients", label: "取引先", icon: Users },
-  { href: "/dashboard/tenants", label: "月額管理", icon: DollarSign },
+  { href: "/dashboard/tenants", label: "月額・定期請求", icon: DollarSign },
   { href: "/dashboard/expenses", label: "経費", icon: Receipt },
-  { href: "/dashboard/recurring", label: "定期請求", icon: Calendar },
   { href: "/dashboard/aging", label: "エイジング", icon: BarChart3 },
   { href: "/reconcile", label: "入金消込", icon: Sparkles },
 ] as const;
 
-export default function DashboardSidebar() {
+type DashboardSidebarProps = {
+  open?: boolean;
+  onClose?: () => void;
+};
+
+export default function DashboardSidebar({
+  open = true,
+  onClose,
+}: DashboardSidebarProps) {
   const pathname = usePathname();
   const [groups, setGroups] = useState<TenantGroup[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
@@ -47,31 +56,64 @@ export default function DashboardSidebar() {
     getTenantGroups().then(setGroups);
   }, []);
 
+  useEffect(() => {
+    onClose?.();
+  }, [pathname]);
+
   return (
-    <aside
-      className="w-[260px] flex flex-col shrink-0 mr-8 backdrop-blur-xl rounded-r-2xl border-r border-white/50 shadow-[2px_0_24px_-4px_rgba(0,0,0,0.08)]"
-      style={{ background: "rgba(255,255,255,0.72)" }}
-    >
-      {/* ロゴエリア */}
-      <div className="px-5 pt-8 pb-6 border-b border-black/[0.06]">
-        <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-billio-blue/10 flex items-center justify-center ring-1 ring-billio-blue/20">
-            <Sparkles className="h-5 w-5 text-billio-blue" />
+    <>
+      {/* モバイル: オーバーレイ（サイドバー外タップで閉じる） */}
+      <button
+        type="button"
+        aria-label="メニューを閉じる"
+        onClick={onClose}
+        className={cn(
+          "fixed inset-0 z-40 bg-black/50 transition-opacity duration-200 md:hidden",
+          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        )}
+      />
+      <aside
+        className={cn(
+          "w-[260px] flex flex-col shrink-0 bg-white border-r border-gray-100",
+          "max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:shadow-xl",
+          "max-md:transition-transform max-md:duration-200 max-md:ease-out",
+          open ? "max-md:translate-x-0" : "max-md:-translate-x-full"
+        )}
+      >
+      {/* ロゴエリア + モバイル閉じるボタン */}
+      <div className="px-5 pt-8 pb-6 border-b border-black/[0.06] flex items-center justify-between gap-3">
+        <Link href="/dashboard" className="flex items-center gap-3 min-w-0">
+          <div className="w-14 h-14 flex items-center justify-center overflow-hidden shrink-0 bg-transparent">
+            <Image
+              src="/logo.png"
+              alt="Billia"
+              width={56}
+              height={56}
+              className="w-full h-full object-contain"
+            />
           </div>
           <div>
-            <span className="text-lg font-semibold tracking-tight text-billio-text">
-              Billio
+            <span className="text-lg font-semibold tracking-tight text-billia-text">
+              Billia
             </span>
-            <p className="text-[11px] text-billio-text-muted tracking-wide mt-0.5">
+            <p className="text-[11px] text-billia-text-muted tracking-wide mt-0.5">
               請求管理
             </p>
           </div>
         </Link>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="メニューを閉じる"
+          className="md:hidden p-2 rounded-lg text-billia-text-muted hover:bg-black/[0.04] hover:text-billia-text"
+        >
+          <X className="w-6 h-6" />
+        </button>
       </div>
 
       {/* メインナビ */}
       <nav className="flex-1 overflow-y-auto py-5 px-3">
-        <p className="billio-label px-3 mb-3 text-billio-text-muted">メニュー</p>
+        <p className="billia-label px-3 mb-3 text-billia-text-muted">メニュー</p>
         <ul className="space-y-0.5">
           {navItems.map(({ href, label, icon: Icon }) => {
             const isActive =
@@ -86,14 +128,14 @@ export default function DashboardSidebar() {
                     flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] transition-colors duration-150
                     ${
                       isActive
-                        ? "bg-billio-blue/10 text-billio-blue font-medium"
-                        : "text-billio-text-muted hover:bg-black/[0.04] hover:text-billio-text"
+                        ? "bg-billia-blue/10 text-billia-blue font-medium"
+                        : "text-billia-text-muted hover:bg-black/[0.04] hover:text-billia-text"
                     }
                   `}
                 >
                   <Icon
                     className={`w-5 h-5 shrink-0 ${
-                      isActive ? "text-billio-blue" : "text-billio-text-muted"
+                      isActive ? "text-billia-blue" : "text-billia-text-muted"
                     }`}
                   />
                   <span>{label}</span>
@@ -104,23 +146,23 @@ export default function DashboardSidebar() {
         </ul>
 
         <div className="mt-6 pt-4 border-t border-black/[0.06]">
-          <p className="billio-label px-3 mb-3 text-billio-text-muted">アカウント</p>
+          <p className="billia-label px-3 mb-3 text-billia-text-muted">アカウント</p>
           <Link
             href="/dashboard/settings"
             className={`
               flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] transition-colors duration-150
               ${
                 pathname?.startsWith("/dashboard/settings")
-                  ? "bg-billio-blue/10 text-billio-blue font-medium"
-                  : "text-billio-text-muted hover:bg-black/[0.04] hover:text-billio-text"
+                  ? "bg-billia-blue/10 text-billia-blue font-medium"
+                  : "text-billia-text-muted hover:bg-black/[0.04] hover:text-billia-text"
               }
             `}
           >
             <Settings
               className={`w-5 h-5 shrink-0 ${
                 pathname?.startsWith("/dashboard/settings")
-                  ? "text-billio-blue"
-                  : "text-billio-text-muted"
+                  ? "text-billia-blue"
+                  : "text-billia-text-muted"
               }`}
             />
             <span>設定</span>
@@ -128,5 +170,6 @@ export default function DashboardSidebar() {
         </div>
       </nav>
     </aside>
+    </>
   );
 }

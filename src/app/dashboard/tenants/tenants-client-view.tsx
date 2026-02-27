@@ -254,8 +254,8 @@ export default function TenantsClientView({
         {/* 集金金額 */}
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-billio-green/20 to-billio-blue/20 flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-billio-green" />
+            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-billia-green/20 to-billia-blue/20 flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-billia-green" />
             </div>
           </div>
           <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">
@@ -313,16 +313,6 @@ export default function TenantsClientView({
             </div>
 
             <div className="space-y-1">
-              <button
-                onClick={() => handleGroupSelect(null)}
-                className={`w-full text-left px-3 py-2 rounded-lg transition-all ${
-                  !selectedGroupId
-                    ? "bg-blue-50 text-blue-700 font-medium"
-                    : "hover:bg-gray-50 text-slate-700"
-                }`}
-              >
-                すべて
-              </button>
               {groups.map((group) => {
                 const isSelected = selectedGroupId === group.id;
                 return (
@@ -412,25 +402,29 @@ export default function TenantsClientView({
                   {selectedGroupId
                     ? groups.find((g) => g.id === selectedGroupId)?.name ||
                       "取引先一覧"
-                    : "すべての取引先"}
+                    : "プロジェクトを選択"}
                 </h2>
                 <p className="text-sm text-slate-500">
-                  月額請求を管理する取引先を表示しています
+                  {selectedGroupId
+                    ? "月額請求を管理する取引先を表示しています"
+                    : "左のプロジェクトから選択してください"}
                 </p>
               </div>
-              <button
-                onClick={() => {
-                  setEditingTenant(null);
-                  setNewTenantName("");
-                  setNewTenantNameKana("");
-                  setNewTenantAmount("");
-                  setShowNewTenantDialog(true);
-                }}
-                className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-              >
-                <Plus className="w-4 h-4" />
-                取引先を追加
-              </button>
+              {selectedGroupId && (
+                <button
+                  onClick={() => {
+                    setEditingTenant(null);
+                    setNewTenantName("");
+                    setNewTenantNameKana("");
+                    setNewTenantAmount("");
+                    setShowNewTenantDialog(true);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                >
+                  <Plus className="w-4 h-4" />
+                  取引先を追加
+                </button>
+              )}
             </div>
 
             {/* 新規/編集取引先ダイアログ */}
@@ -514,7 +508,16 @@ export default function TenantsClientView({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {tenants.length === 0 ? (
+                  {!selectedGroupId ? (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="px-4 py-10 text-center text-sm text-slate-500"
+                      >
+                        左のプロジェクトを選択してください。
+                      </td>
+                    </tr>
+                  ) : tenants.length === 0 ? (
                     <tr>
                       <td
                         colSpan={4}

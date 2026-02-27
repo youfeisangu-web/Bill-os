@@ -60,7 +60,7 @@ export async function updateSettings(formData: FormData): Promise<SubmitResult> 
         // 全てのString?フィールドを空文字に統一（nullではなく""にすることでエラー回避）
         companyName: companyName ?? "",
         representativeName: representativeName ?? "",
-        email: email || "dev@bill-os.local", // emailは必須のためフォールバック必須
+        email: email || "dev@billia.local", // emailは必須のためフォールバック必須
         invoiceRegNumber: invoiceRegNumber ?? "",
         address: address ?? "",
         phoneNumber: phoneNumber ?? "",

@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Bell, ChevronDown, Search, User } from "lucide-react";
+import { Bell, ChevronDown, Menu, Search, User } from "lucide-react";
 import { getTenantGroups } from "@/app/actions/tenant-group";
 import { useEffect, useState } from "react";
 
@@ -10,7 +10,11 @@ type TenantGroup = {
   name: string;
 };
 
-export default function DashboardHeader() {
+type DashboardHeaderProps = {
+  onMenuClick?: () => void;
+};
+
+export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
   const pathname = usePathname();
   const [groups, setGroups] = useState<TenantGroup[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
@@ -33,12 +37,19 @@ export default function DashboardHeader() {
 
   return (
     <header
-      className="shrink-0 h-[60px] flex items-center px-6 backdrop-blur-xl border-b border-white/50 shadow-sm"
-      style={{ background: "rgba(255,255,255,0.72)" }}
+      className="shrink-0 h-[56px] md:h-[60px] flex items-center px-3 md:px-6 bg-white border-b border-gray-100"
     >
-      <div className="flex items-center justify-between gap-4 w-full">
-        <div className="flex items-center gap-4 min-w-0">
-          <div className="relative flex items-center gap-2 rounded-lg border border-billio-border-subtle bg-billio-bg px-4 py-2.5 text-sm text-billio-text min-w-[200px]">
+      <div className="flex items-center justify-between gap-2 md:gap-4 w-full">
+        <div className="flex items-center gap-2 md:gap-4 min-w-0">
+          <button
+            type="button"
+            onClick={onMenuClick}
+            aria-label="メニューを開く"
+            className="md:hidden p-2 rounded-lg text-billia-text-muted hover:bg-billia-bg hover:text-billia-text"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+          <div className="relative flex items-center gap-2 rounded-lg border border-billia-border-subtle bg-billia-bg px-3 md:px-4 py-2 md:py-2.5 text-sm text-billia-text min-w-0 md:min-w-[200px] max-w-[180px] md:max-w-none">
             <span className="truncate text-stone-700">プロジェクト: {selectedName}</span>
             <ChevronDown className="w-4 h-4 shrink-0 text-stone-400" />
             <select
@@ -60,7 +71,7 @@ export default function DashboardHeader() {
               ))}
             </select>
           </div>
-          <div className="hidden sm:flex items-center gap-2.5 rounded-lg border border-billio-border-subtle bg-billio-bg px-4 py-2.5 text-stone-400 min-w-[200px]">
+          <div className="hidden sm:flex items-center gap-2.5 rounded-lg border border-billia-border-subtle bg-billia-bg px-4 py-2.5 text-stone-400 min-w-[200px]">
             <Search className="w-4 h-4 shrink-0" />
             <input
               type="search"
@@ -72,14 +83,14 @@ export default function DashboardHeader() {
         <div className="flex items-center gap-1 shrink-0">
           <button
             type="button"
-            className="relative p-2.5 rounded-lg text-stone-500 hover:bg-billio-bg hover:text-stone-700 transition-colors"
+            className="relative p-2.5 rounded-lg text-stone-500 hover:bg-billia-bg hover:text-stone-700 transition-colors"
             aria-label="通知"
           >
             <Bell className="w-5 h-5" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-500 pointer-events-none" />
           </button>
-          <div className="w-9 h-9 rounded-xl bg-billio-blue/10 flex items-center justify-center ring-1 ring-billio-blue/20">
-            <User className="w-5 h-5 text-billio-blue" />
+          <div className="w-9 h-9 rounded-xl bg-billia-blue/10 flex items-center justify-center ring-1 ring-billia-blue/20">
+            <User className="w-5 h-5 text-billia-blue" />
           </div>
         </div>
       </div>

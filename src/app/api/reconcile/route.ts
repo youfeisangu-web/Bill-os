@@ -55,79 +55,70 @@ const agencies = [
 
 // ファイルサイズの上限（20MB、画像/PDF対応のため拡張）
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
+const MAX_FILES = 20;
 
-export async function POST(req: NextRequest) {
-    try {
-        // 認証チェック
-        const { userId } = await auth();
-        if (!userId) {
-            return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
-        }
+/** 1ファイルを入金明細データ（[date, '', amount, name]）に変換 */
+async function processFileToBankData(
+    file: File,
+    apiKey: string | undefined,
+): Promise<string[][]> {
+    const name = (file.name || '').toLowerCase();
+    const type = (file.type || '').toLowerCase();
+    const isCsv = name.endsWith('.csv') || type === 'text/csv' || type === 'application/vnd.ms-excel' || type === 'application/csv';
+    const isImage = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'].includes(type) ||
+                    name.match(/\.(jpg|jpeg|png|gif|webp)$/);
+    const isPdf = type === 'application/pdf' || name.endsWith('.pdf');
 
-        // 1. 画面から送られてきたファイルを受け取る
-        const formData = await req.formData();
-        const file = formData.get('file') as File;
-
-        if (!file) {
-            return NextResponse.json({ error: 'ファイルがありません' }, { status: 400 });
-        }
-
-        // ファイルサイズチェック
-        if (file.size > MAX_FILE_SIZE) {
-            return NextResponse.json({ error: 'ファイルサイズが大きすぎます（10MB以下）' }, { status: 400 });
-        }
-
-        // ファイルタイプチェック（CSV、画像、PDF）
-        const name = (file.name || '').toLowerCase();
-        const type = (file.type || '').toLowerCase();
-        const isCsv = name.endsWith('.csv') || type === 'text/csv' || type === 'application/vnd.ms-excel' || type === 'application/csv';
-        const isImage = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'].includes(type) ||
-                        name.match(/\.(jpg|jpeg|png|gif|webp)$/);
-        const isPdf = type === 'application/pdf' || name.endsWith('.pdf');
-        
-        if (!isCsv && !isImage && !isPdf) {
-            return NextResponse.json({ error: 'CSV、画像（JPEG、PNG、GIF、WebP）、またはPDFファイルを選択してください' }, { status: 400 });
-        }
-
-        // 2. 未払い・部分払いの請求書を取得（取引先名で照合・発行日でFIFO）
-        const invoices = await prisma.invoice.findMany({
-            where: { userId, status: { in: ['未払い', '部分払い'] } },
-            select: { id: true, totalAmount: true, issueDate: true, client: { select: { name: true } } },
-            orderBy: { issueDate: 'asc' },
-        });
-        const clientNames = invoices.map((inv) => inv.client.name);
-        const invoiceMatchNames = await getNamesForMatch(clientNames, process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY);
-
-        let bankData: string[][] = [];
-
-        // 3. ファイルタイプに応じて処理を分岐
-        if (isCsv) {
-            // CSVファイルの処理
-            const buffer = Buffer.from(await file.arrayBuffer());
-            let text: string;
-            if (buffer.length >= 3 && buffer[0] === 0xef && buffer[1] === 0xbb && buffer[2] === 0xbf) {
-                text = buffer.toString('utf-8');
-            } else {
-                text = buffer.toString('utf-8');
-                if (text.includes('\uFFFD')) {
-                    text = iconv.decode(buffer, 'Shift_JIS');
-                }
+    if (isCsv) {
+        const buffer = Buffer.from(await file.arrayBuffer());
+        let text: string;
+        if (buffer.length >= 3 && buffer[0] === 0xef && buffer[1] === 0xbb && buffer[2] === 0xbf) {
+            text = buffer.toString('utf-8');
+        } else {
+            text = buffer.toString('utf-8');
+            if (text.includes('\uFFFD')) {
+                text = iconv.decode(buffer, 'Shift_JIS');
             }
-            const parsed = Papa.parse(text, { header: false, skipEmptyLines: true });
-            bankData = parsed.data as string[][];
-        } else if (isImage || isPdf) {
-            // 画像/PDFファイルの処理（Gemini Vision APIでOCR）
-            const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-            if (!apiKey) {
-                return NextResponse.json({ error: 'Gemini APIキーが設定されていません。画像/PDFの読み込みにはAPIキーが必要です。' }, { status: 400 });
-            }
+        }
+        const parsed = Papa.parse(text, { header: false, skipEmptyLines: true });
+        const rawRows = parsed.data as string[][];
 
+        let colMap: ColumnMap = { dateCol: 0, amountCol: 2, nameCol: 3 };
+        if (apiKey && rawRows.length > 0 && rawRows.some((r) => Array.isArray(r) && r.length >= 3)) {
             try {
-                const buffer = Buffer.from(await file.arrayBuffer());
-                const base64Data = buffer.toString('base64');
-                const mimeType = isPdf ? 'application/pdf' : (file.type || 'image/jpeg');
+                const sampleRows = rawRows.slice(0, 5).map((r) => (Array.isArray(r) ? r : []));
+                const prompt = `以下の銀行入金CSVのサンプル行です。列は0始まりのインデックスで、「取引日」「入金額（数値）」「入金名義（振込人名）」がそれぞれ何列目か判定し、JSONのみで返してください。形式: {"dateCol":0,"amountCol":2,"nameCol":3}\n\nサンプル:\n${JSON.stringify(sampleRows)}`;
+                const content = (await generateText(prompt, { maxTokens: 100 })).trim();
+                const jsonMatch = content.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    const parsedMap = JSON.parse(jsonMatch[0]) as ColumnMap;
+                    if (
+                        typeof parsedMap.dateCol === 'number' &&
+                        typeof parsedMap.amountCol === 'number' &&
+                        typeof parsedMap.nameCol === 'number' &&
+                        parsedMap.dateCol >= 0 &&
+                        parsedMap.amountCol >= 0 &&
+                        parsedMap.nameCol >= 0
+                    ) {
+                        colMap = parsedMap;
+                    }
+                }
+            } catch {
+                // デフォルトのまま
+            }
+        }
 
-                const prompt = `この画像は銀行の入金明細（通帳の写し、入金通知書、振込明細など）です。以下の情報をすべて抽出し、JSON形式のみで返してください（Markdown記法は不要）。
+        return rawRows
+            .filter((row): row is string[] => Array.isArray(row) && row.length > Math.max(colMap.dateCol, colMap.amountCol, colMap.nameCol))
+            .map((row) => [row[colMap.dateCol]?.trim() || '', '', String(row[colMap.amountCol] ?? '').replace(/[,，]/g, ''), row[colMap.nameCol]?.trim() || '']);
+    }
+
+    if (isImage || isPdf) {
+        if (!apiKey) throw new Error('Gemini APIキーが設定されていません。画像/PDFの読み込みにはAPIキーが必要です。');
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const base64Data = buffer.toString('base64');
+        const mimeType = isPdf ? 'application/pdf' : (file.type || 'image/jpeg');
+        const prompt = `この画像は銀行の入金明細（通帳の写し、入金通知書、振込明細など）です。以下の情報をすべて抽出し、JSON形式のみで返してください（Markdown記法は不要）。
 
 各入金明細を配列として返してください。各要素は以下の形式です：
 {
@@ -144,85 +135,92 @@ export async function POST(req: NextRequest) {
 
 複数の入金明細がある場合は、すべて抽出してください。日付が不明な場合は現在の日付を使用してください。`;
 
-                const responseText = await generateContentWithImage(
-                    prompt,
-                    base64Data,
-                    mimeType,
-                    { maxTokens: 2000, temperature: 0.1 }
-                );
+        const responseText = await generateContentWithImage(
+            prompt,
+            base64Data,
+            mimeType,
+            { maxTokens: 2000, temperature: 0.1 }
+        );
+        if (!responseText) throw new Error('AIからの応答がありませんでした');
 
-                if (!responseText) {
-                    return NextResponse.json({ error: 'AIからの応答がありませんでした' }, { status: 500 });
-                }
+        let jsonText = responseText.trim();
+        if (jsonText.startsWith('```')) {
+            jsonText = jsonText.split('\n').filter((line) => !line.startsWith('```')).join('\n').trim();
+        }
+        const jsonMatch = jsonText.match(/\[[\s\S]*\]/);
+        if (!jsonMatch) throw new Error('AIの応答を解析できませんでした。入金明細が抽出できませんでした。');
 
-                let jsonText = responseText.trim();
-                if (jsonText.startsWith('```')) {
-                    jsonText = jsonText
-                        .split('\n')
-                        .filter((line) => !line.startsWith('```'))
-                        .join('\n')
-                        .trim();
-                }
-                const jsonMatch = jsonText.match(/\[[\s\S]*\]/);
-                if (!jsonMatch) {
-                    return NextResponse.json({ error: 'AIの応答を解析できませんでした。入金明細が抽出できませんでした。' }, { status: 500 });
-                }
+        const extractedData = JSON.parse(jsonMatch[0]) as Array<{ date: string; amount: number; name: string }>;
+        return extractedData.map((item) => [item.date || '', '', String(item.amount || 0), item.name || '']);
+    }
 
-                const extractedData = JSON.parse(jsonMatch[0]) as Array<{ date: string; amount: number; name: string }>;
-                
-                // CSV形式の配列に変換
-                bankData = extractedData.map((item) => [
-                    item.date || '',
-                    '',
-                    String(item.amount || 0),
-                    item.name || '',
-                ]);
-            } catch (error: any) {
-                console.error('Image/PDF OCR error:', error);
-                const errorMessage = error?.message || '画像/PDFの読み込みに失敗しました';
-                return NextResponse.json({ 
-                    error: `画像/PDFの読み込みに失敗しました: ${errorMessage}` 
-                }, { status: 500 });
+    throw new Error('対応していないファイル形式です');
+}
+
+export async function POST(req: NextRequest) {
+    try {
+        const { userId } = await auth();
+        if (!userId) {
+            return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
+        }
+
+        const formData = await req.formData();
+        const rawFiles = formData.getAll('file');
+        const files = (Array.isArray(rawFiles) ? rawFiles : rawFiles ? [rawFiles] : []).filter(
+            (f): f is File => f instanceof File
+        );
+
+        if (files.length === 0) {
+            return NextResponse.json({ error: 'ファイルがありません' }, { status: 400 });
+        }
+        if (files.length > MAX_FILES) {
+            return NextResponse.json({ error: `一度に${MAX_FILES}件までです（${files.length}件選択されています）` }, { status: 400 });
+        }
+
+        for (const file of files) {
+            if (file.size > MAX_FILE_SIZE) {
+                return NextResponse.json({ error: `「${file.name}」が大きすぎます（20MB以下）` }, { status: 400 });
+            }
+            const name = (file.name || '').toLowerCase();
+            const type = (file.type || '').toLowerCase();
+            const isCsv = name.endsWith('.csv') || type === 'text/csv' || type === 'application/vnd.ms-excel' || type === 'application/csv';
+            const isImage = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'].includes(type) || name.match(/\.(jpg|jpeg|png|gif|webp)$/);
+            const isPdf = type === 'application/pdf' || name.endsWith('.pdf');
+            if (!isCsv && !isImage && !isPdf) {
+                return NextResponse.json({ error: `「${file.name}」はCSV、画像、PDF以外です` }, { status: 400 });
+            }
+        }
+
+        const invoices = await prisma.invoice.findMany({
+            where: { userId, status: { in: ['未払い', '部分払い'] } },
+            select: { id: true, totalAmount: true, issueDate: true, client: { select: { name: true } } },
+            orderBy: { issueDate: 'asc' },
+        });
+        const clientNames = invoices.map((inv) => inv.client.name);
+        const invoiceMatchNames = await getNamesForMatch(clientNames, process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY);
+
+        const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+        let bankData: string[][] = [];
+
+        for (const file of files) {
+            try {
+                const rows = await processFileToBankData(file, apiKey);
+                bankData = bankData.concat(rows);
+            } catch (err: unknown) {
+                const msg = err instanceof Error ? err.message : '読み込みに失敗しました';
+                return NextResponse.json({ error: `「${file.name}」: ${msg}` }, { status: 500 });
             }
         }
 
         const results: ReconcileResult[] = [];
         const allocatedInvoiceIds = new Set<string>();
 
-        // 4. データの検証と列のマッピング
         const MAX_ROWS = 10000;
         if (bankData.length > MAX_ROWS) {
             return NextResponse.json({ error: `データの行数が多すぎます（${MAX_ROWS}行以下）` }, { status: 400 });
         }
 
-        // CSVの場合は列のマッピングを検出、画像/PDFの場合は固定マッピング
-        let colMap: ColumnMap = { dateCol: 0, amountCol: 2, nameCol: 3 };
-        if (isCsv) {
-            const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-            const sampleRows = bankData.slice(0, 5).map((r) => (Array.isArray(r) ? r : []));
-            if (apiKey && sampleRows.length > 0 && sampleRows.some((r) => r.length >= 3)) {
-                try {
-                    const prompt = `以下の銀行入金CSVのサンプル行です。列は0始まりのインデックスで、「取引日」「入金額（数値）」「入金名義（振込人名）」がそれぞれ何列目か判定し、JSONのみで返してください。形式: {"dateCol":0,"amountCol":2,"nameCol":3}\n\nサンプル:\n${JSON.stringify(sampleRows)}`;
-                    const content = (await generateText(prompt, { maxTokens: 100 })).trim();
-                    const jsonMatch = content.match(/\{[\s\S]*\}/);
-                    if (jsonMatch) {
-                        const parsed = JSON.parse(jsonMatch[0]) as ColumnMap;
-                        if (
-                            typeof parsed.dateCol === 'number' &&
-                            typeof parsed.amountCol === 'number' &&
-                            typeof parsed.nameCol === 'number' &&
-                            parsed.dateCol >= 0 &&
-                            parsed.amountCol >= 0 &&
-                            parsed.nameCol >= 0
-                        ) {
-                            colMap = parsed;
-                        }
-                    }
-                } catch (e) {
-                    console.warn('Gemini column detection failed, using default:', e);
-                }
-            }
-        }
+        const colMap: ColumnMap = { dateCol: 0, amountCol: 2, nameCol: 3 };
 
         for (const row of bankData) {
             if (!Array.isArray(row)) continue;

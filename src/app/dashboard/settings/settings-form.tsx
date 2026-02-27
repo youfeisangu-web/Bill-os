@@ -84,7 +84,7 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex items-center gap-2 rounded-xl bg-billio-blue px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-xl bg-billia-blue px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
           {isPending ? "保存中..." : "変更を保存"}
@@ -109,7 +109,7 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
 
         <TabsContent value="company" className="mt-6">
           <div className="rounded-2xl p-6 space-y-4 bg-white/60 backdrop-blur-md border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.1)]">
-            <h2 className="text-lg font-semibold text-billio-text">
+            <h2 className="text-lg font-semibold text-billia-text">
               会社情報
             </h2>
             <div className="grid gap-4 md:grid-cols-2">
@@ -190,7 +190,7 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
 
         <TabsContent value="bank" className="mt-6">
           <div className="rounded-2xl p-6 space-y-4 bg-white/60 backdrop-blur-md border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.1)]">
-            <h2 className="text-lg font-semibold text-billio-text">
+            <h2 className="text-lg font-semibold text-billia-text">
               銀行口座・支払設定
             </h2>
             <div className="grid gap-4 md:grid-cols-2">
@@ -305,10 +305,10 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
 
         <TabsContent value="branding" className="mt-6">
           <div className="rounded-2xl p-6 space-y-6 bg-white/60 backdrop-blur-md border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.1)]">
-            <h2 className="text-lg font-semibold text-billio-text">
+            <h2 className="text-lg font-semibold text-billia-text">
               ブランディング
             </h2>
-            <p className="text-sm text-billio-text-muted">
+            <p className="text-sm text-billia-text-muted">
               会社ロゴと角印をアップロードして、請求書に使用できます。
             </p>
 
@@ -336,7 +336,7 @@ export default function SettingsForm({ userId, initialData }: SettingsFormProps)
 
         <TabsContent value="system" className="mt-6">
           <div className="rounded-2xl p-6 space-y-6 bg-white/60 backdrop-blur-md border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.1)]">
-            <h2 className="text-lg font-semibold text-billio-text">
+            <h2 className="text-lg font-semibold text-billia-text">
               システム設定
             </h2>
             <div className="grid gap-4 md:grid-cols-2">

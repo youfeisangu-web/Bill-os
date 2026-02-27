@@ -1,5 +1,5 @@
 {
-  "name": "bill-os",
+  "name": "billia",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -13,7 +13,6 @@
     "test:coverage": "vitest --coverage"
   },
   "dependencies": {
-    "@ai-sdk/google": "^3.0.20",
     "@clerk/localizations": "^3.34.0",
     "@clerk/nextjs": "^6.36.7",
     "@google/genai": "^1.39.0",
@@ -48,6 +47,7 @@
     "@vitest/ui": "^2.1.9",
     "eslint": "^9",
     "eslint-config-next": "16.1.2",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^2.1.9"

@@ -23,7 +23,7 @@ export default async function SettingsPage() {
     user = await prisma.userProfile.create({
       data: {
         id: userId,
-        email: "dev@bill-os.local",
+        email: "dev@billia.local",
         companyName: "",
         representativeName: "",
         address: "",

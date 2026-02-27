@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { readReceiptImage } from '@/app/actions/ocr';
+import { readReceiptImage } from '@/app/actions/ocr-receipt';
 import { Loader2, UploadCloud, CheckCircle, AlertCircle } from 'lucide-react';
 import NewExpenseDialog from './new-expense-dialog';
 import type { ExpenseInitialValues } from './new-expense-dialog';
-import type { ReceiptOCRData } from '@/app/actions/ocr';
+import type { ReceiptOCRData } from '@/app/actions/ocr-receipt';
 
 function receiptToInitialValues(data: ReceiptOCRData): ExpenseInitialValues {
   return {

@@ -10,7 +10,7 @@ type SubmitResult = {
   message: string;
 };
 
-const DEFAULT_EMAIL = "dev@bill-os.local";
+const DEFAULT_EMAIL = "dev@billia.local";
 const DEFAULT_ACCOUNT_TYPE = "普通";
 
 const getValue = (formData: FormData, key: string) => {

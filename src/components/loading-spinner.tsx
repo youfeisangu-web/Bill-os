@@ -19,8 +19,8 @@ export default function LoadingSpinner({
 
   return (
     <div className="flex flex-col items-center justify-center gap-3">
-      <Loader2 className={`${sizeClasses[size]} text-billio-blue animate-spin`} />
-      {text && <p className="text-sm text-billio-text-muted">{text}</p>}
+      <Loader2 className={`${sizeClasses[size]} text-billia-blue animate-spin`} />
+      {text && <p className="text-sm text-billia-text-muted">{text}</p>}
     </div>
   );
 }

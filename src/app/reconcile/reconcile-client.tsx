@@ -15,7 +15,7 @@ export default function ReconcileClient({
   initialSummary: Summary;
 }) {
   const [summary, setSummary] = useState<Summary>(initialSummary);
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [results, setResults] = useState<ReconcileResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -35,14 +35,16 @@ export default function ReconcileClient({
   const [parseError, setParseError] = useState<string | null>(null);
   const [lastMeta, setLastMeta] = useState<{ unpaidInvoiceCount: number } | null>(null);
 
-  const runReconcile = useCallback(async (f: File) => {
+  const runReconcile = useCallback(async (fileList: File[]) => {
     setResults([]);
     setExecuted(false);
     setParseError(null);
     setLoading(true);
     try {
       const formData = new FormData();
-      formData.append("file", f);
+      for (const f of fileList) {
+        formData.append("file", f);
+      }
       const res = await fetch("/api/reconcile", { method: "POST", body: formData });
       const json = await res.json();
       if (json.success) {
@@ -68,27 +70,32 @@ export default function ReconcileClient({
     }
   }, []);
 
+  const isValidFile = useCallback((f: File) => {
+    const fileName = f.name.toLowerCase();
+    const fileType = f.type.toLowerCase();
+    const isCsv = fileName.endsWith(".csv") || fileType === "text/csv" || fileType === "application/vnd.ms-excel" || fileType === "application/csv";
+    const isImage = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'].includes(fileType) || fileName.match(/\.(jpg|jpeg|png|gif|webp)$/);
+    const isPdf = fileType === "application/pdf" || fileName.endsWith(".pdf");
+    return isCsv || isImage || isPdf;
+  }, []);
+
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
       setIsDragging(false);
-      const f = e.dataTransfer.files?.[0];
-      if (!f) return;
-      const fileName = f.name.toLowerCase();
-      const fileType = f.type.toLowerCase();
-      const isCsv = fileName.endsWith(".csv") || fileType === "text/csv" || fileType === "application/vnd.ms-excel" || fileType === "application/csv";
-      const isImage = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'].includes(fileType) || fileName.match(/\.(jpg|jpeg|png|gif|webp)$/);
-      const isPdf = fileType === "application/pdf" || fileName.endsWith(".pdf");
-      
-      if (isCsv || isImage || isPdf) {
-        setFile(f);
+      const dropped = Array.from(e.dataTransfer.files ?? []);
+      const valid = dropped.filter(isValidFile);
+      const invalid = dropped.filter((f) => !isValidFile(f));
+      if (invalid.length > 0) {
+        alert("CSV、画像（JPEG、PNG、GIF、WebP）、またはPDFファイルのみ選択できます。");
+      }
+      if (valid.length > 0) {
+        setFiles((prev) => [...prev, ...valid]);
         setParseError(null);
-      } else {
-        alert("CSV、画像（JPEG、PNG、GIF、WebP）、またはPDFファイルを選択してください");
       }
     },
-    [],
+    [isValidFile],
   );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -107,9 +114,16 @@ export default function ReconcileClient({
 
   const handleFileInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const f = e.target.files?.[0];
-      if (f) {
-        setFile(f);
+      const selected = Array.from(e.target.files ?? []);
+      const valid = selected.filter((f) => {
+        const fn = f.name.toLowerCase();
+        const ft = f.type.toLowerCase();
+        return fn.endsWith(".csv") || ft === "text/csv" || ft === "application/vnd.ms-excel" || ft === "application/csv" ||
+          ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'].includes(ft) || fn.match(/\.(jpg|jpeg|png|gif|webp)$/) ||
+          ft === "application/pdf" || fn.endsWith(".pdf");
+      });
+      if (valid.length > 0) {
+        setFiles((prev) => [...prev, ...valid]);
         setParseError(null);
       }
       e.target.value = "";
@@ -118,9 +132,9 @@ export default function ReconcileClient({
   );
 
   const handleStartReconcile = useCallback(() => {
-    if (!file || loading) return;
-    runReconcile(file);
-  }, [file, loading, runReconcile]);
+    if (files.length === 0 || loading) return;
+    runReconcile(files);
+  }, [files, loading, runReconcile]);
 
   const completableRows = results.filter(
     (r) => (r.status === "完了" || r.status === "確認") && r.invoiceId && r.date,
@@ -163,7 +177,7 @@ export default function ReconcileClient({
   };
 
   const handleClear = () => {
-    setFile(null);
+    setFiles([]);
     setResults([]);
     setExecuted(false);
     setExecutedInvoiceIds(new Set());
@@ -204,9 +218,9 @@ export default function ReconcileClient({
           銀行の入金明細（CSV、通帳の写真、入金通知書のPDFなど）をドロップするか、選択して読み込みます。AIが自動で入金情報を抽出し、内容を確認してから「消し込みを実行」でマッチした請求書を支払済にします。
         </p>
         <p className="text-xs text-slate-500 mb-4 rounded-lg bg-slate-100 p-3">
-          <strong>手順：</strong> ファイルを選択したら「消し込み開始」を押して解析します。<strong>金額は完全に同じ</strong>未払い請求書と照合し、<strong>名前は完全でなくてもあってそうな候補</strong>を表示します。確認後に「消し込みを実行」で支払済にします。
+          <strong>手順：</strong> ファイルを選択（複数可）したら「消し込み開始」を押して解析します。<strong>金額は完全に同じ</strong>未払い請求書と照合し、<strong>名前は完全でなくてもあってそうな候補</strong>を表示します。確認後に「消し込みを実行」で支払済にします。
           <br />
-          <strong>対応形式：</strong> CSV（Shift_JIS / UTF-8）、画像（JPEG、PNG、GIF、WebP）、PDF
+          <strong>対応形式：</strong> CSV（Shift_JIS / UTF-8）、画像（JPEG、PNG、GIF、WebP）、PDF　<strong>複数ファイルを一括で処理できます</strong>
         </p>
         <div
           role="button"
@@ -230,6 +244,7 @@ export default function ReconcileClient({
           <input
             id="reconcile-file"
             type="file"
+            multiple
             accept=".csv,text/csv,application/vnd.ms-excel,application/csv,.pdf,application/pdf,image/jpeg,image/jpg,image/png,image/gif,image/webp"
             onChange={handleFileInput}
             className="sr-only"
@@ -237,15 +252,25 @@ export default function ReconcileClient({
           />
           <Upload className="h-10 w-10 text-slate-400 pointer-events-none" />
           <span className="font-medium text-slate-600 pointer-events-none">
-            {file ? file.name : "ファイルをドロップまたはクリックして選択"}
+            {files.length > 0 ? `${files.length}件のファイルを選択済み` : "ファイルをドロップまたはクリックして選択（複数可）"}
           </span>
           <span className="text-xs text-slate-500 pointer-events-none">
             CSV、画像（JPEG、PNG、GIF、WebP）、PDF対応（AIで自動読み取り）
           </span>
         </div>
-        {file && (
+        {files.length > 0 && (
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <span className="text-sm text-slate-600">選択中: {file.name}</span>
+            <span className="text-sm text-slate-600">
+              選択中: {files.length}件
+              {files.length <= 5 && `（${files.map((f) => f.name).join(", ")}）`}
+            </span>
+            <button
+              type="button"
+              onClick={() => setFiles([])}
+              className="text-sm text-slate-500 hover:text-slate-700 underline"
+            >
+              クリア
+            </button>
             <button
               type="button"
               onClick={handleStartReconcile}
