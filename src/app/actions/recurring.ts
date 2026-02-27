@@ -28,7 +28,7 @@ async function getOrCreateClientFromTenant(
   });
 
   if (!tenant) {
-    throw new Error("入居者が見つかりません");
+    throw new Error("取引先が見つかりません");
   }
 
   // 既存のClientを検索（名前で一致するもの）

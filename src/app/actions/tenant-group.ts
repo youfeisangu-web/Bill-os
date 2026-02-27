@@ -82,7 +82,7 @@ export async function deleteTenantGroup(id: string): Promise<SubmitResult> {
       return { success: false, message: "IDが指定されていません。" };
     }
 
-    // フォルダに紐づいている入居者がいるかチェック
+    // フォルダに紐づいている取引先がいるかチェック
     const group = await prisma.tenantGroup.findUnique({
       where: { id },
       include: {
@@ -95,7 +95,7 @@ export async function deleteTenantGroup(id: string): Promise<SubmitResult> {
     }
 
     if (group.tenants.length > 0) {
-      // フォルダ内の入居者のgroupIdをnullに設定
+      // フォルダ内の取引先のgroupIdをnullに設定
       await prisma.tenant.updateMany({
         where: { groupId: id },
         data: { groupId: null },

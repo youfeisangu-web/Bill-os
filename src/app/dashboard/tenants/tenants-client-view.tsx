@@ -123,7 +123,7 @@ export default function TenantsClientView({
   const handleDeleteGroup = async (id: string) => {
     if (
       !confirm(
-        "このフォルダを削除しますか？フォルダ内の入居者はフォルダなしになります。"
+        "このフォルダを削除しますか？フォルダ内の取引先はフォルダなしになります。"
       )
     ) {
       return;
@@ -438,7 +438,7 @@ export default function TenantsClientView({
                 <div className="space-y-3">
                   <div>
                     <label className="mb-1 block text-xs font-medium text-slate-700">
-                      契約者名
+                      取引先名
                     </label>
                     <input
                       type="text"

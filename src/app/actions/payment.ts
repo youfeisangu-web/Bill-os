@@ -15,8 +15,8 @@ export async function savePayment(tenantId: string, amount: number, dateStr: str
   }
 
   // 入力値のバリデーション
-  validateRequired(tenantId, '入居者ID');
-  validateUUID(tenantId, '入居者ID');
+  validateRequired(tenantId, '取引先ID');
+  validateUUID(tenantId, '取引先ID');
   validatePositiveInteger(amount, '金額');
   validateDate(dateStr, '日付');
   
@@ -51,7 +51,7 @@ export async function getReconcileSummary() {
   return { totalBilledAmount, invoiceCount: invoices.length };
 }
 
-// 特定の入居者の支払い履歴を取ってくる
+// 特定の取引先の支払い履歴を取ってくる
 export async function getPaymentsByTenant(tenantId: string) {
   // 認証チェック
   const { userId } = await auth();
@@ -60,16 +60,16 @@ export async function getPaymentsByTenant(tenantId: string) {
   }
 
   // 入力値のバリデーション
-  validateRequired(tenantId, '入居者ID');
-  validateUUID(tenantId, '入居者ID');
+  validateRequired(tenantId, '取引先ID');
+  validateUUID(tenantId, '取引先ID');
 
-  // 入居者が存在することを確認（将来的にユーザー権限チェックを追加可能）
+  // 取引先が存在することを確認（将来的にユーザー権限チェックを追加可能）
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
   });
 
   if (!tenant) {
-    throw new Error('入居者が見つかりません');
+    throw new Error('取引先が見つかりません');
   }
 
   return await prisma.payment.findMany({

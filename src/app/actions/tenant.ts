@@ -28,7 +28,7 @@ export async function createTenant(formData: FormData): Promise<SubmitResult> {
     const groupId = getValue(formData, "groupId") || null;
 
     if (!name || !nameKana) {
-      return { success: false, message: "契約者名とフリガナを入力してください。" };
+      return { success: false, message: "取引先名とフリガナを入力してください。" };
     }
 
     const amount = amountRaw ? parseInt(amountRaw, 10) : 0;
@@ -56,7 +56,7 @@ export async function createTenant(formData: FormData): Promise<SubmitResult> {
     });
 
     revalidatePath("/dashboard");
-    return { success: true, message: "入居者を登録しました。" };
+    return { success: true, message: "取引先を登録しました。" };
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "保存に失敗しました。";
@@ -80,7 +80,7 @@ export async function updateTenant(formData: FormData): Promise<SubmitResult> {
     }
 
     if (!name || !nameKana) {
-      return { success: false, message: "契約者名とフリガナを入力してください。" };
+      return { success: false, message: "取引先名とフリガナを入力してください。" };
     }
 
     const amount = amountRaw ? parseInt(amountRaw, 10) : 0;
@@ -109,7 +109,7 @@ export async function updateTenant(formData: FormData): Promise<SubmitResult> {
     });
 
     revalidatePath("/dashboard");
-    return { success: true, message: "入居者情報を更新しました。" };
+    return { success: true, message: "取引先情報を更新しました。" };
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "更新に失敗しました。";
@@ -131,7 +131,7 @@ export async function deleteTenant(id: string): Promise<SubmitResult> {
     });
 
     revalidatePath("/dashboard");
-    return { success: true, message: "入居者を削除しました。" };
+    return { success: true, message: "取引先を削除しました。" };
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "削除に失敗しました。";
@@ -139,8 +139,8 @@ export async function deleteTenant(id: string): Promise<SubmitResult> {
   }
 }
 
-// フォルダIDで入居者を取得
-// groupIdがnullの場合はすべての入居者を取得
+// フォルダIDで取引先を取得
+// groupIdがnullの場合はすべての取引先を取得
 export async function getTenantsByGroup(groupId: string | null) {
   try {
     const { userId } = await auth();
@@ -195,7 +195,7 @@ export async function importClientsAsTenants(): Promise<
     revalidatePath("/dashboard/tenants");
     return {
       success: true,
-      message: `${imported}件の取引先を入金消し込み用に取り込みました。金額は0のため、ダッシュボードの「入居者」で金額を編集するとマッチしやすくなります。`,
+      message: `${imported}件の取引先を入金消し込み用に取り込みました。金額は0のため、ダッシュボードの「取引先」で金額を編集するとマッチしやすくなります。`,
       importedCount: imported,
     };
   } catch (error) {

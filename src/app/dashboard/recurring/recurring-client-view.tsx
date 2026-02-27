@@ -94,7 +94,7 @@ export default function RecurringClientView({
 
   const [tenants, setTenants] = useState<Array<{ id: string; name: string; amount: number }>>([]);
 
-  // 入居者一覧を読み込む
+  // 取引先一覧を読み込む
   useEffect(() => {
     getTenantsByGroup(null).then((data) => {
       setTenants(data.map((t) => ({ id: t.id, name: t.name, amount: t.amount })));
@@ -374,7 +374,7 @@ export default function RecurringClientView({
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-billia-text">
-                  入居者
+                  取引先
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-billia-text">
                   作成日
@@ -464,10 +464,10 @@ export default function RecurringClientView({
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-6">
-              {/* 入居者選択 */}
+              {/* 取引先選択 */}
               <div>
                 <label className="block text-sm font-medium text-billia-text mb-2">
-                  入居者 <span className="text-red-500">*</span>
+                  取引先 <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={selectedTenantId}

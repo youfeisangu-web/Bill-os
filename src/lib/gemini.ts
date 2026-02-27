@@ -103,12 +103,8 @@ export async function generateContentWithImage(
   options?: { maxTokens?: number; temperature?: number }
 ): Promise<string> {
   return retryApiCall(async () => {
-    const apiCallStartTime = Date.now();
     try {
-      console.log("📡 Calling Gemini API (generateContentWithImage)...");
       const gemini = getGeminiClient();
-      
-      const requestStartTime = Date.now();
       const response = await gemini.models.generateContent({
         model: "gemini-2.0-flash",
         contents: [
@@ -120,22 +116,13 @@ export async function generateContentWithImage(
           temperature: options?.temperature ?? 0.1,
         },
       });
-      const requestDuration = Date.now() - requestStartTime;
-      
-      console.log(`📥 Gemini API response received in ${requestDuration}ms`);
-      
+
       if (!response || !response.text) {
         throw new Error("Gemini APIからの応答が空です");
       }
-      
-      const totalDuration = Date.now() - apiCallStartTime;
-      console.log(`✅ generateContentWithImage completed in ${totalDuration}ms`);
-      
+
       return response.text;
     } catch (error: any) {
-      const totalDuration = Date.now() - apiCallStartTime;
-      console.error(`❌ generateContentWithImage error (経過時間: ${totalDuration}ms):`, error);
-      
       // エラーメッセージを安全に取得
       let errorMessage = "Gemini APIの呼び出しに失敗しました";
       if (error?.message) {
@@ -148,13 +135,7 @@ export async function generateContentWithImage(
           errorMessage = errorString;
         }
       }
-      
-      // タイムアウトの可能性をチェック
-      if (totalDuration > 55000) { // 55秒以上かかっている場合
-        console.warn(`⚠️ 長時間実行警告: ${totalDuration}ms経過。タイムアウトの可能性があります。`);
-      }
-      
-      // 新しいエラーオブジェクトを作成（シリアライズ可能な形式）
+
       const newError = new Error(errorMessage);
       if (error?.status) {
         (newError as any).status = error.status;
@@ -162,7 +143,7 @@ export async function generateContentWithImage(
       if (error?.code) {
         (newError as any).code = error.code;
       }
-      
+
       throw newError;
     }
   });
