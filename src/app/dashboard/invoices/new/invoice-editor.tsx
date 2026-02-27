@@ -438,9 +438,8 @@ export default function InvoiceEditor({
             {isPending ? "保存中..." : "保存する"}
           </button>
         </div>
-      </section>
 
-      <section className="mx-auto w-full max-w-4xl rounded-[32px] border border-slate-200 bg-white p-8 shadow-lg">
+        <section className="mx-auto w-full max-w-4xl rounded-[32px] border border-slate-200 bg-white p-8 shadow-lg">
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
             <div className="flex items-center gap-4">
@@ -749,6 +748,7 @@ export default function InvoiceEditor({
             )}
           </div>
         </div>
+        </section>
           </TabsContent>
         </Tabs>
       </section>
