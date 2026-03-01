@@ -60,7 +60,7 @@ function niceScale(maxVal: number, minVal: number, targetTicks = 5): number[] {
 function LineChart({ data }: { data: MonthlyFinancial[] }) {
   if (data.length === 0) {
     return (
-      <div className="h-48 flex items-center justify-center text-sm text-gray-400">
+      <div className="h-32 flex items-center justify-center text-sm text-gray-400">
         データがありません
       </div>
     );
@@ -69,18 +69,18 @@ function LineChart({ data }: { data: MonthlyFinancial[] }) {
   if (data.length === 1) {
     const d = data[0];
     return (
-      <div className="h-48 flex items-center justify-center gap-10">
+      <div className="h-32 flex items-center justify-center gap-10">
         <div className="text-center">
-          <p className="text-xs text-gray-400 mb-1">収入</p>
-          <p className="text-lg font-bold text-blue-600">{fmt(d.income)}</p>
+          <p className="text-[11px] text-gray-400 mb-1">収入</p>
+          <p className="text-base font-bold text-blue-600">{fmt(d.income)}</p>
         </div>
         <div className="text-center">
-          <p className="text-xs text-gray-400 mb-1">経費</p>
-          <p className="text-lg font-bold text-red-500">{fmt(d.expense)}</p>
+          <p className="text-[11px] text-gray-400 mb-1">経費</p>
+          <p className="text-base font-bold text-red-500">{fmt(d.expense)}</p>
         </div>
         <div className="text-center">
-          <p className="text-xs text-gray-400 mb-1">利益</p>
-          <p className={`text-lg font-bold ${d.profit >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+          <p className="text-[11px] text-gray-400 mb-1">利益</p>
+          <p className={`text-base font-bold ${d.profit >= 0 ? "text-emerald-600" : "text-red-500"}`}>
             {fmt(d.profit)}
           </p>
         </div>
@@ -88,8 +88,8 @@ function LineChart({ data }: { data: MonthlyFinancial[] }) {
     );
   }
 
-  const W = 560, H = 210;
-  const pad = { l: 92, t: 16, r: 16, b: 34 };
+  const W = 560, H = 155;
+  const pad = { l: 8, t: 22, r: 8, b: 26 };
   const iw = W - pad.l - pad.r;
   const ih = H - pad.t - pad.b;
 
@@ -97,7 +97,7 @@ function LineChart({ data }: { data: MonthlyFinancial[] }) {
   const minVal = Math.min(0, ...allVals);
   const maxVal = Math.max(1, ...allVals);
 
-  const ticks = niceScale(maxVal, minVal, 5);
+  const ticks = niceScale(maxVal, minVal, 4);
   const tickMin = ticks[0];
   const tickMax = ticks[ticks.length - 1];
   const tickRange = tickMax - tickMin || 1;
@@ -120,23 +120,23 @@ function LineChart({ data }: { data: MonthlyFinancial[] }) {
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ overflow: "visible" }}>
       <defs>
         <linearGradient id="financeIncomeGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.08" />
+          <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.07" />
           <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
         </linearGradient>
       </defs>
 
-      {/* Horizontal grid lines + Y-axis labels */}
+      {/* Grid lines + Y-axis labels (inside chart, above each line) */}
       {ticks.map((v, i) => (
         <g key={i}>
           <line
             x1={pad.l} y1={yAt(v)}
             x2={W - pad.r} y2={yAt(v)}
-            stroke={v === 0 ? "#d1d5db" : "#f0f0f0"}
+            stroke={v === 0 ? "#e5e7eb" : "#f3f4f6"}
             strokeWidth="1"
           />
           <text
-            x={pad.l - 8} y={yAt(v) + 4}
-            textAnchor="end" fontSize="10" fill="#b0b7c3"
+            x={pad.l + 4} y={yAt(v) - 3}
+            textAnchor="start" fontSize="9" fill="#c8cdd6"
             fontFamily="system-ui, sans-serif"
           >
             {fmt(v)}
@@ -151,7 +151,7 @@ function LineChart({ data }: { data: MonthlyFinancial[] }) {
       <polyline
         points={pts("expense")} fill="none" stroke="#F87171"
         strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
-        strokeDasharray="5,3"
+        strokeDasharray="4,3"
       />
 
       {/* Profit line */}
@@ -163,13 +163,13 @@ function LineChart({ data }: { data: MonthlyFinancial[] }) {
       {/* Income line */}
       <polyline
         points={pts("income")} fill="none" stroke="#3B82F6"
-        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+        strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
       />
 
-      {/* Income dots (only for shorter ranges) */}
-      {data.length <= 24 && data.map((d, i) => (
+      {/* Income dots (short ranges only) */}
+      {data.length <= 12 && data.map((d, i) => (
         <circle
-          key={i} cx={xAt(i)} cy={yAt(d.income)} r="3"
+          key={i} cx={xAt(i)} cy={yAt(d.income)} r="2.5"
           fill="white" stroke="#3B82F6" strokeWidth="1.5"
         />
       ))}
@@ -182,15 +182,15 @@ function LineChart({ data }: { data: MonthlyFinancial[] }) {
           const isJanuary = m === 1;
           if (!isFirst && !isJanuary) return null;
           return (
-            <text key={i} x={xAt(i)} y={H - 6} textAnchor="middle"
-              fontSize="10" fill="#b0b7c3" fontFamily="system-ui, sans-serif">
+            <text key={i} x={xAt(i)} y={H - 4} textAnchor="middle"
+              fontSize="9" fill="#c8cdd6" fontFamily="system-ui, sans-serif">
               {isFirst && !isJanuary ? `${m}月` : `${y}年`}
             </text>
           );
         }
         return (
-          <text key={i} x={xAt(i)} y={H - 6} textAnchor="middle"
-            fontSize="10" fill="#b0b7c3" fontFamily="system-ui, sans-serif">
+          <text key={i} x={xAt(i)} y={H - 4} textAnchor="middle"
+            fontSize="9" fill="#c8cdd6" fontFamily="system-ui, sans-serif">
             {m}月
           </text>
         );

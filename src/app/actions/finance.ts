@@ -43,31 +43,45 @@ export async function getMonthlyFinancials(months = 6): Promise<MonthlyFinancial
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const result: MonthlyFinancial[] = [];
   const now = new Date();
+  const startDate = new Date(now.getFullYear(), now.getMonth() - (months - 1), 1);
+  const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
+  // 2クエリで全期間を一括取得してJS側で月別集計
+  const [invoices, expenses] = await Promise.all([
+    prisma.invoice.findMany({
+      where: { userId, issueDate: { gte: startDate, lte: endDate } },
+      select: { issueDate: true, totalAmount: true },
+    }),
+    prisma.expense.findMany({
+      where: { userId, date: { gte: startDate, lte: endDate } },
+      select: { date: true, amount: true },
+    }),
+  ]);
+
+  const toMonthKey = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+
+  const incomeByMonth = new Map<string, number>();
+  const expenseByMonth = new Map<string, number>();
+
+  invoices.forEach((inv) => {
+    const key = toMonthKey(inv.issueDate);
+    incomeByMonth.set(key, (incomeByMonth.get(key) ?? 0) + inv.totalAmount);
+  });
+  expenses.forEach((exp) => {
+    const key = toMonthKey(exp.date);
+    expenseByMonth.set(key, (expenseByMonth.get(key) ?? 0) + exp.amount);
+  });
+
+  const result: MonthlyFinancial[] = [];
   for (let i = months - 1; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const start = new Date(d.getFullYear(), d.getMonth(), 1);
-    const end = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
-    const month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-
-    const [invoices, expenses] = await Promise.all([
-      prisma.invoice.aggregate({
-        where: { userId, issueDate: { gte: start, lte: end } },
-        _sum: { totalAmount: true },
-      }),
-      prisma.expense.aggregate({
-        where: { userId, date: { gte: start, lte: end } },
-        _sum: { amount: true },
-      }),
-    ]);
-
-    const income = invoices._sum.totalAmount ?? 0;
-    const expense = expenses._sum.amount ?? 0;
+    const month = toMonthKey(d);
+    const income = incomeByMonth.get(month) ?? 0;
+    const expense = expenseByMonth.get(month) ?? 0;
     result.push({ month, income, expense, profit: income - expense });
   }
-
   return result;
 }
 
