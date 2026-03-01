@@ -15,6 +15,7 @@ import {
   BarChart3,
   TrendingUp,
   X,
+  CreditCard,
 } from "lucide-react";
 import { getTenantGroups } from "@/app/actions/tenant-group";
 import { useEffect, useState } from "react";
@@ -33,6 +34,7 @@ const navItems = [
   { href: "/dashboard/clients", label: "取引先", icon: Users },
   { href: "/dashboard/tenants", label: "月額・定期請求", icon: DollarSign },
   { href: "/dashboard/expenses", label: "経費", icon: Receipt },
+  { href: "/dashboard/bills", label: "支払管理", icon: CreditCard },
   { href: "/dashboard/finance", label: "財務", icon: TrendingUp },
   { href: "/dashboard/aging", label: "エイジング", icon: BarChart3 },
   { href: "/reconcile", label: "入金消込", icon: Sparkles },

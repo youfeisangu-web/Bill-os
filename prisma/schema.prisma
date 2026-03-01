@@ -49,6 +49,7 @@ model UserProfile {
   quotes            Quote[]
   invoices          Invoice[]
   expenses          Expense[]
+  bills             Bill[]
   salesCategories   SalesCategory[]
   categorySales     CategorySalesEntry[]
 
@@ -205,8 +206,29 @@ model Expense {
   amount    Int
   date      DateTime
   category  String
+  bill      Bill? // 支払管理から経費登録された場合の紐付け
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+}
+
+// 受領請求書（支払管理）
+model Bill {
+  id         String      @id @default(cuid())
+  userId     String
+  user       UserProfile @relation(fields: [userId], references: [id])
+  vendorName String // 請求元（会社名など）
+  title      String // 件名
+  amount     Int // 金額
+  issueDate  DateTime // 発行日
+  dueDate    DateTime // 支払期限
+  status     String   @default("UNPAID") // UNPAID | PAID
+  paidDate   DateTime? // 支払日
+  category   String? // 経費カテゴリ（支払済時に経費登録するため）
+  expenseId  String?  @unique // 連携した経費レコードのID
+  expense    Expense? @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+  memo       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 // 操作ログ
