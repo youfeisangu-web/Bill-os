@@ -255,17 +255,17 @@ export default function RecurringClientView({
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="py-5 space-y-4 pb-12 md:py-8 md:space-y-5">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-billia-text">定期請求</h1>
-          <p className="text-sm text-billia-text-muted mt-1">
+          <h1 className="text-xl font-semibold text-billia-text md:text-2xl">定期請求</h1>
+          <p className="text-xs text-billia-text-muted mt-0.5 md:text-sm">
             毎月自動で請求書を作成する設定を管理します
           </p>
         </div>
         <button
           onClick={() => handleOpenDialog()}
-          className="flex items-center gap-2 bg-gradient-to-r from-billia-blue to-billia-green text-white px-4 py-2 rounded-lg font-semibold hover:from-billia-blue-dark hover:to-billia-green-dark transition-all shadow-sm"
+          className="flex items-center gap-2 bg-gradient-to-r from-billia-blue to-billia-green text-white px-3 py-2 text-sm rounded-xl font-semibold shrink-0 md:px-4"
         >
           <Plus className="w-4 h-4" />
           新規作成
@@ -274,15 +274,46 @@ export default function RecurringClientView({
 
       {/* 今月・定期請求で作成した請求書（送付用） */}
       {generatedInvoices.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-billia-text">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100">
+            <h2 className="text-sm font-semibold text-billia-text md:text-base">
               今月作成した請求書（送付）
             </h2>
-            <p className="text-sm text-billia-text-muted mt-0.5">
+            <p className="text-xs text-billia-text-muted mt-0.5 md:text-sm">
               定期請求で自動作成された請求書です。メールで送付する場合はボタンから起動してください。
             </p>
           </div>
+
+          {/* モバイル: カード表示 */}
+          <div className="divide-y divide-gray-100 md:hidden">
+            {generatedInvoices.map((inv) => {
+              const subject = `請求書 ${inv.id}`;
+              const body = ["お世話になっております。", "", "下記の請求書をご確認ください。", "", `請求書番号: ${inv.id}`, `発行日: ${inv.issueDate}`, `合計金額: ¥${inv.totalAmount.toLocaleString()}`, "", "よろしくお願いいたします。"].join("\n");
+              const mailto = inv.clientEmail ? buildMailto(inv.clientEmail, subject, body) : null;
+              return (
+                <div key={inv.id} className="px-4 py-3">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="min-w-0">
+                      <a href={`/dashboard/invoices/${inv.id}`} className="text-sm font-medium text-billia-blue truncate block">{inv.id}</a>
+                      <p className="text-sm text-billia-text">{inv.clientName}</p>
+                    </div>
+                    <p className="text-sm font-semibold text-billia-text shrink-0">¥{inv.totalAmount.toLocaleString()}</p>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-billia-text-muted">{inv.issueDate}</p>
+                    {mailto ? (
+                      <a href={mailto} className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-800">📧 メール送付</a>
+                    ) : (
+                      <span className="text-xs text-billia-text-muted">メール未設定</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* デスクトップ: テーブル表示 */}
+          <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
@@ -358,95 +389,93 @@ export default function RecurringClientView({
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
       {/* テンプレート一覧 */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         {templates.length === 0 ? (
-          <div className="p-12 text-center text-billia-text-muted">
-            <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p>定期請求テンプレートがありません</p>
-            <p className="text-sm mt-2">新規作成ボタンから追加してください</p>
+          <div className="p-10 text-center text-billia-text-muted">
+            <Calendar className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+            <p className="text-sm">定期請求テンプレートがありません</p>
+            <p className="text-xs mt-1">新規作成ボタンから追加してください</p>
           </div>
         ) : (
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-billia-text">
-                  取引先
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-billia-text">
-                  作成日
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-billia-text">
-                  次回実行日
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-billia-text">
-                  状態
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-semibold text-billia-text">
-                  操作
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
+          <>
+            {/* モバイル: カード表示 */}
+            <div className="divide-y divide-gray-100 md:hidden">
               {templates.map((template) => (
-                <tr key={template.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-billia-text">
-                      {template.tenant.name}
+                <div key={template.id} className="px-4 py-3">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-billia-text truncate">{template.tenant.name}</p>
+                      <p className="text-xs text-billia-text-muted">毎月{template.creationDay}日 · 次回: {formatDate(template.nextExecutionDate)}</p>
                     </div>
-                    <div className="text-sm text-billia-text-muted">
-                      {template.tenant.nameKana}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-billia-text">
-                    毎月{template.creationDay}日
-                  </td>
-                  <td className="px-4 py-3 text-sm text-billia-text">
-                    {formatDate(template.nextExecutionDate)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        template.isActive
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
+                    <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 font-medium ${template.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}`}>
                       {template.isActive ? "有効" : "無効"}
                     </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => handleToggle(template.id, template.isActive)}
-                        className="p-2 text-gray-600 hover:text-billia-blue transition-colors"
-                        title={template.isActive ? "無効化" : "有効化"}
-                      >
-                        <Power
-                          className={`w-4 h-4 ${!template.isActive ? "opacity-50" : ""}`}
-                        />
-                      </button>
-                      <button
-                        onClick={() => handleOpenDialog(template)}
-                        className="p-2 text-gray-600 hover:text-billia-blue transition-colors"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(template.id)}
-                        className="p-2 text-red-600 hover:text-red-700 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                  </div>
+                  <div className="flex items-center justify-end gap-1">
+                    <button onClick={() => handleToggle(template.id, template.isActive)} className="p-2 text-gray-500 hover:text-billia-blue" title={template.isActive ? "無効化" : "有効化"}>
+                      <Power className={`w-4 h-4 ${!template.isActive ? "opacity-40" : ""}`} />
+                    </button>
+                    <button onClick={() => handleOpenDialog(template)} className="p-2 text-gray-500 hover:text-billia-blue">
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(template.id)} className="p-2 text-red-500 hover:text-red-700">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+
+            {/* デスクトップ: テーブル表示 */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-billia-text">取引先</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-billia-text">作成日</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-billia-text">次回実行日</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-billia-text">状態</th>
+                    <th className="px-4 py-3 text-right text-sm font-semibold text-billia-text">操作</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {templates.map((template) => (
+                    <tr key={template.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3">
+                        <div className="font-medium text-billia-text">{template.tenant.name}</div>
+                        <div className="text-sm text-billia-text-muted">{template.tenant.nameKana}</div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-billia-text">毎月{template.creationDay}日</td>
+                      <td className="px-4 py-3 text-sm text-billia-text">{formatDate(template.nextExecutionDate)}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${template.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
+                          {template.isActive ? "有効" : "無効"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => handleToggle(template.id, template.isActive)} className="p-2 text-gray-600 hover:text-billia-blue" title={template.isActive ? "無効化" : "有効化"}>
+                            <Power className={`w-4 h-4 ${!template.isActive ? "opacity-50" : ""}`} />
+                          </button>
+                          <button onClick={() => handleOpenDialog(template)} className="p-2 text-gray-600 hover:text-billia-blue">
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => handleDelete(template.id)} className="p-2 text-red-600 hover:text-red-700">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
@@ -578,64 +607,66 @@ export default function RecurringClientView({
                 </label>
                 <div className="space-y-3">
                   {items.map((item, index) => (
-                    <div key={index} className="flex gap-2 items-end">
-                      <div className="flex-1">
-                        <input
-                          type="text"
-                          placeholder="項目名"
-                          value={item.name}
-                          onChange={(e) =>
-                            updateItem(index, "name", e.target.value)
-                          }
-                          required
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billia-blue"
-                        />
+                    <div key={index} className="rounded-lg border border-gray-200 p-3 space-y-2 md:border-0 md:p-0 md:space-y-0 md:flex md:gap-2 md:items-end">
+                      {/* 項目名 + 削除ボタン (モバイル) */}
+                      <div className="flex gap-2 items-center md:flex-1">
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            placeholder="項目名"
+                            value={item.name}
+                            onChange={(e) => updateItem(index, "name", e.target.value)}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billia-blue text-sm"
+                          />
+                        </div>
+                        {items.length > 1 && (
+                          <button type="button" onClick={() => removeItem(index)} className="md:hidden p-1.5 text-red-500">
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
-                      <div className="w-24">
-                        <input
-                          type="number"
-                          placeholder="数量"
-                          min="1"
-                          value={item.quantity}
-                          onChange={(e) =>
-                            updateItem(index, "quantity", parseInt(e.target.value) || 1)
-                          }
-                          required
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billia-blue"
-                        />
-                      </div>
-                      <div className="w-32">
-                        <input
-                          type="number"
-                          placeholder="単価"
-                          min="0"
-                          value={item.unitPrice}
-                          onChange={(e) =>
-                            updateItem(index, "unitPrice", parseInt(e.target.value) || 0)
-                          }
-                          required
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billia-blue"
-                        />
-                      </div>
-                      <div className="w-24">
-                        <input
-                          type="number"
-                          placeholder="税率"
-                          min="0"
-                          max="100"
-                          value={item.taxRate || 10}
-                          onChange={(e) =>
-                            updateItem(index, "taxRate", parseInt(e.target.value) || 10)
-                          }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billia-blue"
-                        />
+                      {/* 数量・単価・税率 */}
+                      <div className="grid grid-cols-3 gap-2 md:contents">
+                        <div className="md:w-24">
+                          <label className="text-[10px] text-gray-400 mb-0.5 block md:hidden">数量</label>
+                          <input
+                            type="number"
+                            placeholder="数量"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) => updateItem(index, "quantity", parseInt(e.target.value) || 1)}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billia-blue text-sm"
+                          />
+                        </div>
+                        <div className="md:w-32">
+                          <label className="text-[10px] text-gray-400 mb-0.5 block md:hidden">単価</label>
+                          <input
+                            type="number"
+                            placeholder="単価"
+                            min="0"
+                            value={item.unitPrice}
+                            onChange={(e) => updateItem(index, "unitPrice", parseInt(e.target.value) || 0)}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billia-blue text-sm"
+                          />
+                        </div>
+                        <div className="md:w-24">
+                          <label className="text-[10px] text-gray-400 mb-0.5 block md:hidden">税率%</label>
+                          <input
+                            type="number"
+                            placeholder="税率"
+                            min="0"
+                            max="100"
+                            value={item.taxRate || 10}
+                            onChange={(e) => updateItem(index, "taxRate", parseInt(e.target.value) || 10)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-billia-blue text-sm"
+                          />
+                        </div>
                       </div>
                       {items.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeItem(index)}
-                          className="p-2 text-red-600 hover:text-red-700"
-                        >
+                        <button type="button" onClick={() => removeItem(index)} className="hidden md:block p-2 text-red-600 hover:text-red-700">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       )}

@@ -59,47 +59,68 @@ export default async function AgingPage() {
           合計未収: ¥{grandTotal.toLocaleString()}
         </p>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-black/10 text-left text-billia-text-muted">
-                <th className="py-3 px-2">取引先</th>
-                <th className="py-3 px-2">請求書番号</th>
-                <th className="py-3 px-2">発行日</th>
-                <th className="py-3 px-2">支払期限</th>
-                <th className="py-3 px-2">経過日数</th>
-                <th className="py-3 px-2">区分</th>
-                <th className="py-3 px-2 text-right">金額</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id} className="border-b border-black/[0.06]">
-                  <td className="py-3 px-2">{r.clientName}</td>
-                  <td className="py-3 px-2">
-                    <Link
-                      href={`/dashboard/invoices/${r.id}`}
-                      className="text-billia-blue hover:underline"
-                    >
-                      {r.id}
-                    </Link>
-                  </td>
-                  <td className="py-3 px-2">{r.issueDate}</td>
-                  <td className="py-3 px-2">{r.dueDate}</td>
-                  <td className="py-3 px-2">{r.daysOverdue}日</td>
-                  <td className="py-3 px-2">{BUCKET_LABELS[r.bucket]}</td>
-                  <td className="py-3 px-2 text-right font-medium">
-                    ¥{r.totalAmount.toLocaleString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {rows.length === 0 && (
-          <p className="text-center text-billia-text-muted py-8">
+        {rows.length === 0 ? (
+          <p className="text-center text-billia-text-muted py-8 text-sm">
             未払い・部分払いの請求はありません。
           </p>
+        ) : (
+          <>
+            {/* モバイル: カード表示 */}
+            <div className="space-y-2 md:hidden">
+              {rows.map((r) => (
+                <Link
+                  key={r.id}
+                  href={`/dashboard/invoices/${r.id}`}
+                  className="block rounded-xl border border-black/[0.06] bg-white p-3 hover:bg-billia-bg transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-2 mb-1.5">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-billia-text truncate">{r.clientName}</p>
+                      <p className="text-xs text-billia-blue">{r.id}</p>
+                    </div>
+                    <p className="text-sm font-semibold text-billia-text shrink-0">¥{r.totalAmount.toLocaleString()}</p>
+                  </div>
+                  <div className="flex items-center gap-3 text-[11px] text-billia-text-muted">
+                    <span>期限: {r.dueDate}</span>
+                    {r.daysOverdue > 0 && <span className="text-red-500 font-medium">{r.daysOverdue}日超過</span>}
+                    <span className="ml-auto">{BUCKET_LABELS[r.bucket]}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* デスクトップ: テーブル表示 */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-black/10 text-left text-billia-text-muted">
+                    <th className="py-3 px-2">取引先</th>
+                    <th className="py-3 px-2">請求書番号</th>
+                    <th className="py-3 px-2">発行日</th>
+                    <th className="py-3 px-2">支払期限</th>
+                    <th className="py-3 px-2">経過日数</th>
+                    <th className="py-3 px-2">区分</th>
+                    <th className="py-3 px-2 text-right">金額</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r) => (
+                    <tr key={r.id} className="border-b border-black/[0.06]">
+                      <td className="py-3 px-2">{r.clientName}</td>
+                      <td className="py-3 px-2">
+                        <Link href={`/dashboard/invoices/${r.id}`} className="text-billia-blue hover:underline">{r.id}</Link>
+                      </td>
+                      <td className="py-3 px-2">{r.issueDate}</td>
+                      <td className="py-3 px-2">{r.dueDate}</td>
+                      <td className="py-3 px-2">{r.daysOverdue}日</td>
+                      <td className="py-3 px-2">{BUCKET_LABELS[r.bucket]}</td>
+                      <td className="py-3 px-2 text-right font-medium">¥{r.totalAmount.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>
