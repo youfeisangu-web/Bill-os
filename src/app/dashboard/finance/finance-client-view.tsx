@@ -88,8 +88,8 @@ function LineChart({ data }: { data: MonthlyFinancial[] }) {
     );
   }
 
-  const W = 560, H = 155;
-  const pad = { l: 8, t: 22, r: 8, b: 26 };
+  const W = 800, H = 150;
+  const pad = { l: 8, t: 20, r: 8, b: 24 };
   const iw = W - pad.l - pad.r;
   const ih = H - pad.t - pad.b;
 
@@ -136,7 +136,7 @@ function LineChart({ data }: { data: MonthlyFinancial[] }) {
           />
           <text
             x={pad.l + 4} y={yAt(v) - 3}
-            textAnchor="start" fontSize="9" fill="#c8cdd6"
+            textAnchor="start" fontSize="8" fill="#d1d5db"
             fontFamily="system-ui, sans-serif"
           >
             {fmt(v)}
@@ -183,14 +183,14 @@ function LineChart({ data }: { data: MonthlyFinancial[] }) {
           if (!isFirst && !isJanuary) return null;
           return (
             <text key={i} x={xAt(i)} y={H - 4} textAnchor="middle"
-              fontSize="9" fill="#c8cdd6" fontFamily="system-ui, sans-serif">
+              fontSize="8" fill="#d1d5db" fontFamily="system-ui, sans-serif">
               {isFirst && !isJanuary ? `${m}月` : `${y}年`}
             </text>
           );
         }
         return (
           <text key={i} x={xAt(i)} y={H - 4} textAnchor="middle"
-            fontSize="9" fill="#c8cdd6" fontFamily="system-ui, sans-serif">
+            fontSize="8" fill="#d1d5db" fontFamily="system-ui, sans-serif">
             {m}月
           </text>
         );
