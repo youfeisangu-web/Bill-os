@@ -32,7 +32,7 @@ export default function Home() {
   return (
     <div
       className="fixed inset-0 flex items-center justify-center overflow-hidden"
-      style={{ backgroundColor: "#080808" }}
+      style={{ backgroundColor: "#ffffff" }}
     >
       <style>{`
         @keyframes logoEnter {
@@ -62,7 +62,7 @@ export default function Home() {
           background: linear-gradient(
             90deg,
             transparent 0%,
-            rgba(255, 255, 255, 0.12) 50%,
+            rgba(0, 0, 0, 0.06) 50%,
             transparent 100%
           );
           filter: blur(20px);

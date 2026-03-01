@@ -102,18 +102,27 @@ export async function getTopClients(limit = 5): Promise<TopClient[]> {
 
   const invoices = await prisma.invoice.findMany({
     where: { userId },
-    select: { clientName: true, totalAmount: true },
+    select: {
+      clientId: true,
+      client: { select: { name: true } },
+      totalAmount: true,
+    },
   });
 
-  const map = new Map<string, number>();
+  const map = new Map<string, { name: string; total: number }>();
   invoices.forEach((inv) => {
-    map.set(inv.clientName, (map.get(inv.clientName) ?? 0) + inv.totalAmount);
+    const existing = map.get(inv.clientId);
+    if (existing) {
+      existing.total += inv.totalAmount;
+    } else {
+      map.set(inv.clientId, { name: inv.client.name, total: inv.totalAmount });
+    }
   });
 
-  return Array.from(map.entries())
-    .sort((a, b) => b[1] - a[1])
+  return Array.from(map.values())
+    .sort((a, b) => b.total - a.total)
     .slice(0, limit)
-    .map(([name, total]) => ({ name, total }));
+    .map(({ name, total }) => ({ name, total }));
 }
 
 /** 未払い請求書の入金予定 */
@@ -127,8 +136,7 @@ export async function getUpcomingPayments(): Promise<UpcomingPayment[]> {
     where: { userId, status: { in: ["未払い", "部分払い"] } },
     select: {
       id: true,
-      invoiceNumber: true,
-      clientName: true,
+      client: { select: { name: true } },
       totalAmount: true,
       dueDate: true,
       status: true,
@@ -138,8 +146,13 @@ export async function getUpcomingPayments(): Promise<UpcomingPayment[]> {
   });
 
   return invoices.map((inv) => ({
-    ...inv,
-    isOverdue: inv.dueDate ? new Date(inv.dueDate) < now : false,
+    id: inv.id,
+    invoiceNumber: inv.id,
+    clientName: inv.client.name,
+    totalAmount: inv.totalAmount,
+    dueDate: inv.dueDate,
+    status: inv.status,
+    isOverdue: new Date(inv.dueDate) < now,
   }));
 }
 
