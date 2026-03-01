@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "@clerk/nextjs";
-import Link from "next/link";
 import Image from "next/image";
 import {
   FileText,
@@ -12,15 +10,14 @@ import {
   CreditCard,
   Zap,
   CheckCircle2,
-  ArrowRight,
   Menu,
   X,
   Sparkles,
   TrendingUp,
   FileStack,
-  Clock,
   ShieldCheck,
   Upload,
+  Clock,
 } from "lucide-react";
 
 /* ── inline mini mockups ─────────────────────────────────── */
@@ -163,14 +160,28 @@ function FinanceMockup() {
   );
 }
 
+/* ── coming soon badge ───────────────────────────────────── */
+
+function ComingSoonBadge({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
+  const styles = {
+    sm: "px-3 py-1 text-xs gap-1.5",
+    md: "px-5 py-2.5 text-sm gap-2",
+    lg: "px-7 py-3.5 text-base gap-2.5",
+  };
+  return (
+    <span
+      className={`inline-flex items-center font-bold rounded-full border-2 border-dashed border-blue-300 bg-blue-50 text-blue-600 select-none ${styles[size]}`}
+    >
+      <Clock className={size === "lg" ? "w-5 h-5" : "w-4 h-4"} />
+      Coming Soon
+    </span>
+  );
+}
+
 /* ── main page ───────────────────────────────────────────── */
 
 export default function Home() {
-  const { isSignedIn, isLoaded } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
-
-  const ctaHref = isLoaded && isSignedIn ? "/dashboard" : "/sign-up";
-  const ctaLabel = isLoaded && isSignedIn ? "ダッシュボードへ" : "無料で始める";
 
   const features = [
     {
@@ -230,33 +241,21 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-5 md:px-8">
           <div className="flex h-14 items-center justify-between">
             {/* logo */}
-            <Link href="/" className="flex items-center gap-2.5 shrink-0">
+            <div className="flex items-center gap-2.5 shrink-0">
               <Image src="/logo.png" alt="Billia" width={32} height={32} className="object-contain" />
               <span className="font-bold text-[1.1rem] tracking-tight text-slate-900">Billia</span>
-            </Link>
+            </div>
 
             {/* desktop nav */}
             <nav className="hidden md:flex items-center gap-6 text-sm text-slate-600">
               <a href="#features" className="hover:text-slate-900 transition-colors">機能</a>
               <a href="#ai" className="hover:text-slate-900 transition-colors">AI機能</a>
-              <a href="#how" className="hover:text-slate-900 transition-colors">使い方</a>
+              <a href="#pricing" className="hover:text-slate-900 transition-colors">料金</a>
             </nav>
 
-            {/* desktop ctas */}
-            <div className="hidden md:flex items-center gap-3">
-              <Link
-                href={isLoaded && isSignedIn ? "/dashboard" : "/sign-in"}
-                className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
-              >
-                ログイン
-              </Link>
-              <Link
-                href={ctaHref}
-                className="flex items-center gap-1.5 rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-blue-200 transition hover:bg-blue-700"
-              >
-                {ctaLabel}
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
+            {/* coming soon badge desktop */}
+            <div className="hidden md:block">
+              <ComingSoonBadge size="sm" />
             </div>
 
             {/* mobile menu button */}
@@ -275,14 +274,9 @@ export default function Home() {
           <div className="md:hidden border-t border-slate-100 bg-white px-5 py-4 space-y-3">
             <a href="#features" className="block text-sm text-slate-600" onClick={() => setMenuOpen(false)}>機能</a>
             <a href="#ai" className="block text-sm text-slate-600" onClick={() => setMenuOpen(false)}>AI機能</a>
-            <a href="#how" className="block text-sm text-slate-600" onClick={() => setMenuOpen(false)}>使い方</a>
-            <div className="pt-2 flex flex-col gap-2">
-              <Link href={isLoaded && isSignedIn ? "/dashboard" : "/sign-in"} className="text-center text-sm font-medium text-slate-700 border border-slate-200 rounded-full py-2">
-                ログイン
-              </Link>
-              <Link href={ctaHref} className="text-center text-sm font-semibold text-white bg-blue-600 rounded-full py-2">
-                {ctaLabel}
-              </Link>
+            <a href="#pricing" className="block text-sm text-slate-600" onClick={() => setMenuOpen(false)}>料金</a>
+            <div className="pt-2">
+              <ComingSoonBadge size="sm" />
             </div>
           </div>
         )}
@@ -328,23 +322,7 @@ export default function Home() {
               AIがメモや書類を読み取り、入力の手間を限りなくゼロへ。
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link
-                href={ctaHref}
-                className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-7 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 hover:shadow-blue-300"
-              >
-                {ctaLabel}
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              {(!isLoaded || !isSignedIn) && (
-                <Link
-                  href="/sign-in"
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-7 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                >
-                  ログイン
-                </Link>
-              )}
-            </div>
+            <ComingSoonBadge size="lg" />
           </div>
 
           {/* mockup grid */}
@@ -449,8 +427,71 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── pricing ── */}
+      <section id="pricing" className="py-20 md:py-28">
+        <div className="mx-auto max-w-4xl px-5 md:px-8 text-center">
+          <p className="billia-label mb-3">料金</p>
+          <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight mb-4">
+            シンプルな料金体系
+          </h2>
+          <p className="text-slate-500 mb-12 max-w-md mx-auto">
+            すべての機能が使える、月額定額プランのみ。隠れた費用は一切なし。
+          </p>
+
+          <div className="max-w-sm mx-auto">
+            <div
+              className="rounded-3xl p-8 text-left relative overflow-hidden"
+              style={{
+                background: "linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #06b6d4 100%)",
+              }}
+            >
+              {/* shimmer decoration */}
+              <div
+                className="pointer-events-none absolute -top-20 -right-20 w-64 h-64 rounded-full opacity-20"
+                style={{ background: "radial-gradient(circle, #ffffff 0%, transparent 70%)" }}
+              />
+
+              <div className="relative">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white mb-6">
+                  <Sparkles className="w-3 h-3" />
+                  All-inclusive Plan
+                </div>
+
+                <div className="mb-6">
+                  <div className="flex items-end gap-1 mb-1">
+                    <span className="text-5xl font-black text-white">¥1,000</span>
+                    <span className="text-blue-200 mb-2 text-sm">/ 月</span>
+                  </div>
+                  <p className="text-blue-100 text-sm">税込み・いつでもキャンセル可能</p>
+                </div>
+
+                <ul className="space-y-3 mb-8">
+                  {[
+                    "請求書・見積書の作成・管理（無制限）",
+                    "受取請求書・支払管理",
+                    "経費管理・領収書スキャン",
+                    "AIメモ入力・書類OCR読み取り",
+                    "財務サマリー・グラフ表示",
+                    "複数ファイル一括インポート",
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2.5 text-sm text-blue-50">
+                      <CheckCircle2 className="w-4 h-4 text-cyan-300 shrink-0 mt-0.5" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="flex justify-center">
+                  <ComingSoonBadge size="md" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── how it works ── */}
-      <section id="how" className="py-20 md:py-28">
+      <section id="how" className="py-20 md:py-28 bg-slate-50">
         <div className="mx-auto max-w-4xl px-5 md:px-8 text-center">
           <p className="billia-label mb-3">使い方</p>
           <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight mb-12">
@@ -462,7 +503,7 @@ export default function Home() {
                 step: "01",
                 icon: ShieldCheck,
                 title: "アカウント作成",
-                desc: "メールアドレスだけで無料登録。すぐに使い始められます。",
+                desc: "メールアドレスだけで登録。すぐに使い始められます。",
                 color: "text-blue-500 bg-blue-50",
               },
               {
@@ -503,19 +544,13 @@ export default function Home() {
             }}
           >
             <h2 className="text-2xl md:text-4xl font-extrabold text-white mb-4 tracking-tight">
-              今すぐ請求業務を効率化しよう
+              もうすぐリリース
             </h2>
             <p className="text-blue-100 mb-8 text-sm md:text-base max-w-md mx-auto leading-relaxed">
-              Billiaは無料でご利用いただけます。
-              面倒な請求業務から解放されて、本来の仕事に集中しましょう。
+              月額¥1,000で、AIを活用した請求業務の自動化を体験してください。
+              公開をお楽しみに。
             </p>
-            <Link
-              href={ctaHref}
-              className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-bold text-blue-700 shadow-lg transition hover:bg-blue-50"
-            >
-              {ctaLabel}
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            <ComingSoonBadge size="lg" />
           </div>
         </div>
       </section>
@@ -531,9 +566,7 @@ export default function Home() {
             <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-slate-400">
               <a href="#features" className="hover:text-slate-600 transition-colors">機能</a>
               <a href="#ai" className="hover:text-slate-600 transition-colors">AI機能</a>
-              <a href="#how" className="hover:text-slate-600 transition-colors">使い方</a>
-              <Link href="/sign-in" className="hover:text-slate-600 transition-colors">ログイン</Link>
-              <Link href="/sign-up" className="hover:text-slate-600 transition-colors">新規登録</Link>
+              <a href="#pricing" className="hover:text-slate-600 transition-colors">料金</a>
             </div>
             <p className="text-xs text-slate-400">© 2025 Billia</p>
           </div>
