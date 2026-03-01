@@ -133,9 +133,81 @@ ${memoText}
 
     return { success: true, data: result };
   } catch (error: any) {
-    console.error("Memo parse error:", error);
     const errorMessage = error?.message || "メモの解析に失敗しました";
     return { success: false, message: errorMessage };
+  }
+}
+
+/**
+ * メモテキストから経費データを解析する
+ */
+export type ExpenseMemoParseResult = {
+  success: boolean;
+  data?: {
+    title: string;
+    amount: number;
+    date: string; // YYYY-MM-DD
+    category: string;
+  };
+  message?: string;
+};
+
+export async function parseMemoToExpense(memoText: string): Promise<ExpenseMemoParseResult> {
+  try {
+    const { userId } = await auth();
+    if (!userId) return { success: false, message: "認証が必要です" };
+
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    if (!apiKey) return { success: false, message: "Gemini APIキーが設定されていません" };
+
+    if (!memoText || memoText.trim().length === 0) {
+      return { success: false, message: "メモを入力してください" };
+    }
+
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+    const prompt = `以下のメモから経費情報を抽出してください。JSON形式のみで返してください（Markdown不要）。
+カテゴリは必ず次の中から選んでください: 通信費, 外注費, 消耗品, 旅費交通費, 地代家賃, 広告宣伝費, その他
+今日の日付: ${todayStr}
+
+メモ:
+${memoText}
+
+形式:
+{"title": "件名", "amount": 金額（数値）, "date": "YYYY-MM-DD", "category": "カテゴリ"}
+
+例:
+"昨日コンビニで500円のお菓子" → {"title": "コンビニ（お菓子）", "amount": 500, "date": "${todayStr}", "category": "消耗品"}
+"電車代1200円" → {"title": "電車代", "amount": 1200, "date": "${todayStr}", "category": "旅費交通費"}
+"AWS 3月分 15000円" → {"title": "AWS利用料", "amount": 15000, "date": "${todayStr}", "category": "通信費"}`;
+
+    const responseText = await generateText(prompt, { maxTokens: 300 });
+    if (!responseText) return { success: false, message: "AIからの応答がありませんでした" };
+
+    let jsonText = responseText.trim();
+    if (jsonText.startsWith("```")) {
+      jsonText = jsonText.split("\n").filter((l) => !l.startsWith("```")).join("\n").trim();
+    }
+    const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return { success: false, message: "AIの応答を解析できませんでした" };
+
+    const parsed = JSON.parse(jsonMatch[0]) as any;
+    if (!parsed.title || !parsed.amount) {
+      return { success: false, message: "件名と金額が読み取れませんでした。もう少し詳しく書いてみてください。" };
+    }
+
+    return {
+      success: true,
+      data: {
+        title: String(parsed.title).trim(),
+        amount: Number(String(parsed.amount).replace(/[,，円]/g, "")),
+        date: parsed.date || todayStr,
+        category: parsed.category || "その他",
+      },
+    };
+  } catch (error: any) {
+    return { success: false, message: error?.message || "メモの解析に失敗しました" };
   }
 }
 
@@ -248,7 +320,6 @@ ${memoText}
 
     return { success: true, data: result };
   } catch (error: any) {
-    console.error("Memo parse error:", error);
     const errorMessage = error?.message || "メモの解析に失敗しました";
     return { success: false, message: errorMessage };
   }

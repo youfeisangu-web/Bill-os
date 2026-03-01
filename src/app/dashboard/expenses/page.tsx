@@ -2,7 +2,8 @@
 
 import { useState, useRef } from 'react';
 import { readReceiptImage } from '@/app/actions/ocr-receipt';
-import { Loader2, UploadCloud, AlertCircle } from 'lucide-react';
+import { parseMemoToExpense } from '@/app/actions/memo-parser';
+import { Loader2, UploadCloud, AlertCircle, Sparkles, PenLine, Camera } from 'lucide-react';
 import NewExpenseDialog from './new-expense-dialog';
 import type { ExpenseInitialValues } from './new-expense-dialog';
 import type { ReceiptOCRData } from '@/app/actions/ocr-receipt';
@@ -18,11 +19,14 @@ function receiptToInitialValues(data: ReceiptOCRData): ExpenseInitialValues {
 
 export default function ExpensesPage() {
   const [isScanning, setIsScanning] = useState(false);
+  const [isMemoLoading, setIsMemoLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [initialValues, setInitialValues] = useState<ExpenseInitialValues | null>(null);
+  const [memo, setMemo] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // ------- 領収書OCR -------
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -31,10 +35,9 @@ export default function ExpensesPage() {
     setError(null);
 
     try {
-      const MAX_SIZE = 4 * 1024 * 1024; // 4MB
+      const MAX_SIZE = 4 * 1024 * 1024;
       let processedFile = file;
 
-      // HEIC形式の場合はJPEGに変換
       const fileName = file.name.toLowerCase();
       const fileType = file.type.toLowerCase();
       const isHeic = fileType === 'image/heic' || fileType === 'image/heif' || fileName.endsWith('.heic') || fileName.endsWith('.heif');
@@ -42,47 +45,40 @@ export default function ExpensesPage() {
       if (isHeic) {
         try {
           const heic2any = (await import('heic2any')).default;
-          const convertedBlob = await heic2any({
-            blob: file,
-            toType: 'image/jpeg',
-            quality: 0.9,
-          });
-
+          const convertedBlob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
           const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
           processedFile = new File([blob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), {
             type: 'image/jpeg',
             lastModified: file.lastModified,
           });
         } catch (heicError: any) {
-          setError(`HEIC形式の画像の変換に失敗しました: ${heicError?.message || String(heicError)}。JPEGまたはPNG形式の画像を使用してください。`);
+          setError(`HEIC変換エラー: ${heicError?.message || String(heicError)}`);
           setIsScanning(false);
           return;
         }
       }
 
-      // 大きすぎる場合は圧縮
       if (processedFile.type.startsWith('image/') && processedFile.size > MAX_SIZE) {
         try {
           processedFile = await compressImage(processedFile, 3.5);
         } catch (compressError: any) {
-          setError(`画像の圧縮に失敗しました: ${compressError?.message || String(compressError)}`);
+          setError(`圧縮エラー: ${compressError?.message || String(compressError)}`);
           setIsScanning(false);
           return;
         }
       }
 
       if (processedFile.size > MAX_SIZE) {
-        setError(`ファイルサイズが大きすぎます（${Math.round(processedFile.size / 1024 / 1024)}MB）。3MB以下のファイルを選択してください。`);
+        setError(`ファイルサイズが大きすぎます（${Math.round(processedFile.size / 1024 / 1024)}MB）。3MB以下にしてください。`);
         setIsScanning(false);
         return;
       }
 
       const formData = new FormData();
       formData.append('file', processedFile);
-
       const fileInFormData = formData.get('file') as File | null;
       if (!fileInFormData || fileInFormData.size === 0) {
-        setError('ファイルがFormDataに正しく含まれていません。ページを再読み込みして再試行してください。');
+        setError('ファイルの読み込みに失敗しました。再度お試しください。');
         setIsScanning(false);
         return;
       }
@@ -92,7 +88,7 @@ export default function ExpensesPage() {
         result = await readReceiptImage(formData);
       } catch (serverError: any) {
         if (serverError?.message?.includes('400') || serverError?.message?.includes('Bad Request')) {
-          setError(`リクエストが不正です（400 Bad Request）。ファイル形式: ${processedFile.type || '不明'} / サイズ: ${Math.round(processedFile.size / 1024 / 1024 * 100) / 100}MB`);
+          setError(`リクエストエラー（400）。ファイル形式: ${processedFile.type || '不明'}`);
           setIsScanning(false);
           return;
         }
@@ -106,21 +102,42 @@ export default function ExpensesPage() {
         setError(result.message || '読み取りに失敗しました。もう一度お試しください。');
       }
     } catch (err: any) {
-      let errorMessage = 'エラーが発生しました。もう一度お試しください。';
-      if (err?.message) {
-        errorMessage = err.message;
-      } else if (typeof err === 'string') {
-        errorMessage = err;
-      } else if (err?.toString && err.toString() !== '[object Object]') {
-        errorMessage = err.toString();
-      }
-      setError(`エラー: ${errorMessage}`);
+      setError(`エラー: ${err?.message || 'もう一度お試しください。'}`);
     } finally {
       setIsScanning(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
-  // 画像圧縮
+  // ------- メモから解析 -------
+  const handleMemoSubmit = async () => {
+    if (!memo.trim()) return;
+    setIsMemoLoading(true);
+    setError(null);
+    try {
+      const result = await parseMemoToExpense(memo.trim());
+      if (result.success && result.data) {
+        setInitialValues(result.data);
+        setDialogOpen(true);
+        setMemo('');
+      } else {
+        setError(result.message || '解析できませんでした。もう少し詳しく書いてみてください。');
+      }
+    } catch (err: any) {
+      setError(`エラー: ${err?.message || '解析に失敗しました。'}`);
+    } finally {
+      setIsMemoLoading(false);
+    }
+  };
+
+  // ------- 手動入力 -------
+  const handleManual = () => {
+    setInitialValues(null);
+    setError(null);
+    setDialogOpen(true);
+  };
+
+  // ------- 画像圧縮 -------
   const compressImage = async (file: File, maxSizeMB: number = 3.5): Promise<File> => {
     const maxSizeBytes = maxSizeMB * 1024 * 1024;
     if (file.size <= maxSizeBytes) return file;
@@ -134,50 +151,26 @@ export default function ExpensesPage() {
           let width = img.width;
           let height = img.height;
           const maxDimension = 2000;
-
           if (width > maxDimension || height > maxDimension) {
-            if (width > height) {
-              height = (height * maxDimension) / width;
-              width = maxDimension;
-            } else {
-              width = (width * maxDimension) / height;
-              height = maxDimension;
-            }
+            if (width > height) { height = (height * maxDimension) / width; width = maxDimension; }
+            else { width = (width * maxDimension) / height; height = maxDimension; }
           }
-
           canvas.width = width;
           canvas.height = height;
           const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            reject(new Error('Canvas context not available'));
-            return;
-          }
-
+          if (!ctx) { reject(new Error('Canvas context not available')); return; }
           ctx.drawImage(img, 0, 0, width, height);
-
           const tryCompress = (q: number) => {
-            canvas.toBlob(
-              (blob) => {
-                if (!blob) {
-                  reject(new Error('圧縮に失敗しました'));
-                  return;
-                }
-
-                if (blob.size > maxSizeBytes && q > 0.3) {
-                  tryCompress(q - 0.1);
-                } else {
-                  const compressedFile = new File([blob], file.name.replace(/\.(png|gif|webp)$/i, '.jpg'), {
-                    type: 'image/jpeg',
-                    lastModified: file.lastModified,
-                  });
-                  resolve(compressedFile);
-                }
-              },
-              'image/jpeg',
-              q
-            );
+            canvas.toBlob((blob) => {
+              if (!blob) { reject(new Error('圧縮に失敗しました')); return; }
+              if (blob.size > maxSizeBytes && q > 0.3) { tryCompress(q - 0.1); }
+              else {
+                resolve(new File([blob], file.name.replace(/\.(png|gif|webp)$/i, '.jpg'), {
+                  type: 'image/jpeg', lastModified: file.lastModified,
+                }));
+              }
+            }, 'image/jpeg', q);
           };
-
           tryCompress(0.7);
         };
         img.onerror = () => reject(new Error('画像の読み込みに失敗しました'));
@@ -189,55 +182,106 @@ export default function ExpensesPage() {
   };
 
   return (
-    <div className="py-5 max-w-4xl mx-auto space-y-5 md:py-8 md:space-y-8">
+    <div className="py-5 max-w-2xl mx-auto space-y-4 md:py-8 md:space-y-5">
       <div>
-        <h1 className="text-xl font-bold tracking-tight text-gray-900 md:text-3xl">経費管理</h1>
-        <p className="text-sm text-gray-500 mt-1">領収書をアップロードして、AIに自動入力させましょう。</p>
-      </div>
-
-      {/* アップロードエリア */}
-      <div
-        className="bg-white border-2 border-dashed border-indigo-200 rounded-2xl p-6 text-center hover:bg-indigo-50 transition cursor-pointer relative group md:p-10"
-        onClick={() => {
-          if (!isScanning && fileInputRef.current) {
-            fileInputRef.current.click();
-          }
-        }}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*, .pdf"
-          onChange={handleFileChange}
-          className="hidden"
-          disabled={isScanning}
-        />
-
-        {isScanning ? (
-          <div className="flex flex-col items-center animate-pulse">
-            <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-4" />
-            <p className="text-lg font-semibold text-indigo-700">AIが解析中...</p>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center group-hover:scale-105 transition-transform">
-            <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-3 md:w-16 md:h-16 md:mb-4">
-              <UploadCloud className="w-6 h-6 md:w-8 md:h-8" />
-            </div>
-            <p className="text-base font-bold text-gray-700 md:text-xl">ここをクリックして領収書を選択</p>
-            <p className="text-xs text-gray-400 mt-1.5 md:text-sm md:mt-2">またはドラッグ＆ドロップ (JPG, PNG, PDF)</p>
-          </div>
-        )}
+        <h1 className="text-xl font-bold tracking-tight text-gray-900 md:text-2xl">経費管理</h1>
+        <p className="text-sm text-gray-500 mt-0.5">3つの方法で経費を素早く記録できます。</p>
       </div>
 
       {/* エラー表示 */}
       {error && (
-        <div className="bg-red-50 text-red-600 p-4 rounded-lg flex items-center gap-2">
-          <AlertCircle className="w-5 h-5" />
-          {error}
+        <div className="bg-red-50 text-red-600 p-3 rounded-xl flex items-start gap-2 text-sm">
+          <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
-      {/* 経費登録ダイアログ */}
+      {/* ① 領収書をスキャン */}
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+          <Camera className="w-4 h-4 text-indigo-500" />
+          <span className="text-sm font-semibold text-gray-800">領収書をスキャン</span>
+          <span className="text-xs text-gray-400 ml-1">AIが自動で読み取り</span>
+        </div>
+        <div
+          className="p-4 md:p-6 text-center cursor-pointer hover:bg-indigo-50 transition"
+          onClick={() => { if (!isScanning) fileInputRef.current?.click(); }}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*, .pdf"
+            onChange={handleFileChange}
+            className="hidden"
+            disabled={isScanning}
+          />
+          {isScanning ? (
+            <div className="flex flex-col items-center gap-2 py-2">
+              <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+              <p className="text-sm font-medium text-indigo-700">AIが解析中...</p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2 py-2">
+              <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center">
+                <UploadCloud className="w-6 h-6 text-indigo-500" />
+              </div>
+              <p className="text-sm font-medium text-gray-700">タップして領収書を選択</p>
+              <p className="text-xs text-gray-400">JPG / PNG / HEIC / PDF 対応</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ② メモから作成 */}
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-amber-500" />
+          <span className="text-sm font-semibold text-gray-800">メモから作成</span>
+          <span className="text-xs text-gray-400 ml-1">話し言葉でOK</span>
+        </div>
+        <div className="p-4 space-y-3">
+          <textarea
+            value={memo}
+            onChange={(e) => setMemo(e.target.value)}
+            placeholder={"例: 昨日コンビニで500円のお菓子\n例: 電車代1,200円\n例: AWS 3月分 15,000円"}
+            rows={3}
+            className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 resize-none focus:outline-none focus:ring-2 focus:ring-amber-300 placeholder:text-gray-400"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleMemoSubmit();
+            }}
+          />
+          <button
+            onClick={handleMemoSubmit}
+            disabled={isMemoLoading || !memo.trim()}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-600 disabled:opacity-40"
+          >
+            {isMemoLoading ? (
+              <><Loader2 className="w-4 h-4 animate-spin" />解析中...</>
+            ) : (
+              <><Sparkles className="w-4 h-4" />AIで解析して登録</>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* ③ 手動入力 */}
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+          <PenLine className="w-4 h-4 text-gray-500" />
+          <span className="text-sm font-semibold text-gray-800">手動で入力</span>
+        </div>
+        <div className="p-4">
+          <button
+            onClick={handleManual}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+          >
+            <PenLine className="w-4 h-4" />
+            フォームを開く
+          </button>
+        </div>
+      </div>
+
+      {/* 登録ダイアログ */}
       <NewExpenseDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}

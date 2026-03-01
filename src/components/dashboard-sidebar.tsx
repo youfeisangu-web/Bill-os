@@ -13,6 +13,7 @@ import {
   Settings,
   Receipt,
   BarChart3,
+  TrendingUp,
   X,
 } from "lucide-react";
 import { getTenantGroups } from "@/app/actions/tenant-group";
@@ -32,6 +33,7 @@ const navItems = [
   { href: "/dashboard/clients", label: "取引先", icon: Users },
   { href: "/dashboard/tenants", label: "月額・定期請求", icon: DollarSign },
   { href: "/dashboard/expenses", label: "経費", icon: Receipt },
+  { href: "/dashboard/finance", label: "財務", icon: TrendingUp },
   { href: "/dashboard/aging", label: "エイジング", icon: BarChart3 },
   { href: "/reconcile", label: "入金消込", icon: Sparkles },
 ] as const;

@@ -7,26 +7,27 @@ import Image from "next/image";
 
 export default function Home() {
   const router = useRouter();
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
   const [phase, setPhase] = useState<"enter" | "shine" | "exit">("enter");
 
+  // アニメーションは常に即座に開始（Clerkの状態に依存しない）
   useEffect(() => {
     const t1 = setTimeout(() => setPhase("shine"), 700);
     const t2 = setTimeout(() => setPhase("exit"), 2000);
-    const t3 = setTimeout(() => {
-      if (isSignedIn) {
-        router.push("/dashboard");
-      } else {
-        router.push("/sign-in");
-      }
-    }, 2700);
-
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
-      clearTimeout(t3);
     };
-  }, [router, isSignedIn]);
+  }, []);
+
+  // リダイレクトはClerkの読み込み完了後のみ実行
+  useEffect(() => {
+    if (!isLoaded) return;
+    const t3 = setTimeout(() => {
+      router.push(isSignedIn ? "/dashboard" : "/sign-in");
+    }, 2700);
+    return () => clearTimeout(t3);
+  }, [router, isSignedIn, isLoaded]);
 
   return (
     <div
