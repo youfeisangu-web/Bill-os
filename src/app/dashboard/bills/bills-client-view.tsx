@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { deleteBill } from "@/app/actions/bill";
 import NewBillDialog from "./new-bill-dialog";
 import MarkPaidDialog from "./mark-paid-dialog";
+import ImportBillButton from "./import-bill-button";
 import type { BillFormValues } from "./new-bill-dialog";
 import { Plus, Pencil, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
 
@@ -113,13 +114,16 @@ export default function BillsClientView({
               他社から届いた請求書を管理し、支払い漏れを防ぎます。
             </p>
           </div>
-          <button
-            onClick={() => setNewOpen(true)}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-billia-sidebar px-3 py-2 text-xs font-medium text-white transition-opacity hover:opacity-95 md:px-4 md:py-2.5 md:text-sm"
-          >
-            <Plus className="w-4 h-4" />
-            請求書を追加
-          </button>
+          <div className="flex items-center gap-2">
+            <ImportBillButton />
+            <button
+              onClick={() => setNewOpen(true)}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-billia-sidebar px-3 py-2 text-xs font-medium text-white transition-opacity hover:opacity-95 md:px-4 md:py-2.5 md:text-sm"
+            >
+              <Plus className="w-4 h-4" />
+              手動で追加
+            </button>
+          </div>
         </header>
 
         {/* KPIカード */}

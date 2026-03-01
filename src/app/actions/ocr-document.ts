@@ -374,6 +374,198 @@ export async function importDocumentAndCreateInvoice(
   }
 }
 
+export type BillOCRData = {
+  vendorName: string; // 請求元（送付元会社名）
+  title: string; // 件名・摘要
+  totalAmount: number; // 合計金額（税込）
+  issueDate: string; // YYYY-MM-DD
+  dueDate?: string; // YYYY-MM-DD
+};
+
+export type BillOCRResult = {
+  success: boolean;
+  data?: BillOCRData;
+  message?: string;
+  billId?: string;
+};
+
+const BILL_IMPORT_PROMPT = `この画像は他社から届いた請求書のPDF/画像です。以下の情報をすべて抽出し、JSON形式のみで返してください（Markdown記法は不要）。
+
+必須項目:
+- vendorName: 請求書の発行元（送付元）の会社名・氏名（必須）
+- title: 件名・摘要・サービス内容の要約（必須）
+- totalAmount: 合計金額・税込金額（数値のみ、必須）
+- issueDate: 発行日（YYYY-MM-DD形式、必須）
+
+任意項目:
+- dueDate: 支払期限（YYYY-MM-DD形式、あれば）
+
+例:
+{
+  "vendorName": "株式会社サンプル",
+  "title": "3月分 クラウドサーバー利用料",
+  "totalAmount": 11000,
+  "issueDate": "2026-03-01",
+  "dueDate": "2026-03-31"
+}`;
+
+/**
+ * PDF/画像から受領請求書データを抽出し、支払管理に登録する
+ */
+export async function importDocumentAndCreateBill(
+  formData: FormData,
+): Promise<BillOCRResult> {
+  try {
+    const { userId } = await auth();
+    if (!userId) return { success: false, message: "認証が必要です" };
+
+    const geminiKey =
+      process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    if (!geminiKey)
+      return { success: false, message: "Gemini APIキーが設定されていません" };
+
+    const file = formData.get("file") as File | null;
+    if (!file) return { success: false, message: "ファイルが指定されていません" };
+
+    const fileNameLower = file.name.toLowerCase();
+    const allowedImageTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+      "image/bmp",
+      "image/tiff",
+      "image/tif",
+      "image/heic",
+      "image/heif",
+    ];
+    const imageExtensions = /\.(jpg|jpeg|png|gif|webp|bmp|tiff|tif|heic|heif)$/i;
+    const isImage =
+      allowedImageTypes.includes(file.type) ||
+      imageExtensions.test(fileNameLower);
+    const isPdf =
+      file.type === "application/pdf" || fileNameLower.endsWith(".pdf");
+
+    if (!isImage && !isPdf) {
+      return {
+        success: false,
+        message:
+          "対応していないファイル形式です。画像（JPEG、PNG、WebP、HEICなど）またはPDFを使用してください。",
+      };
+    }
+
+    const MAX_SIZE = 50 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      return {
+        success: false,
+        message: `ファイルサイズが大きすぎます（${Math.round(file.size / 1024 / 1024)}MB）。最大サイズ: 50MB`,
+      };
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const base64Data = Buffer.from(arrayBuffer).toString("base64");
+    let mimeType: string;
+    if (isPdf) {
+      mimeType = "application/pdf";
+    } else if (file.type.startsWith("image/")) {
+      mimeType = file.type;
+    } else if (fileNameLower.match(/\.(jpg|jpeg)$/i)) {
+      mimeType = "image/jpeg";
+    } else if (fileNameLower.match(/\.png$/i)) {
+      mimeType = "image/png";
+    } else {
+      mimeType = "image/jpeg";
+    }
+
+    const TIMEOUT_MS = 60000;
+    const apiCallPromise = generateContentWithImage(
+      BILL_IMPORT_PROMPT,
+      base64Data,
+      mimeType,
+      { maxTokens: 1000, temperature: 0.1 },
+    );
+    const timeoutPromise = new Promise<string>((_, reject) =>
+      setTimeout(
+        () => reject(new Error("API呼び出しがタイムアウトしました。")),
+        TIMEOUT_MS,
+      ),
+    );
+    const responseText = await Promise.race([apiCallPromise, timeoutPromise]);
+
+    if (!responseText?.trim()) {
+      return {
+        success: false,
+        message: "AIからの応答がありませんでした。もう一度お試しください。",
+      };
+    }
+
+    let jsonText = responseText.trim();
+    if (jsonText.startsWith("```")) {
+      jsonText = jsonText
+        .split("\n")
+        .filter((l) => !l.startsWith("```"))
+        .join("\n")
+        .trim();
+    }
+    const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch)
+      return { success: false, message: "AIの応答を解析できませんでした" };
+
+    const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
+    const vendorName =
+      typeof parsed.vendorName === "string" ? parsed.vendorName.trim() : "";
+    const title =
+      typeof parsed.title === "string" ? parsed.title.trim() : "";
+    const totalAmount = Number(parsed.totalAmount) || 0;
+    const issueDate =
+      typeof parsed.issueDate === "string" ? parsed.issueDate : "";
+    const dueDate =
+      typeof parsed.dueDate === "string" ? parsed.dueDate : undefined;
+
+    if (!vendorName || !title || !totalAmount || !issueDate) {
+      return {
+        success: false,
+        message:
+          "必要な情報（請求元・件名・金額・発行日）が抽出できませんでした",
+      };
+    }
+
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(issueDate)) {
+      return { success: false, message: "発行日の形式が正しくありません" };
+    }
+
+    // 支払期限がない場合は発行日+30日
+    let dueDateFinal = dueDate && dateRegex.test(dueDate) ? dueDate : undefined;
+    if (!dueDateFinal) {
+      const d = new Date(`${issueDate}T00:00:00`);
+      d.setDate(d.getDate() + 30);
+      dueDateFinal = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    }
+
+    const bill = await prisma.bill.create({
+      data: {
+        userId,
+        vendorName,
+        title,
+        amount: totalAmount,
+        issueDate: new Date(`${issueDate}T00:00:00`),
+        dueDate: new Date(`${dueDateFinal}T00:00:00`),
+      },
+    });
+
+    revalidatePath("/dashboard/bills");
+    revalidatePath("/dashboard");
+    return { success: true, data: { vendorName, title, totalAmount, issueDate, dueDate: dueDateFinal }, billId: bill.id };
+  } catch (error) {
+    return {
+      success: false,
+      message: formatErrorMessage(error, "書類の読み込みに失敗しました"),
+    };
+  }
+}
+
 /**
  * PDF/画像から見積書を読み込み、自動で見積書を作成する
  */
