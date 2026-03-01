@@ -368,8 +368,7 @@ export default function Home() {
               <span className="text-purple-600">限りなくゼロへ</span>
             </h2>
             <p className="text-slate-500 max-w-lg mx-auto text-sm md:text-base leading-relaxed">
-              Billiaは Google Gemini を活用した3つのAI機能で、
-              書類作成・データ入力のあらゆる手間を自動化します。
+              3つのAI機能で、書類作成・データ入力のあらゆる手間を自動化します。
             </p>
           </div>
 
@@ -425,10 +424,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* memo mockup full width demo */}
-          <div className="max-w-sm mx-auto md:max-w-xs">
-            <MemoMockup />
-          </div>
         </div>
       </section>
 
@@ -442,21 +437,124 @@ export default function Home() {
             <div className="md:order-2">
               <p className="billia-label mb-3">財務サマリー</p>
               <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight mb-5">
-                お金の流れを<br />
-                <span className="text-cyan-600">リアルタイムで把握</span>
+                売上・経費・未回収を<br />
+                <span className="text-cyan-600">ひとつの画面で確認</span>
               </h2>
               <p className="text-slate-500 leading-relaxed mb-6">
-                売上・未回収・経費をひとつの画面でまとめて確認。
-                月次の収支推移グラフで、ビジネスの健全性を一目でチェックできます。
+                今月の請求額・未入金・経費をダッシュボードにまとめて表示。
+                払い忘れや未回収をすぐに把握できます。
               </p>
               <ul className="space-y-3">
                 {[
-                  "月次売上・経費のグラフ表示",
-                  "未回収請求書の金額・件数をひと目で確認",
-                  "支払期限が近い請求書のアラート",
+                  "今月の請求額・未入金をひと目で確認",
+                  "経費の月次合計を自動集計",
+                  "支払期限が近い請求書をすぐ把握",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2.5 text-sm text-slate-700">
                     <CheckCircle2 className="w-4 h-4 text-cyan-500 shrink-0 mt-0.5" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── mobile section ── */}
+      <section className="py-20 md:py-28">
+        <div className="mx-auto max-w-6xl px-5 md:px-8">
+          <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
+            {/* phone mockups */}
+            <div className="flex justify-center gap-4 md:gap-6">
+              {/* phone 1 */}
+              <div className="w-[140px] md:w-[160px] rounded-[2rem] border-4 border-slate-200 bg-white shadow-2xl overflow-hidden shrink-0">
+                <div className="bg-slate-100 h-5 flex items-center justify-center">
+                  <div className="w-10 h-1.5 rounded-full bg-slate-300" />
+                </div>
+                <div className="p-2.5 space-y-2">
+                  <p className="text-[9px] font-semibold text-slate-400">2026年3月</p>
+                  <p className="text-[11px] font-bold text-slate-800">ダッシュボード</p>
+                  <div className="rounded-lg bg-red-50 border border-red-100 px-2 py-1.5 flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
+                    <div>
+                      <p className="text-[8px] font-semibold text-red-600">未入金があります</p>
+                      <p className="text-[7px] text-red-400">¥447,700</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1">
+                    {[
+                      { label: "今月の請求額", value: "¥78,100", color: "text-slate-800" },
+                      { label: "未入金", value: "¥447,700", color: "text-red-600" },
+                      { label: "今月の経費", value: "¥11,500", color: "text-slate-800" },
+                      { label: "前月比", value: "+0.0%", color: "text-emerald-600" },
+                    ].map((k) => (
+                      <div key={k.label} className="rounded-md bg-slate-50 border border-slate-100 px-1.5 py-1">
+                        <p className="text-[7px] text-slate-400">{k.label}</p>
+                        <p className={`text-[9px] font-bold ${k.color}`}>{k.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="rounded-md bg-slate-50 border border-slate-100 px-1.5 py-1.5">
+                    <p className="text-[7px] text-slate-400 mb-1">クイックアクション</p>
+                    <div className="grid grid-cols-2 gap-1">
+                      {["請求書を作成", "見積書を作成", "経費を記録", "入金消込"].map((a) => (
+                        <div key={a} className="rounded bg-white border border-slate-100 px-1 py-1 text-center">
+                          <p className="text-[7px] text-slate-600">{a}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* phone 2 */}
+              <div className="w-[140px] md:w-[160px] rounded-[2rem] border-4 border-slate-200 bg-white shadow-2xl overflow-hidden shrink-0">
+                <div className="bg-slate-100 h-5 flex items-center justify-center">
+                  <div className="w-10 h-1.5 rounded-full bg-slate-300" />
+                </div>
+                <div className="p-2.5 space-y-2">
+                  <p className="text-[9px] font-semibold text-slate-400">請求書</p>
+                  <p className="text-[11px] font-bold text-slate-800">請求書一覧</p>
+                  <div className="space-y-1.5">
+                    {[
+                      { name: "サンプル商事", amount: "¥78,100", status: "未払い", sc: "bg-amber-100 text-amber-700" },
+                      { name: "株式会社ビリオ", amount: "¥11,000", status: "支払済", sc: "bg-emerald-100 text-emerald-700" },
+                      { name: "佐藤健二", amount: "¥11,000", status: "支払済", sc: "bg-emerald-100 text-emerald-700" },
+                    ].map((item) => (
+                      <div key={item.name} className="rounded-md border border-slate-100 px-1.5 py-1">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[8px] font-medium text-blue-600 truncate max-w-[70px]">INV-2026</p>
+                          <span className={`text-[7px] px-1 py-0.5 rounded-full font-medium ${item.sc}`}>{item.status}</span>
+                        </div>
+                        <p className="text-[8px] text-slate-700 truncate">{item.name}</p>
+                        <p className="text-[9px] font-bold text-slate-800">{item.amount}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* text */}
+            <div>
+              <p className="billia-label mb-3">モバイル対応</p>
+              <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight mb-5">
+                スマホでも、<br />
+                <span className="text-blue-600">サクサク動く</span>
+              </h2>
+              <p className="text-slate-500 leading-relaxed mb-6">
+                PCだけではありません。Billiaはスマートフォンにも完全対応。
+                外出先でも移動中でも、急な請求書の発行や入金確認がその場ですぐにできます。
+              </p>
+              <ul className="space-y-3">
+                {[
+                  "スマートフォンに最適化されたUI",
+                  "外出先からでも請求書を即発行",
+                  "入金確認・ステータス更新もモバイルから",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2.5 text-sm text-slate-700">
+                    <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
                     {item}
                   </li>
                 ))}
