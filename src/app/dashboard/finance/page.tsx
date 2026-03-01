@@ -14,7 +14,7 @@ export default async function FinancePage() {
   if (!userId) redirect("/");
 
   const [monthly, categories, topClients, upcoming, kpi] = await Promise.all([
-    getMonthlyFinancials(6),
+    getMonthlyFinancials(60),
     getExpensesByCategory(),
     getTopClients(5),
     getUpcomingPayments(),

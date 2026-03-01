@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { TrendingUp, TrendingDown, AlertCircle, ArrowRight, Clock } from "lucide-react";
 import type {
@@ -10,6 +11,8 @@ import type {
   FinanceKPI,
 } from "@/app/actions/finance";
 
+type Period = "1m" | "6m" | "1y" | "5y";
+
 type Props = {
   monthly: MonthlyFinancial[];
   categories: CategoryExpense[];
@@ -19,13 +22,13 @@ type Props = {
 };
 
 const fmt = (n: number) => "¥" + new Intl.NumberFormat("ja-JP").format(Math.abs(n));
-const fmtCompact = (n: number) => {
-  const abs = Math.abs(n);
-  const sign = n < 0 ? "-" : "";
-  if (abs >= 1_000_000) return `${sign}¥${(abs / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1_000) return `${sign}¥${Math.round(abs / 1_000)}K`;
-  return `${sign}¥${abs}`;
-};
+
+const PERIODS: { label: string; value: Period; months: number }[] = [
+  { label: "1ヶ月", value: "1m", months: 1 },
+  { label: "半年", value: "6m", months: 6 },
+  { label: "1年", value: "1y", months: 12 },
+  { label: "5年", value: "5y", months: 60 },
+];
 
 const CATEGORY_COLORS: Record<string, string> = {
   通信費: "#3B82F6",
@@ -37,22 +40,70 @@ const CATEGORY_COLORS: Record<string, string> = {
   その他: "#6B7280",
 };
 
-// ─── SVG 線グラフ ────────────────────────────────────────────────
-function LineChart({ data }: { data: MonthlyFinancial[] }) {
-  if (data.length < 2) return <div className="h-40 flex items-center justify-center text-sm text-gray-400">データがありません</div>;
+function niceScale(maxVal: number, minVal: number, targetTicks = 5): number[] {
+  const range = maxVal - minVal;
+  if (range <= 0) return [minVal, minVal + 100000];
+  const roughStep = range / (targetTicks - 1);
+  const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
+  const n = roughStep / magnitude;
+  const niceStep = (n < 1.5 ? 1 : n < 3 ? 2 : n < 7 ? 5 : 10) * magnitude;
+  const niceMin = Math.floor(minVal / niceStep) * niceStep;
+  const niceMax = Math.ceil(maxVal / niceStep) * niceStep;
+  const ticks: number[] = [];
+  for (let v = niceMin; v <= niceMax + niceStep * 0.01; v += niceStep) {
+    ticks.push(Math.round(v));
+  }
+  return ticks;
+}
 
-  const W = 500, H = 170;
-  const pad = { l: 58, t: 20, r: 18, b: 28 };
+// ─── SVG 線グラフ ─────────────────────────────────────────────────
+function LineChart({ data }: { data: MonthlyFinancial[] }) {
+  if (data.length === 0) {
+    return (
+      <div className="h-48 flex items-center justify-center text-sm text-gray-400">
+        データがありません
+      </div>
+    );
+  }
+
+  if (data.length === 1) {
+    const d = data[0];
+    return (
+      <div className="h-48 flex items-center justify-center gap-10">
+        <div className="text-center">
+          <p className="text-xs text-gray-400 mb-1">収入</p>
+          <p className="text-lg font-bold text-blue-600">{fmt(d.income)}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-xs text-gray-400 mb-1">経費</p>
+          <p className="text-lg font-bold text-red-500">{fmt(d.expense)}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-xs text-gray-400 mb-1">利益</p>
+          <p className={`text-lg font-bold ${d.profit >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+            {fmt(d.profit)}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const W = 560, H = 210;
+  const pad = { l: 92, t: 16, r: 16, b: 34 };
   const iw = W - pad.l - pad.r;
   const ih = H - pad.t - pad.b;
 
   const allVals = data.flatMap((d) => [d.income, d.expense, d.profit]);
   const minVal = Math.min(0, ...allVals);
   const maxVal = Math.max(1, ...allVals);
-  const range = maxVal - minVal || 1;
+
+  const ticks = niceScale(maxVal, minVal, 5);
+  const tickMin = ticks[0];
+  const tickMax = ticks[ticks.length - 1];
+  const tickRange = tickMax - tickMin || 1;
 
   const xAt = (i: number) => pad.l + (i / (data.length - 1)) * iw;
-  const yAt = (v: number) => pad.t + (1 - (v - minVal) / range) * ih;
+  const yAt = (v: number) => pad.t + (1 - (v - tickMin) / tickRange) * ih;
   const zeroY = yAt(0);
 
   const pts = (key: keyof MonthlyFinancial) =>
@@ -63,58 +114,83 @@ function LineChart({ data }: { data: MonthlyFinancial[] }) {
     data.map((d, i) => `${xAt(i)},${yAt(d.income)}`).join(" ") +
     ` ${xAt(data.length - 1)},${zeroY}`;
 
-  // Y軸グリッド（3本）
-  const gridSteps = [0, 0.5, 1].map((t) => {
-    const v = minVal + t * range;
-    return { y: yAt(v), label: fmtCompact(v) };
-  });
+  const isMultiYear = data.length > 24;
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ overflow: "visible" }}>
       <defs>
-        <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.15" />
+        <linearGradient id="financeIncomeGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.08" />
           <stop offset="100%" stopColor="#3B82F6" stopOpacity="0" />
         </linearGradient>
       </defs>
 
-      {/* グリッド */}
-      {gridSteps.map(({ y, label }, i) => (
+      {/* Horizontal grid lines + Y-axis labels */}
+      {ticks.map((v, i) => (
         <g key={i}>
-          <line x1={pad.l} y1={y} x2={W - pad.r} y2={y} stroke="#e5e7eb" strokeWidth="1" strokeDasharray={i === 0 ? "0" : "4,3"} />
-          <text x={pad.l - 6} y={y + 4} textAnchor="end" fontSize="9" fill="#9ca3af">{label}</text>
+          <line
+            x1={pad.l} y1={yAt(v)}
+            x2={W - pad.r} y2={yAt(v)}
+            stroke={v === 0 ? "#d1d5db" : "#f0f0f0"}
+            strokeWidth="1"
+          />
+          <text
+            x={pad.l - 8} y={yAt(v) + 4}
+            textAnchor="end" fontSize="10" fill="#b0b7c3"
+            fontFamily="system-ui, sans-serif"
+          >
+            {fmt(v)}
+          </text>
         </g>
       ))}
 
-      {/* 0ライン（利益がマイナスの場合のみ強調） */}
-      {minVal < 0 && (
-        <line x1={pad.l} y1={zeroY} x2={W - pad.r} y2={zeroY} stroke="#d1d5db" strokeWidth="1.5" />
-      )}
+      {/* Income area fill */}
+      <polygon points={incomeArea} fill="url(#financeIncomeGrad)" />
 
-      {/* 収入エリア塗り */}
-      <polygon points={incomeArea} fill="url(#incomeGrad)" />
+      {/* Expense line */}
+      <polyline
+        points={pts("expense")} fill="none" stroke="#F87171"
+        strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+        strokeDasharray="5,3"
+      />
 
-      {/* 経費ライン */}
-      <polyline points={pts("expense")} fill="none" stroke="#F87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="6,3" />
+      {/* Profit line */}
+      <polyline
+        points={pts("profit")} fill="none" stroke="#10B981"
+        strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+      />
 
-      {/* 利益ライン */}
-      <polyline points={pts("profit")} fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      {/* Income line */}
+      <polyline
+        points={pts("income")} fill="none" stroke="#3B82F6"
+        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      />
 
-      {/* 収入ライン（最前面） */}
-      <polyline points={pts("income")} fill="none" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-
-      {/* 収入ドット */}
-      {data.map((d, i) => (
-        <g key={i}>
-          <circle cx={xAt(i)} cy={yAt(d.income)} r="4" fill="white" stroke="#3B82F6" strokeWidth="2" />
-        </g>
+      {/* Income dots (only for shorter ranges) */}
+      {data.length <= 24 && data.map((d, i) => (
+        <circle
+          key={i} cx={xAt(i)} cy={yAt(d.income)} r="3"
+          fill="white" stroke="#3B82F6" strokeWidth="1.5"
+        />
       ))}
 
-      {/* X軸ラベル */}
+      {/* X-axis labels */}
       {data.map((d, i) => {
-        const [, m] = d.month.split("-").map(Number);
+        const [y, m] = d.month.split("-").map(Number);
+        if (isMultiYear) {
+          const isFirst = i === 0;
+          const isJanuary = m === 1;
+          if (!isFirst && !isJanuary) return null;
+          return (
+            <text key={i} x={xAt(i)} y={H - 6} textAnchor="middle"
+              fontSize="10" fill="#b0b7c3" fontFamily="system-ui, sans-serif">
+              {isFirst && !isJanuary ? `${m}月` : `${y}年`}
+            </text>
+          );
+        }
         return (
-          <text key={i} x={xAt(i)} y={H - 4} textAnchor="middle" fontSize="10" fill="#9ca3af">
+          <text key={i} x={xAt(i)} y={H - 6} textAnchor="middle"
+            fontSize="10" fill="#b0b7c3" fontFamily="system-ui, sans-serif">
             {m}月
           </text>
         );
@@ -125,8 +201,12 @@ function LineChart({ data }: { data: MonthlyFinancial[] }) {
 
 // ─── メインビュー ─────────────────────────────────────────────────
 export default function FinanceClientView({ monthly, categories, topClients, upcoming, kpi }: Props) {
+  const [period, setPeriod] = useState<Period>("1y");
   const now = new Date();
   const topClientMax = topClients[0]?.total ?? 1;
+
+  const periodMonths = PERIODS.find((p) => p.value === period)!.months;
+  const filteredMonthly = monthly.slice(-periodMonths);
 
   return (
     <div className="py-5 space-y-4 pb-12 md:py-8 md:space-y-5">
@@ -165,23 +245,46 @@ export default function FinanceClientView({ monthly, categories, topClients, upc
         </Link>
       </div>
 
-      {/* 収支推移 線グラフ */}
+      {/* 収支推移チャート */}
       <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm md:p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-gray-800">収支推移（6ヶ月）</h2>
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5 text-[11px] text-gray-500">
-              <span className="w-5 h-0.5 bg-blue-500 inline-block rounded" />収入
-            </span>
-            <span className="flex items-center gap-1.5 text-[11px] text-gray-500">
-              <span className="w-5 h-0.5 bg-red-400 inline-block rounded border-dashed" style={{ borderTop: "2px dashed #F87171", background: "transparent" }} />経費
-            </span>
-            <span className="flex items-center gap-1.5 text-[11px] text-gray-500">
-              <span className="w-5 h-0.5 bg-emerald-500 inline-block rounded" />利益
-            </span>
+        <div className="flex items-start justify-between mb-4 gap-3 flex-wrap">
+          <div>
+            <h2 className="text-sm font-semibold text-gray-800 mb-2">収支推移</h2>
+            <div className="flex items-center gap-4">
+              <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
+                <span className="w-5 h-px bg-blue-500 inline-block" />収入
+              </span>
+              <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
+                <svg width="20" height="6" className="inline-block" style={{ verticalAlign: "middle" }}>
+                  <line x1="0" y1="3" x2="20" y2="3" stroke="#F87171" strokeWidth="1.5" strokeDasharray="4,2" />
+                </svg>
+                経費
+              </span>
+              <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
+                <span className="w-5 h-px bg-emerald-500 inline-block" />利益
+              </span>
+            </div>
+          </div>
+
+          {/* 期間セレクター */}
+          <div className="flex items-center gap-0.5 bg-gray-100 rounded-xl p-0.5 self-start">
+            {PERIODS.map((p) => (
+              <button
+                key={p.value}
+                onClick={() => setPeriod(p.value)}
+                className={`px-3 py-1.5 text-xs rounded-lg transition-all font-medium ${
+                  period === p.value
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-400 hover:text-gray-600"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
-        <LineChart data={monthly} />
+
+        <LineChart data={filteredMonthly} />
       </div>
 
       {/* 下段: 経費内訳 + 取引先TOP5 */}
