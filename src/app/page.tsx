@@ -361,34 +361,73 @@ export default function Home() {
       {/* ── AI feature ── */}
       <section id="ai" className="py-20 md:py-28">
         <div className="mx-auto max-w-6xl px-5 md:px-8">
-          <div className="grid md:grid-cols-2 gap-10 items-center">
-            <div>
-              <p className="billia-label mb-3">AI機能</p>
-              <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight mb-5">
-                メモを書くだけで<br />
-                <span className="text-purple-600">請求書が完成する</span>
-              </h2>
-              <p className="text-slate-500 leading-relaxed mb-6">
-                「山田商事に12月分 24万 請求、来月15日払い」—
-                こんな自然な言葉を入力するだけで、AIが取引先・金額・支払期限を読み取り、
-                請求書を自動生成します。
+          <div className="text-center mb-12">
+            <p className="billia-label mb-3">AI機能</p>
+            <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight mb-4">
+              入力の手間を、<br className="md:hidden" />
+              <span className="text-purple-600">限りなくゼロへ</span>
+            </h2>
+            <p className="text-slate-500 max-w-lg mx-auto text-sm md:text-base leading-relaxed">
+              Billiaは Google Gemini を活用した3つのAI機能で、
+              書類作成・データ入力のあらゆる手間を自動化します。
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6 mb-14">
+            {/* AI card 1 */}
+            <div className="rounded-2xl border border-purple-100 bg-gradient-to-b from-purple-50 to-white p-6">
+              <div className="inline-flex rounded-xl bg-purple-100 p-2.5 mb-4">
+                <Brain className="w-5 h-5 text-purple-600" />
+              </div>
+              <h3 className="font-bold text-slate-900 mb-2">メモから自動生成</h3>
+              <p className="text-sm text-slate-500 leading-relaxed mb-4">
+                日本語の自然なメモを入力するだけで、請求書・見積書・経費を自動生成。
+                取引先・金額・期日をAIが読み取ります。
               </p>
-              <ul className="space-y-3">
-                {[
-                  "自然言語のメモから請求書・経費を自動生成",
-                  "PDFや画像の書類をOCRでデータ抽出",
-                  "領収書スキャンで経費を即登録",
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-2.5 text-sm text-slate-700">
-                    <CheckCircle2 className="w-4 h-4 text-purple-500 shrink-0 mt-0.5" />
-                    {item}
-                  </li>
+              <div className="rounded-lg bg-white border border-purple-100 px-3 py-2">
+                <p className="text-[11px] text-slate-400 italic mb-1">入力例</p>
+                <p className="text-xs text-slate-600">"山田商事に12月分 24万 請求、来月15日払い"</p>
+              </div>
+            </div>
+
+            {/* AI card 2 */}
+            <div className="rounded-2xl border border-blue-100 bg-gradient-to-b from-blue-50 to-white p-6">
+              <div className="inline-flex rounded-xl bg-blue-100 p-2.5 mb-4">
+                <Upload className="w-5 h-5 text-blue-600" />
+              </div>
+              <h3 className="font-bold text-slate-900 mb-2">書類をそのままインポート</h3>
+              <p className="text-sm text-slate-500 leading-relaxed mb-4">
+                請求書・見積書・領収書のPDFや画像をアップロードすると、
+                OCRで取引先・金額・日付・明細を自動抽出してデータ登録。
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {["PDF", "JPEG", "PNG", "HEIC", "WebP"].map((f) => (
+                  <span key={f} className="text-[10px] font-medium bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{f}</span>
                 ))}
-              </ul>
+              </div>
             </div>
-            <div className="max-w-xs mx-auto md:max-w-none">
-              <MemoMockup />
+
+            {/* AI card 3 */}
+            <div className="rounded-2xl border border-emerald-100 bg-gradient-to-b from-emerald-50 to-white p-6">
+              <div className="inline-flex rounded-xl bg-emerald-100 p-2.5 mb-4">
+                <BarChart3 className="w-5 h-5 text-emerald-600" />
+              </div>
+              <h3 className="font-bold text-slate-900 mb-2">経費を自動分類</h3>
+              <p className="text-sm text-slate-500 leading-relaxed mb-4">
+                領収書のスキャンやメモ入力時に、通信費・外注費・旅費交通費などの
+                経費カテゴリをAIが自動で判定して分類します。
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {["通信費", "外注費", "旅費交通費", "消耗品"].map((c) => (
+                  <span key={c} className="text-[10px] font-medium bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">{c}</span>
+                ))}
+              </div>
             </div>
+          </div>
+
+          {/* memo mockup full width demo */}
+          <div className="max-w-sm mx-auto md:max-w-xs">
+            <MemoMockup />
           </div>
         </div>
       </section>
