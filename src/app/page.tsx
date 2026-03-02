@@ -168,17 +168,35 @@ export default function Home() {
 
             {/* big text + 3D object layout */}
             <div className="relative w-full flex flex-col items-center">
-              {/* line 1: BILLIA */}
+              {/* line 1: BILLIA — 塗り白 + アウトライン重ね */}
               <h1
-                className="font-black tracking-tighter leading-none text-center select-none"
+                className="font-black tracking-tighter leading-none text-center select-none relative"
                 style={{
                   fontSize: "clamp(5rem, 18vw, 18rem)",
-                  color: "transparent",
-                  WebkitTextStroke: "1.5px rgba(255,255,255,0.15)",
                   letterSpacing: "-0.02em",
                 }}
               >
-                BILLIA
+                {/* 背面: アウトライン文字（透過） */}
+                <span
+                  aria-hidden
+                  className="absolute inset-0 flex items-center justify-center"
+                  style={{
+                    color: "transparent",
+                    WebkitTextStroke: "2px rgba(255,255,255,0.12)",
+                  }}
+                >
+                  BILLIA
+                </span>
+                {/* 前面: グラデーション塗り */}
+                <span
+                  className="relative bg-clip-text text-transparent"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(160deg, #ffffff 0%, rgba(255,255,255,0.75) 50%, rgba(180,210,255,0.6) 100%)",
+                  }}
+                >
+                  BILLIA
+                </span>
               </h1>
 
               {/* 3D gem overlaid on text */}
