@@ -121,14 +121,28 @@ export default function LandingPage() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-10 lg:gap-12">
             {/* 左: コピー + CTA */}
             <div className="lg:max-w-[50%] text-center lg:text-left">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[2.75rem] font-extrabold tracking-tight leading-tight text-slate-900 mb-4">
+              <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 mb-4">
+                <Sparkles className="w-3.5 h-3.5" />
+                小さなチームのための AI バックオフィスOS
+              </div>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[2.75rem] font-extrabold tracking-tight leading-tight text-slate-900 mb-5">
                 AIで、バックオフィスを
                 <br />
-                もっとスマートに。「Billia」
+                <span className="bg-clip-text text-transparent" style={{ backgroundImage: "linear-gradient(135deg,#2563eb 0%,#22c1c3 45%,#6366f1 100%)" }}>
+                  もっとスマートに。
+                </span>
+                <span className="block mt-1 text-[1.05rem] md:text-[1.15rem] font-semibold text-slate-800">「Billia」</span>
               </h1>
-              <p className="text-base md:text-lg text-slate-600 leading-relaxed mb-8">
-                請求書、見積書、経費、AIメモ入力、入金消込、定期請求、財務サマリー。これ一つで解決。
+              <p className="text-base md:text-lg text-slate-600 leading-relaxed mb-4">
+                請求・経費・入金消込・定期請求・財務サマリーまで、バックオフィスの面倒ごとをまるっと自動化。
               </p>
+              <div className="flex flex-wrap gap-2 justify-center lg:justify-start mb-6">
+                {["請求書・見積書","経費・領収書","入金消込","財務サマリー"].map((chip) => (
+                  <span key={chip} className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium text-slate-600">
+                    {chip}
+                  </span>
+                ))}
+              </div>
               <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
                 <a
                   href="/sign-up"
@@ -143,6 +157,9 @@ export default function LandingPage() {
                   詳細を見る
                 </a>
               </div>
+              <p className="mt-4 text-xs md:text-sm text-slate-400">
+                現在クローズドβ準備中。先行ユーザー向けにリリース情報をお届けします。
+              </p>
             </div>
 
             {/* 右: 素材画像（MacBook + iPhone + 携帯でもできる） */}
