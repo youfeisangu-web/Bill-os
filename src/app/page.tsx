@@ -25,215 +25,7 @@ import {
   Briefcase,
   Home,
   Star,
-  Cloud,
 } from "lucide-react";
-
-/* ── mockups ─────────────────────────────────────────────── */
-
-function DashboardMockup() {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-lg p-4 w-full text-xs">
-      <div className="flex items-center gap-2 mb-3">
-        <div className="w-2 h-2 rounded-full bg-red-400" />
-        <div className="w-2 h-2 rounded-full bg-yellow-400" />
-        <div className="w-2 h-2 rounded-full bg-green-400" />
-        <span className="ml-2 text-slate-400 text-[10px]">Billia ダッシュボード</span>
-      </div>
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        {[
-          { label: "今月売上", value: "¥1,240,000", color: "text-blue-600" },
-          { label: "未回収", value: "¥320,000", color: "text-amber-600" },
-          { label: "経費合計", value: "¥89,500", color: "text-slate-600" },
-        ].map((k) => (
-          <div key={k.label} className="rounded-lg border border-slate-100 bg-slate-50 p-2">
-            <p className="text-[9px] text-slate-400">{k.label}</p>
-            <p className={`font-bold text-[11px] ${k.color}`}>{k.value}</p>
-          </div>
-        ))}
-      </div>
-      <div className="space-y-1.5">
-        {["山田商事", "株式会社ABC", "田中工務店"].map((name, i) => (
-          <div key={name} className="flex items-center justify-between rounded-lg border border-slate-100 px-2 py-1.5">
-            <span className="text-slate-600">{name}</span>
-            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-              i === 0 ? "bg-green-100 text-green-700" : i === 1 ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
-            }`}>
-              {i === 0 ? "入金済" : i === 1 ? "未回収" : "送付済"}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function InvoiceListMockup() {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-lg p-4 w-full text-xs">
-      <div className="flex items-center justify-between mb-3">
-        <span className="font-semibold text-slate-700 text-[11px]">請求書一覧</span>
-        <div className="flex gap-1">
-          <span className="bg-blue-100 text-blue-700 text-[9px] px-2 py-0.5 rounded-full">すべて</span>
-          <span className="bg-slate-100 text-slate-500 text-[9px] px-2 py-0.5 rounded-full">未回収</span>
-        </div>
-      </div>
-      <div className="space-y-1.5">
-        {[
-          { name: "株式会社山田商事", amount: "¥240,000", status: "入金済", color: "bg-emerald-100 text-emerald-700" },
-          { name: "田中製作所", amount: "¥180,000", status: "未回収", color: "bg-amber-100 text-amber-700" },
-          { name: "鈴木コンサルティング", amount: "¥95,000", status: "送付済", color: "bg-blue-100 text-blue-700" },
-        ].map((item) => (
-          <div key={item.name} className="flex items-center justify-between rounded-lg border border-slate-100 px-2 py-1.5">
-            <div>
-              <p className="text-slate-700 text-[10px]">{item.name}</p>
-              <p className="text-slate-400 text-[9px]">2025-12-15</p>
-            </div>
-            <div className="text-right">
-              <p className="font-bold text-slate-800 text-[11px]">{item.amount}</p>
-              <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${item.color}`}>{item.status}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function MemoMockup() {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-lg p-4 w-full text-xs">
-      <div className="flex items-center gap-2 mb-3">
-        <Sparkles className="w-3.5 h-3.5 text-purple-500" />
-        <span className="font-semibold text-slate-700 text-[11px]">AIメモ読み取り</span>
-      </div>
-      <div className="rounded-lg bg-slate-50 border border-slate-200 p-2 mb-2">
-        <p className="text-slate-500 text-[10px] italic">"山田商事に12月分 24万 請求、来月15日払い"</p>
-      </div>
-      <div className="flex items-center gap-1 text-[9px] text-slate-400 mb-2">
-        <div className="w-3 h-3 rounded-full bg-purple-100 flex items-center justify-center">
-          <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
-        </div>
-        AIが解析中...
-      </div>
-      <div className="rounded-lg border border-purple-200 bg-purple-50 p-2 space-y-1">
-        <div className="flex justify-between">
-          <span className="text-slate-500 text-[9px]">取引先</span>
-          <span className="font-medium text-slate-700 text-[9px]">山田商事</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-slate-500 text-[9px]">金額</span>
-          <span className="font-medium text-slate-700 text-[9px]">¥240,000</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-slate-500 text-[9px]">支払期限</span>
-          <span className="font-medium text-slate-700 text-[9px]">翌月15日</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FinanceMockup() {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-lg p-4 w-full text-xs">
-      <div className="flex items-center gap-2 mb-3">
-        <TrendingUp className="w-3.5 h-3.5 text-blue-500" />
-        <span className="font-semibold text-slate-700 text-[11px]">財務サマリー</span>
-      </div>
-      <div className="space-y-2">
-        {[
-          { month: "10月", amount: 820000, bar: "65%" },
-          { month: "11月", amount: 1040000, bar: "82%" },
-          { month: "12月", amount: 1280000, bar: "100%" },
-        ].map((item) => (
-          <div key={item.month} className="flex items-center gap-2">
-            <span className="text-slate-400 text-[9px] w-5">{item.month}</span>
-            <div className="flex-1 h-2.5 rounded-full bg-slate-100 overflow-hidden">
-              <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-400" style={{ width: item.bar }} />
-            </div>
-            <span className="text-slate-700 font-medium text-[9px] w-14 text-right">
-              ¥{(item.amount / 10000).toFixed(0)}万
-            </span>
-          </div>
-        ))}
-      </div>
-      <div className="mt-3 pt-2.5 border-t border-slate-100 flex justify-between">
-        <span className="text-slate-400 text-[9px]">未回収率</span>
-        <span className="font-bold text-amber-600 text-[11px]">12.4%</span>
-      </div>
-    </div>
-  );
-}
-
-/* ヒーロー用: ノートPC + スマホのデバイスモック */
-function HeroLaptopMockup() {
-  return (
-    <div className="relative rounded-lg border-[8px] md:border-[10px] border-slate-300 bg-slate-200 shadow-2xl w-[220px] sm:w-[260px] md:w-[280px]">
-      <div className="rounded-t-sm bg-slate-800 px-2 py-1.5 flex items-center gap-1.5">
-        <div className="w-2 h-2 rounded-full bg-red-500" />
-        <div className="w-2 h-2 rounded-full bg-yellow-500" />
-        <div className="w-2 h-2 rounded-full bg-green-500" />
-      </div>
-      <div className="bg-white p-3 overflow-hidden rounded-b">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-white text-[10px] font-bold">B</div>
-          <span className="font-semibold text-slate-800 text-xs">Billia ダッシュボード</span>
-        </div>
-        <div className="grid grid-cols-3 gap-1.5 mb-2">
-          {[
-            { label: "今月請求", value: "¥13,200", color: "text-blue-600" },
-            { label: "今月入金", value: "¥6,085", color: "text-slate-600" },
-          ].map((k) => (
-            <div key={k.label} className="rounded border border-slate-100 bg-slate-50 p-1.5">
-              <p className="text-[8px] text-slate-400">{k.label}</p>
-              <p className={`font-bold text-[9px] ${k.color}`}>{k.value}</p>
-            </div>
-          ))}
-        </div>
-        <p className="text-[8px] text-slate-400 mb-1">最近のアクティビティ</p>
-        <div className="space-y-1">
-          {["サンプル請求書", "株式会社DDOヒラオ"].map((name, i) => (
-            <div key={name} className="flex justify-between text-[8px] text-slate-600 border-b border-slate-50 pb-1">
-              <span>{name}</span>
-              <span>¥78,100</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function HeroPhoneMockup() {
-  return (
-    <div className="relative rounded-[1.5rem] md:rounded-[2rem] border-[6px] md:border-[8px] border-slate-400 bg-slate-300 shadow-xl w-[110px] md:w-[140px]">
-      <div className="bg-white rounded-[1.25rem] overflow-hidden min-h-[220px]">
-        <div className="bg-slate-800 text-white text-center py-1 text-[9px]">9:41</div>
-        <div className="p-2">
-          <div className="flex items-center justify-between mb-2">
-            <Menu className="w-4 h-4 text-slate-500" />
-            <span className="text-[8px] text-slate-500">プロジェクト: T</span>
-          </div>
-          <p className="font-semibold text-slate-800 text-[10px] mb-2">ダッシュボード</p>
-          <div className="rounded bg-red-50 border border-red-100 px-2 py-1 mb-2">
-            <p className="text-[8px] text-red-700">未入金があります</p>
-            <p className="text-[9px] font-bold text-red-700">¥447,700</p>
-          </div>
-          <div className="grid grid-cols-2 gap-1 text-[8px]">
-            <div className="rounded bg-slate-50 p-1"><span className="text-slate-400">今月請求</span><br />¥78,100</div>
-            <div className="rounded bg-slate-50 p-1"><span className="text-slate-400">売上</span><br />¥447,700</div>
-          </div>
-          <p className="text-[8px] text-slate-500 mt-2">クイックアクション</p>
-          <div className="grid grid-cols-2 gap-1 mt-1">
-            {["請求書", "見積書", "経費", "入金消込"].map((t) => (
-              <div key={t} className="rounded border border-slate-100 py-1 text-[7px] text-slate-600 text-center">{t}</div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /* ── coming soon badge ───────────────────────────────────── */
 
@@ -353,22 +145,17 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* 右: デバイスモック + 携帯でもできる */}
-            <div className="relative flex-shrink-0 flex justify-center lg:justify-end min-h-[200px] md:min-h-[260px]">
-              {/* フロートアイコン（雲・書類・脳・グラフ） */}
-              <div className="absolute top-2 left-4 md:left-8 w-8 h-8 md:w-10 md:h-10 rounded-full bg-sky-100/90 flex items-center justify-center text-sky-600" aria-hidden><Cloud className="w-4 h-4 md:w-5 md:h-5" /></div>
-              <div className="absolute top-6 right-2 md:right-6 w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-100/90 flex items-center justify-center text-blue-600" aria-hidden><FileText className="w-4 h-4 md:w-5 md:h-5" /></div>
-              <div className="absolute bottom-12 left-2 md:left-4 w-8 h-8 md:w-10 md:h-10 rounded-full bg-violet-100/90 flex items-center justify-center text-violet-600" aria-hidden><Brain className="w-4 h-4 md:w-5 md:h-5" /></div>
-              <div className="absolute bottom-4 right-4 md:right-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-teal-100/90 flex items-center justify-center text-teal-600" aria-hidden><BarChart3 className="w-4 h-4 md:w-5 md:h-5" /></div>
-
-              <div className="relative flex items-end justify-center gap-1 md:gap-4 scale-[0.85] sm:scale-95 md:scale-100 origin-center">
-                <HeroLaptopMockup />
-                <div className="relative -ml-4 md:-ml-8 mb-0 md:mb-4">
-                  <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-slate-100 px-2.5 py-1 text-[10px] md:text-xs font-medium text-slate-600 shadow-sm">
-                    携帯でもできる!
-                  </span>
-                  <HeroPhoneMockup />
-                </div>
+            {/* 右: 素材画像（MacBook + iPhone + 携帯でもできる） */}
+            <div className="relative flex-shrink-0 flex justify-center lg:justify-end">
+              <div className="relative w-full max-w-md lg:max-w-lg">
+                <Image
+                  src="/landing/hero.png"
+                  alt="Billia - MacBookとスマホで使えるバックオフィス管理"
+                  width={800}
+                  height={600}
+                  className="w-full h-auto object-contain drop-shadow-2xl"
+                  priority
+                />
               </div>
             </div>
           </div>
@@ -413,6 +200,28 @@ export default function LandingPage() {
                 <p className="text-xs text-slate-500 leading-relaxed">{f.desc}</p>
               </div>
             ))}
+          </div>
+
+          {/* 実際の画面（素材画像） */}
+          <div className="mt-16">
+            <p className="text-center text-sm font-medium text-slate-500 mb-6">実際の画面</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+              {[
+                { src: "/landing/dashboard-desktop.png", label: "ダッシュボード" },
+                { src: "/landing/invoice-list.png", label: "請求書一覧" },
+                { src: "/landing/memo-create.png", label: "メモから作成" },
+                { src: "/landing/expense.png", label: "経費管理" },
+                { src: "/landing/payment.png", label: "支払管理" },
+                { src: "/landing/finance-desktop.png", label: "財務サマリー" },
+              ].map((item) => (
+                <div key={item.label} className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+                  <div className="aspect-[4/3] relative bg-slate-50">
+                    <Image src={item.src} alt={item.label} fill className="object-contain p-2" sizes="(max-width:768px) 50vw, 33vw" />
+                  </div>
+                  <p className="text-center text-xs font-medium text-slate-600 py-2">{item.label}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -492,7 +301,7 @@ export default function LandingPage() {
               {
                 icon: Brain, title: "メモから自動生成", color: "bg-purple-100 text-purple-600 border-purple-100 from-purple-50",
                 desc: "日本語の自然なメモを入力するだけで、請求書・見積書・経費を自動生成。取引先・金額・期日をAIが読み取ります。",
-                extra: <div className="rounded-lg bg-white border border-purple-100 px-3 py-2"><p className="text-[11px] text-slate-400 italic mb-1">入力例</p><p className="text-xs text-slate-600">"山田商事に12月分 24万 請求、来月15日払い"</p></div>,
+                extra: <div className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm"><Image src="/landing/memo-create.png" alt="メモから請求書を作成" width={400} height={280} className="w-full h-auto object-cover" /></div>,
               },
               {
                 icon: Upload, title: "書類をそのままインポート", color: "bg-blue-100 text-blue-600 border-blue-100 from-blue-50",
@@ -502,7 +311,7 @@ export default function LandingPage() {
               {
                 icon: BarChart3, title: "経費を自動分類", color: "bg-emerald-100 text-emerald-600 border-emerald-100 from-emerald-50",
                 desc: "領収書のスキャンやメモ入力時に、通信費・外注費・旅費交通費などの経費カテゴリをAIが自動で判定して分類します。",
-                extra: <div className="flex flex-wrap gap-1.5">{["通信費","外注費","旅費交通費","消耗品"].map((c)=><span key={c} className="text-[10px] font-medium bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">{c}</span>)}</div>,
+                extra: <div className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm"><Image src="/landing/expense.png" alt="経費管理画面" width={400} height={280} className="w-full h-auto object-cover" /></div>,
               },
             ].map((card) => {
               const [iconBg, iconText, borderColor, fromColor] = card.color.split(" ");
@@ -587,8 +396,8 @@ export default function LandingPage() {
       <section className="py-20 md:py-28">
         <div className="mx-auto max-w-6xl px-5 md:px-8">
           <div className="grid md:grid-cols-2 gap-10 items-center">
-            <div className="max-w-xs mx-auto md:max-w-none md:order-1">
-              <FinanceMockup />
+            <div className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-lg md:order-1">
+              <Image src="/landing/finance-desktop.png" alt="財務サマリー画面" width={600} height={400} className="w-full h-auto object-contain" />
             </div>
             <div className="md:order-2">
               <p className="billia-label mb-3">財務サマリー</p>
@@ -618,69 +427,11 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-5 md:px-8">
           <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
             <div className="flex justify-center gap-4 md:gap-6">
-              <div className="w-[140px] md:w-[160px] rounded-[2rem] border-4 border-slate-200 bg-white shadow-2xl overflow-hidden shrink-0">
-                <div className="bg-slate-100 h-5 flex items-center justify-center">
-                  <div className="w-10 h-1.5 rounded-full bg-slate-300" />
-                </div>
-                <div className="p-2.5 space-y-2">
-                  <p className="text-[9px] font-semibold text-slate-400">2026年3月</p>
-                  <p className="text-[11px] font-bold text-slate-800">ダッシュボード</p>
-                  <div className="rounded-lg bg-red-50 border border-red-100 px-2 py-1.5 flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
-                    <div>
-                      <p className="text-[8px] font-semibold text-red-600">未入金があります</p>
-                      <p className="text-[7px] text-red-400">¥447,700</p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-1">
-                    {[
-                      { label: "今月の請求額", value: "¥78,100", color: "text-slate-800" },
-                      { label: "未入金", value: "¥447,700", color: "text-red-600" },
-                      { label: "今月の経費", value: "¥11,500", color: "text-slate-800" },
-                      { label: "前月比", value: "+0.0%", color: "text-emerald-600" },
-                    ].map((k) => (
-                      <div key={k.label} className="rounded-md bg-slate-50 border border-slate-100 px-1.5 py-1">
-                        <p className="text-[7px] text-slate-400">{k.label}</p>
-                        <p className={`text-[9px] font-bold ${k.color}`}>{k.value}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="rounded-md bg-slate-50 border border-slate-100 px-1.5 py-1.5">
-                    <p className="text-[7px] text-slate-400 mb-1">クイックアクション</p>
-                    <div className="grid grid-cols-2 gap-1">
-                      {["請求書を作成", "見積書を作成", "経費を記録", "入金消込"].map((a) => (
-                        <div key={a} className="rounded bg-white border border-slate-100 px-1 py-1 text-center">
-                          <p className="text-[7px] text-slate-600">{a}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+              <div className="w-[140px] md:w-[180px] rounded-[2rem] border-4 border-slate-200 bg-slate-100 shadow-2xl overflow-hidden shrink-0">
+                <Image src="/landing/mobile-dashboard.png" alt="スマホダッシュボード" width={180} height={360} className="w-full h-auto object-cover" />
               </div>
-              <div className="w-[140px] md:w-[160px] rounded-[2rem] border-4 border-slate-200 bg-white shadow-2xl overflow-hidden shrink-0">
-                <div className="bg-slate-100 h-5 flex items-center justify-center">
-                  <div className="w-10 h-1.5 rounded-full bg-slate-300" />
-                </div>
-                <div className="p-2.5 space-y-2">
-                  <p className="text-[9px] font-semibold text-slate-400">請求書</p>
-                  <p className="text-[11px] font-bold text-slate-800">請求書一覧</p>
-                  <div className="space-y-1.5">
-                    {[
-                      { name: "サンプル商事", amount: "¥78,100", status: "未払い", sc: "bg-amber-100 text-amber-700" },
-                      { name: "株式会社ビリア", amount: "¥11,000", status: "支払済", sc: "bg-emerald-100 text-emerald-700" },
-                      { name: "佐藤健二", amount: "¥11,000", status: "支払済", sc: "bg-emerald-100 text-emerald-700" },
-                    ].map((item) => (
-                      <div key={item.name} className="rounded-md border border-slate-100 px-1.5 py-1">
-                        <div className="flex items-center justify-between">
-                          <p className="text-[8px] font-medium text-blue-600 truncate max-w-[70px]">INV-2026</p>
-                          <span className={`text-[7px] px-1 py-0.5 rounded-full font-medium ${item.sc}`}>{item.status}</span>
-                        </div>
-                        <p className="text-[8px] text-slate-700 truncate">{item.name}</p>
-                        <p className="text-[9px] font-bold text-slate-800">{item.amount}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              <div className="w-[140px] md:w-[180px] rounded-[2rem] border-4 border-slate-200 bg-slate-100 shadow-2xl overflow-hidden shrink-0">
+                <Image src="/landing/mobile-finance.png" alt="スマホ財務サマリー" width={180} height={360} className="w-full h-auto object-cover" />
               </div>
             </div>
             <div>
