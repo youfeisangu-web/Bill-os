@@ -33,9 +33,9 @@ export default async function QuotesPage() {
         </div>
         <a
           href="/api/export/quotes"
-          className="shrink-0 inline-flex items-center rounded-full border border-black/10 bg-white px-3 py-1.5 text-xs font-medium text-billia-text shadow-sm transition hover:bg-black/[0.04] md:px-4 md:py-2 md:text-sm"
+          className="shrink-0 text-xs text-slate-400 hover:text-slate-600 transition"
         >
-          CSV
+          CSV出力
         </a>
       </header>
 
