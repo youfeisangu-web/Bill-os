@@ -13,6 +13,7 @@ export default function DocumentActionBar({
   backUrl,
   editUrl,
   receiptUrl = null,
+  receiptIssued = false,
   deliveryUrl = null,
   sendMailTo = null,
   sendMailSubject = "",
@@ -26,6 +27,7 @@ export default function DocumentActionBar({
   backUrl: string;
   editUrl: string;
   receiptUrl?: string | null;
+  receiptIssued?: boolean;
   deliveryUrl?: string | null;
   sendMailTo?: string | null;
   sendMailSubject?: string;
@@ -56,12 +58,17 @@ export default function DocumentActionBar({
       </Link>
       <div className="flex flex-wrap items-center gap-3">
         {receiptUrl && (
-          <Link
-            href={receiptUrl}
-            className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-800 shadow-sm transition hover:bg-emerald-100"
-          >
-            領収書を表示
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href={receiptUrl}
+              className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-800 shadow-sm transition hover:bg-emerald-100"
+            >
+              領収書を表示
+            </Link>
+            {receiptIssued && (
+              <span className="text-xs text-emerald-600 font-medium">発行済み</span>
+            )}
+          </div>
         )}
         {deliveryUrl && (
           <Link

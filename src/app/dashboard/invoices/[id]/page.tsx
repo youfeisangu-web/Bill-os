@@ -110,6 +110,7 @@ export default async function InvoiceDetailPage({
         backUrl="/dashboard/invoices"
         editUrl={`/dashboard/invoices/${invoice.id}/edit`}
         receiptUrl={`/dashboard/invoices/${invoice.id}/receipt`}
+        receiptIssued={!!invoice.receiptIssuedAt}
         deliveryUrl={`/dashboard/invoices/${invoice.id}/delivery`}
         sendMailTo={clientEmail || undefined}
         sendMailSubject={mailSubject}
