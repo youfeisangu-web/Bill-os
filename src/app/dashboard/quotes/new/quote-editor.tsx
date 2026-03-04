@@ -216,7 +216,7 @@ export default function QuoteEditor({ clients, taxRate = 10, taxRounding = "floo
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-4xl rounded-[32px] border border-slate-200 bg-white p-8 shadow-lg">
+      <section className="mx-auto w-full max-w-4xl rounded-2xl border border-slate-200 bg-white p-4 shadow-lg md:rounded-[32px] md:p-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="form">通常入力</TabsTrigger>
@@ -383,7 +383,7 @@ export default function QuoteEditor({ clients, taxRate = 10, taxRounding = "floo
             {items.map((item, index) => (
               <div
                 key={index}
-                className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-[2fr_1fr_1fr_auto]"
+                className="grid gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-3 grid-cols-[2fr_1fr_1fr] md:grid-cols-[2fr_1fr_1fr_auto] md:gap-3 md:p-4"
               >
                 <input
                   type="text"
@@ -408,10 +408,9 @@ export default function QuoteEditor({ clients, taxRate = 10, taxRounding = "floo
                   onChange={(event) => updateItem(index, "unitPrice", event.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                 />
-                <div className="flex items-center justify-between gap-2 text-sm text-slate-600">
-                  <span>
-                    ¥
-                    {formatCurrency(
+                <div className="col-span-3 flex items-center justify-between gap-2 text-sm text-slate-600 md:col-span-1 md:flex-col md:items-end md:justify-center">
+                  <span className="font-medium">
+                    ¥{formatCurrency(
                       (parseFloat(item.quantity) || 0) *
                         (parseFloat(item.unitPrice) || 0),
                     )}
