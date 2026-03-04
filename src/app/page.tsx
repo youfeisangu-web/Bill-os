@@ -320,6 +320,98 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── document workflow ── */}
+      <section className="py-20 md:py-28 overflow-hidden bg-gradient-to-b from-slate-50 to-white">
+        <div className="mx-auto max-w-6xl px-5 md:px-8">
+          <div className="text-center mb-14">
+            <p className="billia-label mb-2">書類ワークフロー</p>
+            <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight text-slate-900">
+              見積から領収書まで、<br className="md:hidden" />全部Billiaで完結
+            </h2>
+            <p className="mt-4 text-slate-500 text-sm md:text-base max-w-xl mx-auto leading-relaxed">
+              4種類の書類がひとつにつながる。ワンクリックで変換、二重入力なし。
+            </p>
+          </div>
+
+          {/* flow steps */}
+          <div className="relative">
+            <div className="hidden md:block absolute top-7 left-[14%] right-[14%] h-px bg-gradient-to-r from-indigo-200 via-blue-300 to-emerald-200" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              {[
+                { step: "01", label: "見積書", desc: "提案・有効期限付き", color: "border-indigo-200 bg-indigo-50 text-indigo-600", dot: "bg-indigo-400" },
+                { step: "02", label: "請求書", desc: "ワンクリックで変換", color: "border-blue-200 bg-blue-50 text-blue-600", dot: "bg-blue-400" },
+                { step: "03", label: "納品書", desc: "請求書から自動生成", color: "border-cyan-200 bg-cyan-50 text-cyan-600", dot: "bg-cyan-400" },
+                { step: "04", label: "領収書", desc: "電帳法対応・自動採番", color: "border-emerald-200 bg-emerald-50 text-emerald-600", dot: "bg-emerald-400" },
+              ].map(({ step, label, desc, color, dot }) => (
+                <div key={step} className="flex flex-col items-center text-center">
+                  <div className={`relative z-10 w-14 h-14 rounded-2xl border-2 flex items-center justify-center mb-4 font-bold text-lg ${color}`}>
+                    {step}
+                    <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full ${dot} shadow`} />
+                  </div>
+                  <h3 className="font-bold text-slate-900 mb-1">{label}</h3>
+                  <p className="text-xs text-slate-500">{desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* feature highlight cards */}
+          <div className="mt-16 grid md:grid-cols-2 gap-6">
+            {/* OCR */}
+            <div className="rounded-3xl border border-slate-200 bg-white p-7 md:p-8">
+              <div className="inline-flex rounded-2xl bg-blue-50 p-3 mb-5">
+                <Upload className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">他社の書類もそのまま読み込める</h3>
+              <p className="text-slate-500 text-sm leading-relaxed mb-5">
+                取引先から届いたPDFや画像をアップロードするだけ。AIが取引先・金額・明細を自動抽出してデータ入力を代行。複数ファイル同時対応でまとめて処理できます。
+              </p>
+              <div className="flex flex-wrap gap-2 mb-6">
+                {["PDF", "JPEG / PNG", "Excel", "Word", "最大15枚同時"].map((t) => (
+                  <span key={t} className="text-xs font-medium bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full">{t}</span>
+                ))}
+              </div>
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 space-y-2 text-xs">
+                {[
+                  { name: "請求書_山田商事_3月.pdf", status: "✓ 完了", color: "text-emerald-700 bg-emerald-50" },
+                  { name: "invoice_ABC_corp.pdf", status: "✓ 完了", color: "text-emerald-700 bg-emerald-50" },
+                  { name: "見積書_3月分.xlsx", status: "解析中...", color: "text-blue-700 bg-blue-50" },
+                ].map((f) => (
+                  <div key={f.name} className="flex items-center justify-between bg-white rounded-lg border border-slate-100 px-3 py-2">
+                    <span className="text-slate-600 truncate">{f.name}</span>
+                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full shrink-0 ml-2 ${f.color}`}>{f.status}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* AI memo */}
+            <div className="rounded-3xl border border-purple-100 bg-gradient-to-br from-purple-50 via-white to-white p-7 md:p-8">
+              <div className="inline-flex rounded-2xl bg-purple-100 p-3 mb-5">
+                <Brain className="w-6 h-6 text-purple-600" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">話し言葉でそのまま作れる</h3>
+              <p className="text-slate-500 text-sm leading-relaxed mb-6">
+                「山田商事に3月分50万、来月末払い」と入力するだけ。AIが請求書・見積書の明細を自動で組み立てます。定期請求の設定もスイッチひとつ。
+              </p>
+              <div className="space-y-3">
+                <div className="flex justify-end">
+                  <div className="bg-purple-600 text-white text-xs rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-[85%] leading-relaxed">
+                    山田商事に3月分システム保守費 50万円、来月末払いで請求して
+                  </div>
+                </div>
+                <div className="flex justify-start">
+                  <div className="bg-white border border-purple-100 text-xs rounded-2xl rounded-tl-sm px-4 py-2.5 max-w-[85%] leading-relaxed text-slate-700 shadow-sm">
+                    ✓ 請求書を作成しました<br />
+                    <span className="text-slate-400">取引先: 山田商事 ／ ¥500,000 ／ 4/30 払い</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── こんな方に ── */}
       <section className="py-20 md:py-28 bg-slate-50">
         <div className="mx-auto max-w-6xl px-5 md:px-8">
