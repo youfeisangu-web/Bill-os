@@ -31,10 +31,10 @@ function todayString() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-/** 翌月末の日付を YYYY-MM-DD で返す */
+/** 3ヶ月後の日付を YYYY-MM-DD で返す */
 function endOfNextMonthString() {
   const d = new Date();
-  const end = new Date(d.getFullYear(), d.getMonth() + 2, 0);
+  const end = new Date(d.getFullYear(), d.getMonth() + 3, d.getDate());
   return `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}`;
 }
 
