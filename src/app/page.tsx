@@ -425,7 +425,7 @@ export default function LandingPage() {
             {[
               { icon: Briefcase, title: "フリーランス", desc: "クライアントへの請求書発行から入金確認まで、ひとりでも迷わず管理。", tags: ["請求書作成", "入金確認", "経費管理"], color: "text-blue-500 bg-blue-50 border-blue-100" },
               { icon: Users, title: "小規模事業者", desc: "複数取引先の請求・支払・経費を一元管理。経理の手間を大幅削減。", tags: ["複数取引先", "支払管理", "財務サマリー"], color: "text-indigo-500 bg-indigo-50 border-indigo-100" },
-              { icon: Building2, title: "不動産オーナー", desc: "入居者への家賃請求・入金消込を自動化。滞納も素早く把握。", tags: ["定期請求", "入金消込", "テナント管理"], color: "text-violet-500 bg-violet-50 border-violet-100" },
+              { icon: Building2, title: "不動産オーナー", desc: "入居者への家賃請求・入金消込を自動化。滞納も素早く把握。", tags: ["定期請求", "入金消込", "滞納管理"], color: "text-violet-500 bg-violet-50 border-violet-100" },
               { icon: Home, title: "副業・個人事業主", desc: "確定申告に必要な経費・売上データをかんたんに整理・エクスポート。", tags: ["経費記録", "CSVエクスポート", "インボイス対応"], color: "text-emerald-500 bg-emerald-50 border-emerald-100" },
             ].map((t) => {
               const [iconText, iconBg, borderColor] = t.color.split(" ");
