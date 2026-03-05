@@ -4,13 +4,14 @@ import { redirect } from "next/navigation";
 import InvoicesTableWithBulkStatus from "./invoices-table-with-bulk-status";
 
 export default async function InvoicesPage() {
-  const { userId } = await auth();
+  const { userId, orgId } = await auth();
   if (!userId) {
     redirect("/");
   }
+  const scope = orgId ? { orgId } : { userId };
 
   const invoices = await prisma.invoice.findMany({
-    where: { userId: userId },
+    where: { ...scope },
     orderBy: { issueDate: "desc" },
     include: {
       client: {

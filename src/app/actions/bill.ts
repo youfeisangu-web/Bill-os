@@ -10,18 +10,19 @@ type SubmitResult = {
 };
 
 export async function getBills() {
-  const { userId } = await auth();
+  const { userId, orgId } = await auth();
   if (!userId) return [];
+  const scope = orgId ? { orgId } : { userId };
 
   return prisma.bill.findMany({
-    where: { userId },
+    where: { ...scope },
     orderBy: { dueDate: "asc" },
   });
 }
 
 export async function createBill(formData: FormData): Promise<SubmitResult> {
   try {
-    const { userId } = await auth();
+    const { userId, orgId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
     const vendorName = formData.get("vendorName") as string;
@@ -38,6 +39,7 @@ export async function createBill(formData: FormData): Promise<SubmitResult> {
     await prisma.bill.create({
       data: {
         userId,
+        orgId: orgId ?? null,
         vendorName,
         title,
         amount,
@@ -62,8 +64,9 @@ export async function updateBill(
   formData: FormData,
 ): Promise<SubmitResult> {
   try {
-    const { userId } = await auth();
+    const { userId, orgId } = await auth();
     if (!userId) throw new Error("Unauthorized");
+    const scope = orgId ? { orgId } : { userId };
 
     const vendorName = formData.get("vendorName") as string;
     const title = formData.get("title") as string;
@@ -77,7 +80,7 @@ export async function updateBill(
     }
 
     await prisma.bill.update({
-      where: { id, userId },
+      where: { id, ...scope },
       data: {
         vendorName,
         title,
@@ -100,10 +103,11 @@ export async function updateBill(
 
 export async function deleteBill(id: string): Promise<SubmitResult> {
   try {
-    const { userId } = await auth();
+    const { userId, orgId } = await auth();
     if (!userId) throw new Error("Unauthorized");
+    const scope = orgId ? { orgId } : { userId };
 
-    await prisma.bill.delete({ where: { id, userId } });
+    await prisma.bill.delete({ where: { id, ...scope } });
 
     revalidatePath("/dashboard/bills");
     revalidatePath("/dashboard");
@@ -121,10 +125,11 @@ export async function markBillAsPaid(
   category: string,
 ): Promise<SubmitResult> {
   try {
-    const { userId } = await auth();
+    const { userId, orgId } = await auth();
     if (!userId) throw new Error("Unauthorized");
+    const scope = orgId ? { orgId } : { userId };
 
-    const bill = await prisma.bill.findUnique({ where: { id, userId } });
+    const bill = await prisma.bill.findFirst({ where: { id, ...scope } });
     if (!bill) return { success: false, message: "請求書が見つかりません。" };
     if (bill.status === "PAID")
       return { success: false, message: "すでに支払済です。" };
@@ -135,6 +140,7 @@ export async function markBillAsPaid(
     const expense = await prisma.expense.create({
       data: {
         userId,
+        orgId: orgId ?? null,
         title: `${bill.vendorName} / ${bill.title}`,
         amount: bill.amount,
         date: paidDate,

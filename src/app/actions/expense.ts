@@ -10,18 +10,19 @@ type SubmitResult = {
 };
 
 export async function getExpenses() {
-  const { userId } = await auth();
+  const { userId, orgId } = await auth();
   if (!userId) return [];
+  const scope = orgId ? { orgId } : { userId };
 
   return prisma.expense.findMany({
-    where: { userId },
+    where: { ...scope },
     orderBy: { date: "desc" },
   });
 }
 
 export async function createExpense(formData: FormData): Promise<SubmitResult> {
   try {
-    const { userId } = await auth();
+    const { userId, orgId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
     const title = formData.get("title") as string;
@@ -38,6 +39,7 @@ export async function createExpense(formData: FormData): Promise<SubmitResult> {
     await prisma.expense.create({
       data: {
         userId: userId,
+        orgId: orgId ?? null,
         title,
         amount,
         date,
@@ -60,8 +62,9 @@ export async function updateExpense(
   formData: FormData,
 ): Promise<SubmitResult> {
   try {
-    const { userId } = await auth();
+    const { userId, orgId } = await auth();
     if (!userId) throw new Error("Unauthorized");
+    const scope = orgId ? { orgId } : { userId };
 
     const title = formData.get("title") as string;
     const amount = Number(formData.get("amount"));
@@ -75,7 +78,7 @@ export async function updateExpense(
     const date = new Date(`${dateRaw}T00:00:00`);
 
     await prisma.expense.update({
-      where: { id, userId },
+      where: { id, ...scope },
       data: { title, amount, date, category },
     });
 
@@ -91,10 +94,11 @@ export async function updateExpense(
 
 export async function deleteExpense(id: string): Promise<SubmitResult> {
   try {
-    const { userId } = await auth();
+    const { userId, orgId } = await auth();
     if (!userId) throw new Error("Unauthorized");
+    const scope = orgId ? { orgId } : { userId };
 
-    await prisma.expense.delete({ where: { id, userId } });
+    await prisma.expense.delete({ where: { id, ...scope } });
 
     revalidatePath("/dashboard/expenses");
     revalidatePath("/dashboard");

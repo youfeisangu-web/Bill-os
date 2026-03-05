@@ -1,7 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Bell, ChevronDown, Menu, Search, User } from "lucide-react";
+import { Bell, ChevronDown, Menu, Search } from "lucide-react";
+import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
 import { getTenantGroups } from "@/app/actions/tenant-group";
 import { useEffect, useState } from "react";
 
@@ -80,7 +81,18 @@ export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
             />
           </div>
         </div>
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
+          <OrganizationSwitcher
+            hidePersonal={false}
+            afterCreateOrganizationUrl="/dashboard"
+            afterLeaveOrganizationUrl="/dashboard"
+            appearance={{
+              elements: {
+                rootBox: "flex items-center",
+                organizationSwitcherTrigger: "rounded-lg border border-billia-border-subtle bg-billia-bg px-3 py-2 text-sm text-stone-700 hover:bg-stone-50 transition-colors",
+              },
+            }}
+          />
           <button
             type="button"
             className="relative p-2.5 rounded-lg text-stone-500 hover:bg-billia-bg hover:text-stone-700 transition-colors"
@@ -89,9 +101,7 @@ export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
             <Bell className="w-5 h-5" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-500 pointer-events-none" />
           </button>
-          <div className="w-9 h-9 rounded-xl bg-billia-blue/10 flex items-center justify-center ring-1 ring-billia-blue/20">
-            <User className="w-5 h-5 text-billia-blue" />
-          </div>
+          <UserButton afterSignOutUrl="/" />
         </div>
       </div>
     </header>

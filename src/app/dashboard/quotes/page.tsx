@@ -4,13 +4,14 @@ import { redirect } from "next/navigation";
 import QuotesTableWithBulkConvert from "./quotes-table-with-bulk-convert";
 
 export default async function QuotesPage() {
-  const { userId } = await auth();
+  const { userId, orgId } = await auth();
   if (!userId) {
     redirect("/");
   }
+  const scope = orgId ? { orgId } : { userId };
 
   const quotes = await prisma.quote.findMany({
-    where: { userId: userId },
+    where: { ...scope },
     orderBy: { issueDate: "desc" },
     include: {
       client: {

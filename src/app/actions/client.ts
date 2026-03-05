@@ -19,7 +19,7 @@ const getValue = (formData: FormData, key: string) => {
 
 export async function createClient(formData: FormData): Promise<SubmitResult> {
   try {
-    const { userId } = await auth();
+    const { userId, orgId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
     const name = getValue(formData, "name");
@@ -33,6 +33,7 @@ export async function createClient(formData: FormData): Promise<SubmitResult> {
     await prisma.client.create({
       data: {
         userId: userId,
+        orgId: orgId ?? null,
         name,
         email: email || null,
         address: address || null,
@@ -50,8 +51,9 @@ export async function createClient(formData: FormData): Promise<SubmitResult> {
 
 export async function updateClient(formData: FormData): Promise<SubmitResult> {
   try {
-    const { userId } = await auth();
+    const { userId, orgId } = await auth();
     if (!userId) throw new Error("Unauthorized");
+    const scope = orgId ? { orgId } : { userId };
 
     const id = getValue(formData, "id");
     const name = getValue(formData, "name");
@@ -66,12 +68,12 @@ export async function updateClient(formData: FormData): Promise<SubmitResult> {
       return { success: false, message: "取引先名を入力してください。" };
     }
 
-    // 取引先が存在し、ユーザーが所有しているか確認
-    const existingClient = await prisma.client.findUnique({
-      where: { id },
+    // 取引先が存在し、アクセス権限があるか確認
+    const existingClient = await prisma.client.findFirst({
+      where: { id, ...scope },
     });
 
-    if (!existingClient || existingClient.userId !== userId) {
+    if (!existingClient) {
       return { success: false, message: "取引先が見つかりません。" };
     }
 
@@ -95,19 +97,20 @@ export async function updateClient(formData: FormData): Promise<SubmitResult> {
 
 export async function deleteClient(id: string): Promise<SubmitResult> {
   try {
-    const { userId } = await auth();
+    const { userId, orgId } = await auth();
     if (!userId) throw new Error("Unauthorized");
+    const scope = orgId ? { orgId } : { userId };
 
     if (!id) {
       return { success: false, message: "IDが指定されていません。" };
     }
 
-    // 取引先が存在し、ユーザーが所有しているか確認
-    const existingClient = await prisma.client.findUnique({
-      where: { id },
+    // 取引先が存在し、アクセス権限があるか確認
+    const existingClient = await prisma.client.findFirst({
+      where: { id, ...scope },
     });
 
-    if (!existingClient || existingClient.userId !== userId) {
+    if (!existingClient) {
       return { success: false, message: "取引先が見つかりません。" };
     }
 

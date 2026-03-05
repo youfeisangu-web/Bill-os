@@ -19,8 +19,9 @@ function getLastMonth() {
 }
 
 export default async function DashboardPage() {
-  const { userId } = await auth();
+  const { userId, orgId } = await auth();
   if (!userId) redirect("/");
+  const scope = orgId ? { orgId } : { userId };
 
   const now = new Date();
   const currentMonth = getCurrentMonth();
@@ -45,15 +46,15 @@ export default async function DashboardPage() {
     getCategorySalesByMonth(currentMonth),
     getMonthlySalesSummary(12),
     prisma.invoice.aggregate({
-      where: { userId },
+      where: { ...scope },
       _count: true,
     }),
     prisma.categorySalesEntry.findMany({
-      where: { userId, month: lastMonth },
+      where: { ...scope, month: lastMonth },
       include: { category: true },
     }),
     prisma.invoice.findMany({
-      where: { userId },
+      where: { ...scope },
       orderBy: { issueDate: "desc" },
       take: 100,
       select: {
@@ -64,14 +65,14 @@ export default async function DashboardPage() {
       },
     }),
     prisma.expense.findMany({
-      where: { userId, date: { gte: firstDayOfMonth, lte: lastDayOfMonth } },
+      where: { ...scope, date: { gte: firstDayOfMonth, lte: lastDayOfMonth } },
     }),
     prisma.invoice.findMany({
-      where: { userId, issueDate: { gte: sixMonthsAgo, lte: lastDayOfCurrent } },
+      where: { ...scope, issueDate: { gte: sixMonthsAgo, lte: lastDayOfCurrent } },
       select: { issueDate: true, totalAmount: true },
     }),
     prisma.expense.findMany({
-      where: { userId, date: { gte: sixMonthsAgo, lte: lastDayOfCurrent } },
+      where: { ...scope, date: { gte: sixMonthsAgo, lte: lastDayOfCurrent } },
     }),
   ]);
 
@@ -94,11 +95,11 @@ export default async function DashboardPage() {
 
   const [paid, unpaid] = await Promise.all([
     prisma.invoice.aggregate({
-      where: { userId, status: "支払済" },
+      where: { ...scope, status: "支払済" },
       _sum: { totalAmount: true },
     }),
     prisma.invoice.aggregate({
-      where: { userId, status: { in: ["未払い", "部分払い"] } },
+      where: { ...scope, status: { in: ["未払い", "部分払い"] } },
       _sum: { totalAmount: true },
     }),
   ]);

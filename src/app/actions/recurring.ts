@@ -21,6 +21,7 @@ type RecurringTemplateItem = {
  */
 async function getOrCreateClientFromTenant(
   userId: string,
+  orgId: string | null,
   tenantId: string
 ): Promise<string> {
   const tenant = await prisma.tenant.findUnique({
@@ -31,10 +32,12 @@ async function getOrCreateClientFromTenant(
     throw new Error("取引先が見つかりません");
   }
 
+  const scope = orgId ? { orgId } : { userId };
+
   // 既存のClientを検索（名前で一致するもの）
   let client = await prisma.client.findFirst({
     where: {
-      userId,
+      ...scope,
       name: tenant.name,
     },
   });
@@ -44,6 +47,7 @@ async function getOrCreateClientFromTenant(
     client = await prisma.client.create({
       data: {
         userId,
+        orgId: orgId ?? null,
         name: tenant.name,
         email: null,
         address: null,
@@ -61,7 +65,7 @@ export async function createRecurringTemplate(
   formData: FormData
 ): Promise<SubmitResult> {
   try {
-    const { userId } = await auth();
+    const { userId, orgId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
     const tenantId = formData.get("tenantId") as string;
@@ -88,7 +92,7 @@ export async function createRecurringTemplate(
     }
 
     // TenantからClientを自動作成または取得
-    const clientId = await getOrCreateClientFromTenant(userId, tenantId);
+    const clientId = await getOrCreateClientFromTenant(userId, orgId ?? null, tenantId);
 
     // 開始日と終了日をパース
     const startDate = new Date(startDateStr);
@@ -385,15 +389,16 @@ export async function getRecurringTemplateById(templateId: string) {
 /** 今月に定期請求で作成された請求書一覧（送付用） */
 export async function getRecurringGeneratedInvoicesThisMonth() {
   try {
-    const { userId } = await auth();
+    const { userId, orgId } = await auth();
     if (!userId) return [];
+    const scope = orgId ? { orgId } : { userId };
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
     const invoices = await prisma.invoice.findMany({
       where: {
-        userId,
+        ...scope,
         recurringTemplateId: { not: null },
         issueDate: { gte: startOfMonth },
       },

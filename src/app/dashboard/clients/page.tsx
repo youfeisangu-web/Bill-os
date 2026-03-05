@@ -9,13 +9,14 @@ const formatDate = (date: Date) =>
   new Intl.DateTimeFormat("ja-JP", { dateStyle: "medium" }).format(date);
 
 export default async function ClientsPage() {
-  const { userId } = await auth();
+  const { userId, orgId } = await auth();
   if (!userId) {
     redirect("/");
   }
+  const scope = orgId ? { orgId } : { userId };
 
   const clients = await prisma.client.findMany({
-    where: { userId: userId },
+    where: { ...scope },
     orderBy: { createdAt: "desc" },
   });
 

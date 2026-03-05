@@ -61,6 +61,7 @@ model UserProfile {
 model SalesCategory {
   id          String   @id @default(uuid())
   userId      String
+  orgId       String?  // Clerk organization ID（チーム所属時）
   user        UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
   name        String   // カテゴリ名（例: 食品、日用品）
   displayOrder Int     @default(0) // 表示順
@@ -70,12 +71,14 @@ model SalesCategory {
   entries CategorySalesEntry[]
 
   @@unique([userId, name])
+  @@index([orgId])
 }
 
 // 月別・カテゴリ別売上（手入力 or AI振り分け結果）
 model CategorySalesEntry {
   id         String   @id @default(uuid())
   userId     String
+  orgId      String?  // Clerk organization ID（チーム所属時）
   user       UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
   categoryId String
   category   SalesCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
@@ -85,12 +88,14 @@ model CategorySalesEntry {
   updatedAt  DateTime @updatedAt
 
   @@unique([userId, categoryId, month])
+  @@index([orgId])
 }
 
 // 銀行口座 (複数登録・デフォルト設定可)
 model BankAccount {
   id            String      @id @default(uuid())
   userId        String
+  orgId         String?     // Clerk organization ID（チーム所属時）
   user          UserProfile @relation(fields: [userId], references: [id])
   bankName      String
   branchName    String
@@ -99,12 +104,15 @@ model BankAccount {
   accountHolder String
   isDefault     Boolean     @default(false)
   clients       Client[]
+
+  @@index([orgId])
 }
 
 // 取引先
 model Client {
   id                   String              @id @default(uuid())
   userId               String
+  orgId                String?             // Clerk organization ID（チーム所属時）
   user                 UserProfile         @relation(fields: [userId], references: [id])
   name                 String
   email                String?
@@ -116,21 +124,27 @@ model Client {
   recurringTemplates   RecurringTemplate[]
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
+
+  @@index([orgId])
 }
 
 // よく使う項目マスタ (スマホ入力支援)
 model ItemMaster {
   id           String      @id @default(uuid())
   userId       String
+  orgId        String?     // Clerk organization ID（チーム所属時）
   user         UserProfile @relation(fields: [userId], references: [id])
   name         String
   defaultPrice Int
+
+  @@index([orgId])
 }
 
 // 見積書 (インタラクティブ機能・ログ付き)
 model Quote {
   id            String        @id @default(uuid())
   userId        String
+  orgId         String?       // Clerk organization ID（チーム所属時）
   user          UserProfile   @relation(fields: [userId], references: [id])
   clientId      String
   client        Client        @relation(fields: [clientId], references: [id])
@@ -148,6 +162,8 @@ model Quote {
   logs          ActivityLog[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+
+  @@index([orgId])
 }
 
 // 見積明細 (オプション機能あり)
@@ -167,6 +183,7 @@ model QuoteItem {
 model Invoice {
   id                  String             @id // "INV-202601-001"
   userId              String
+  orgId               String?            // Clerk organization ID（チーム所属時）
   user                UserProfile        @relation(fields: [userId], references: [id])
   clientId            String
   client              Client             @relation(fields: [clientId], references: [id])
@@ -186,6 +203,8 @@ model Invoice {
   recurringTemplate   RecurringTemplate? @relation(fields: [recurringTemplateId], references: [id], onDelete: SetNull)
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
+
+  @@index([orgId])
 }
 
 // 請求明細
@@ -203,6 +222,7 @@ model InvoiceItem {
 model Expense {
   id        String      @id @default(cuid())
   userId    String
+  orgId     String?     // Clerk organization ID（チーム所属時）
   user      UserProfile @relation(fields: [userId], references: [id])
   title     String
   amount    Int
@@ -211,12 +231,15 @@ model Expense {
   bill      Bill? // 支払管理から経費登録された場合の紐付け
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+
+  @@index([orgId])
 }
 
 // 受領請求書（支払管理）
 model Bill {
   id         String      @id @default(cuid())
   userId     String
+  orgId      String?     // Clerk organization ID（チーム所属時）
   user       UserProfile @relation(fields: [userId], references: [id])
   vendorName String // 請求元（会社名など）
   title      String // 件名
@@ -231,6 +254,8 @@ model Bill {
   memo       String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  @@index([orgId])
 }
 
 // 操作ログ

@@ -5,14 +5,15 @@ import { redirect } from "next/navigation";
 import InvoiceEditor, { type DefaultPaymentTermType } from "./invoice-editor";
 
 export default async function NewInvoicePage() {
-  const { userId } = await auth();
+  const { userId, orgId } = await auth();
   if (!userId) {
     redirect("/");
   }
+  const scope = orgId ? { orgId } : { userId };
 
   const [clients, user] = await Promise.all([
     prisma.client.findMany({
-      where: { userId: userId },
+      where: { ...scope },
       orderBy: { createdAt: "desc" },
       select: { id: true, name: true },
     }),

@@ -35,8 +35,9 @@ const formatInvoiceId = (date: Date, sequence: number) => {
 
 export async function createInvoice(formData: FormData): Promise<SubmitResult> {
   try {
-    const { userId } = await auth();
+    const { userId, orgId } = await auth();
     if (!userId) throw new Error("Unauthorized");
+    const scope = orgId ? { orgId } : { userId };
 
     const clientId = getValue(formData, "clientId");
     const clientName = getValue(formData, "clientName");
@@ -61,6 +62,7 @@ export async function createInvoice(formData: FormData): Promise<SubmitResult> {
       const newClient = await prisma.client.create({
         data: {
           userId: userId,
+          orgId: orgId ?? null,
           name: clientName,
           email: clientEmail || null,
           address: clientAddress || null,
@@ -109,7 +111,7 @@ export async function createInvoice(formData: FormData): Promise<SubmitResult> {
     const yyyymm = `${issueDate.getFullYear()}${String(issueDate.getMonth() + 1).padStart(2, "0")}`;
     const latest = await prisma.invoice.findFirst({
       where: {
-        userId: userId,
+        ...scope,
         id: { startsWith: `INV-${yyyymm}-` },
       },
       orderBy: { id: "desc" },
@@ -123,6 +125,7 @@ export async function createInvoice(formData: FormData): Promise<SubmitResult> {
       data: {
         id: invoiceId,
         userId: userId,
+        orgId: orgId ?? null,
         clientId: finalClientId,
         status: "未払い",
         issueDate,
@@ -158,11 +161,12 @@ export async function createInvoice(formData: FormData): Promise<SubmitResult> {
 /** 入金消し込み：請求書を支払済にする */
 export async function markInvoicePaid(invoiceId: string): Promise<SubmitResult> {
   try {
-    const { userId } = await auth();
+    const { userId, orgId } = await auth();
     if (!userId) throw new Error("Unauthorized");
+    const scope = orgId ? { orgId } : { userId };
 
     const invoice = await prisma.invoice.findFirst({
-      where: { id: invoiceId, userId },
+      where: { id: invoiceId, ...scope },
     });
     if (!invoice) {
       return { success: false, message: "請求書が見つかりません。" };
@@ -192,15 +196,16 @@ export async function updateInvoiceStatus(
   status: string,
 ): Promise<SubmitResult> {
   try {
-    const { userId } = await auth();
+    const { userId, orgId } = await auth();
     if (!userId) throw new Error("Unauthorized");
+    const scope = orgId ? { orgId } : { userId };
 
     if (!VALID_INVOICE_STATUSES.includes(status as (typeof VALID_INVOICE_STATUSES)[number])) {
       return { success: false, message: "無効なステータスです。" };
     }
 
     const invoice = await prisma.invoice.findFirst({
-      where: { id: invoiceId, userId },
+      where: { id: invoiceId, ...scope },
     });
     if (!invoice) {
       return { success: false, message: "請求書が見つかりません。" };
@@ -230,8 +235,9 @@ export async function updateInvoiceStatusBulk(
   status: string,
 ): Promise<SubmitResult> {
   try {
-    const { userId } = await auth();
+    const { userId, orgId } = await auth();
     if (!userId) throw new Error("Unauthorized");
+    const scope = orgId ? { orgId } : { userId };
 
     if (!VALID_INVOICE_STATUSES.includes(status as (typeof VALID_INVOICE_STATUSES)[number])) {
       return { success: false, message: "無効なステータスです。" };
@@ -242,7 +248,7 @@ export async function updateInvoiceStatusBulk(
     }
 
     const { count } = await prisma.invoice.updateMany({
-      where: { id: { in: invoiceIds }, userId },
+      where: { id: { in: invoiceIds }, ...scope },
       data: { status },
     });
 
@@ -260,11 +266,12 @@ export async function updateInvoiceStatusBulk(
 /** モーダル表示用に請求書の表示データを取得（日付はISO文字列で返す） */
 export async function getInvoiceByIdForDisplay(invoiceId: string) {
   try {
-    const { userId } = await auth();
+    const { userId, orgId } = await auth();
     if (!userId) return null;
+    const scope = orgId ? { orgId } : { userId };
 
     const invoice = await prisma.invoice.findUnique({
-      where: { id: invoiceId, userId },
+      where: { id: invoiceId, ...scope },
       include: {
         client: true,
         items: true,
@@ -326,11 +333,12 @@ export async function convertQuoteToInvoice(
   quoteId: string,
 ): Promise<SubmitResult> {
   try {
-    const { userId } = await auth();
+    const { userId, orgId } = await auth();
     if (!userId) throw new Error("Unauthorized");
+    const scope = orgId ? { orgId } : { userId };
 
     const quote = await prisma.quote.findUnique({
-      where: { id: quoteId, userId: userId },
+      where: { id: quoteId, ...scope },
       include: { items: true },
     });
 
@@ -351,7 +359,7 @@ export async function convertQuoteToInvoice(
     ).padStart(2, "0")}`;
     const latest = await prisma.invoice.findFirst({
       where: {
-        userId: userId,
+        ...scope,
         id: { startsWith: `INV-${yyyymm}-` },
       },
       orderBy: { id: "desc" },
@@ -365,6 +373,7 @@ export async function convertQuoteToInvoice(
       data: {
         id: invoiceId,
         userId: userId,
+        orgId: orgId ?? null,
         clientId: quote.clientId,
         status: "未払い",
         issueDate,
@@ -408,8 +417,9 @@ export async function convertQuotesToInvoices(
   quoteIds: string[],
 ): Promise<BulkConvertResult> {
   try {
-    const { userId } = await auth();
+    const { userId, orgId } = await auth();
     if (!userId) throw new Error("Unauthorized");
+    const scope = orgId ? { orgId } : { userId };
 
     if (!quoteIds.length) {
       return { success: false, message: "変換する見積書を選択してください。" };
@@ -427,7 +437,7 @@ export async function convertQuotesToInvoices(
 
     let latest = await prisma.invoice.findFirst({
       where: {
-        userId: userId,
+        ...scope,
         id: { startsWith: `INV-${yyyymm}-` },
       },
       orderBy: { id: "desc" },
@@ -436,7 +446,7 @@ export async function convertQuotesToInvoices(
     let convertedCount = 0;
     for (const quoteId of quoteIds) {
       const quote = await prisma.quote.findUnique({
-        where: { id: quoteId, userId: userId },
+        where: { id: quoteId, ...scope },
         include: { items: true },
       });
       if (!quote) continue;
@@ -449,6 +459,7 @@ export async function convertQuotesToInvoices(
         data: {
           id: invoiceId,
           userId: userId,
+          orgId: orgId ?? null,
           clientId: quote.clientId,
           status: "未払い",
           issueDate,
@@ -505,15 +516,16 @@ export type AgingRow = {
 
 /** 未収のエイジングレポート用データ（0-30 / 31-60 / 61-90 / 90超） */
 export async function getAgingReport(): Promise<AgingRow[]> {
-  const { userId } = await auth();
+  const { userId, orgId } = await auth();
   if (!userId) return [];
+  const scope = orgId ? { orgId } : { userId };
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   const list = await prisma.invoice.findMany({
     where: {
-      userId,
+      ...scope,
       status: { in: ["未払い", "部分払い"] },
     },
     orderBy: { dueDate: "asc" },

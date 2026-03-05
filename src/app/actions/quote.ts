@@ -35,8 +35,9 @@ const formatQuoteId = (date: Date, sequence: number) => {
 
 export async function createQuote(formData: FormData): Promise<SubmitResult> {
   try {
-    const { userId } = await auth();
+    const { userId, orgId } = await auth();
     if (!userId) throw new Error("Unauthorized");
+    const scope = orgId ? { orgId } : { userId };
 
     const clientId = getValue(formData, "clientId");
     const clientName = getValue(formData, "clientName");
@@ -61,6 +62,7 @@ export async function createQuote(formData: FormData): Promise<SubmitResult> {
       const newClient = await prisma.client.create({
         data: {
           userId: userId,
+          orgId: orgId ?? null,
           name: clientName,
           email: clientEmail || null,
           address: clientAddress || null,
@@ -109,7 +111,7 @@ export async function createQuote(formData: FormData): Promise<SubmitResult> {
     const yyyymm = `${issueDate.getFullYear()}${String(issueDate.getMonth() + 1).padStart(2, "0")}`;
     const latest = await prisma.quote.findFirst({
       where: {
-        userId: userId,
+        ...scope,
         quoteNumber: { startsWith: `QTE-${yyyymm}-` },
       },
       orderBy: { quoteNumber: "desc" },
@@ -122,6 +124,7 @@ export async function createQuote(formData: FormData): Promise<SubmitResult> {
     await prisma.quote.create({
       data: {
         userId: userId,
+        orgId: orgId ?? null,
         clientId: finalClientId,
         quoteNumber,
         status: "下書き",
@@ -158,11 +161,12 @@ export async function ensureAcceptToken(quoteId: string): Promise<
   { success: true; acceptUrl: string } | { success: false; message: string }
 > {
   try {
-    const { userId } = await auth();
+    const { userId, orgId } = await auth();
     if (!userId) return { success: false, message: "ログインしてください。" };
+    const scope = orgId ? { orgId } : { userId };
 
     const quote = await prisma.quote.findFirst({
-      where: { id: quoteId, userId },
+      where: { id: quoteId, ...scope },
       select: { acceptToken: true },
     });
     if (!quote) return { success: false, message: "見積書が見つかりません。" };
