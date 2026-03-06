@@ -25,8 +25,8 @@ export default function DocumentScaleWrapper({
   }, []);
 
   return (
-    <div ref={wrapperRef} className="w-full">
-      <div className="document-scale-inner" style={{ zoom: scale }}>
+    <div ref={wrapperRef} className="w-full overflow-hidden">
+      <div style={{ zoom: scale, width: TEMPLATE_WIDTH_PX }}>
         {children}
       </div>
     </div>
