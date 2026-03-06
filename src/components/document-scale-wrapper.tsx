@@ -10,13 +10,17 @@ export default function DocumentScaleWrapper({
   children: React.ReactNode;
 }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
+  const [height, setHeight] = useState<number | null>(null);
 
   useEffect(() => {
     const update = () => {
-      if (!wrapperRef.current) return;
+      if (!wrapperRef.current || !innerRef.current) return;
       const w = wrapperRef.current.offsetWidth;
-      setScale(w >= TEMPLATE_WIDTH_PX ? 1 : w / TEMPLATE_WIDTH_PX);
+      const s = w >= TEMPLATE_WIDTH_PX ? 1 : w / TEMPLATE_WIDTH_PX;
+      setScale(s);
+      setHeight(innerRef.current.scrollHeight * s);
     };
     update();
     const ro = new ResizeObserver(update);
@@ -25,8 +29,15 @@ export default function DocumentScaleWrapper({
   }, []);
 
   return (
-    <div ref={wrapperRef} className="w-full overflow-hidden">
-      <div style={{ zoom: scale, width: TEMPLATE_WIDTH_PX }}>
+    <div ref={wrapperRef} className="w-full overflow-hidden" style={height !== null ? { height } : undefined}>
+      <div
+        ref={innerRef}
+        style={{
+          transform: `scale(${scale})`,
+          transformOrigin: "top left",
+          width: TEMPLATE_WIDTH_PX,
+        }}
+      >
         {children}
       </div>
     </div>
