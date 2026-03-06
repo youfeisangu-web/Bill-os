@@ -424,38 +424,36 @@ export default function QuotesTableWithBulkConvert({
                 </td>
               </tr>
             ) : (
-              sorted.map((quote) => {
-                return (
-                  <tr key={quote.id} className="text-billia-text-muted hover:bg-billia-bg/40">
-                    <td className="px-4 py-4">
-                      <input name="quote-select" type="checkbox" value={quote.id}
-                        aria-label={`${quote.quoteNumber} を選択`}
-                        className="h-4 w-4 rounded border-stone-300 text-billia-green focus:ring-billia-green" />
-                    </td>
-                    <td className="px-4 py-4 font-medium text-billia-blue">
-                      <Link href={`/dashboard/quotes/${quote.id}`}>{quote.quoteNumber}</Link>
-                    </td>
-                    <td className="px-4 py-4">{quote.client?.name ?? "-"}</td>
-                    <td className="px-4 py-4">{formatDate(quote.issueDate)}</td>
-                    <td className="px-4 py-4">{formatDate(quote.validUntil)}</td>
-                    <td className="px-4 py-4">¥{formatCurrency(quote.totalAmount)}</td>
-                    <td className="px-4 py-4">
-                      <span className={`font-medium ${statusTone[quote.status] ?? "text-billia-text-muted"}`}>
-                        {quote.status}
+              sorted.map((quote) => (
+                <tr key={quote.id} className="text-billia-text-muted hover:bg-billia-bg/40">
+                  <td className="px-4 py-4">
+                    <input name="quote-select" type="checkbox" value={quote.id}
+                      aria-label={`${quote.quoteNumber} を選択`}
+                      className="h-4 w-4 rounded border-stone-300 text-billia-green focus:ring-billia-green" />
+                  </td>
+                  <td className="px-4 py-4 font-medium text-billia-blue">
+                    <Link href={`/dashboard/quotes/${quote.id}`}>{quote.quoteNumber}</Link>
+                  </td>
+                  <td className="px-4 py-4">{quote.client?.name ?? "-"}</td>
+                  <td className="px-4 py-4">{formatDate(quote.issueDate)}</td>
+                  <td className="px-4 py-4">{formatDate(quote.validUntil)}</td>
+                  <td className="px-4 py-4">¥{formatCurrency(quote.totalAmount)}</td>
+                  <td className="px-4 py-4">
+                    <span className={`font-medium ${statusTone[quote.status] ?? "text-billia-text-muted"}`}>
+                      {quote.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4">
+                    {quote.folder ? (
+                      <span className={`text-xs px-2 py-0.5 rounded-full border ${folderColor(quote.folder)}`}>
+                        {quote.folder}
                       </span>
-                    </td>
-                    <td className="px-4 py-4">
-                      {quote.folder ? (
-                        <span className={`text-xs px-2 py-0.5 rounded-full border ${folderColor(quote.folder)}`}>
-                          {quote.folder}
-                        </span>
-                      ) : (
-                        <span className="text-billia-text-muted text-xs">—</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })
+                    ) : (
+                      <span className="text-billia-text-muted text-xs">—</span>
+                    )}
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
