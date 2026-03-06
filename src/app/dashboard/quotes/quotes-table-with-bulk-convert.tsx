@@ -119,8 +119,9 @@ export default function QuotesTableWithBulkConvert({
   };
 
   const handleBulkConvert = () => {
-    const ids = getSelectedIds();
-    if (ids.length === 0) { alert("変換する見積書にチェックを入れてください。"); return; }
+    const allIds = getSelectedIds();
+    const ids = allIds.filter((id) => sorted.find((q) => q.id === id)?.status !== "受注");
+    if (ids.length === 0) { alert("変換できる見積書（受注以外）にチェックを入れてください。"); return; }
     if (!confirm(`選択した${ids.length}件の見積書を請求書に変換しますか？（見積書のステータスは「受注」になります）`)) return;
     startTransition(async () => {
       const result = await convertQuotesToInvoices(ids);
@@ -153,8 +154,6 @@ export default function QuotesTableWithBulkConvert({
     });
   };
 
-  const selectableQuotes = sorted.filter((q) => q.status !== "受注");
-
   return (
     <div>
       {/* ヘッダー */}
@@ -167,7 +166,7 @@ export default function QuotesTableWithBulkConvert({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <ImportDocumentButton />
-          {selectableQuotes.length > 0 && (
+          {quotes.some((q) => q.status !== "受注") && (
             <button
               type="button"
               onClick={handleBulkConvert}
@@ -391,7 +390,7 @@ export default function QuotesTableWithBulkConvert({
           <thead className="bg-billia-bg billia-label">
             <tr>
               <th className="w-10 px-4 py-3">
-                {selectableQuotes.length > 0 ? (
+                {sorted.length > 0 ? (
                   <input type="checkbox" aria-label="すべて選択" onChange={handleToggleAll}
                     className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
                 ) : null}
@@ -426,15 +425,12 @@ export default function QuotesTableWithBulkConvert({
               </tr>
             ) : (
               sorted.map((quote) => {
-                const canSelect = quote.status !== "受注";
                 return (
                   <tr key={quote.id} className="text-billia-text-muted hover:bg-billia-bg/40">
                     <td className="px-4 py-4">
-                      {canSelect ? (
-                        <input name="quote-select" type="checkbox" value={quote.id}
-                          aria-label={`${quote.quoteNumber} を選択`}
-                          className="h-4 w-4 rounded border-stone-300 text-billia-green focus:ring-billia-green" />
-                      ) : null}
+                      <input name="quote-select" type="checkbox" value={quote.id}
+                        aria-label={`${quote.quoteNumber} を選択`}
+                        className="h-4 w-4 rounded border-stone-300 text-billia-green focus:ring-billia-green" />
                     </td>
                     <td className="px-4 py-4 font-medium text-billia-blue">
                       <Link href={`/dashboard/quotes/${quote.id}`}>{quote.quoteNumber}</Link>
