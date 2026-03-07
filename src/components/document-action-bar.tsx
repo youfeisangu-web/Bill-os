@@ -53,7 +53,7 @@ export default function DocumentActionBar({
       {/* 下段：PDF（目立つ） */}
       <button
         onClick={() => window.print()}
-        className="w-full inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+        className="w-full inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800"
       >
         🖨️ PDFダウンロード
       </button>
