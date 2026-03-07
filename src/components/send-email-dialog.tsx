@@ -117,24 +117,32 @@ export default function SendEmailDialog({
             )}
           </div>
 
-          <DialogFooter>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              disabled={isPending}
-              className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          <DialogFooter className="flex-col gap-2 sm:flex-col">
+            <div className="flex w-full gap-2">
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                disabled={isPending}
+                className="flex-1 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                キャンセル
+              </button>
+              <button
+                type="button"
+                onClick={handleSend}
+                disabled={isPending || !toValue}
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                アプリから送信
+              </button>
+            </div>
+            <a
+              href={`mailto:${encodeURIComponent(toValue)}?subject=${encodeURIComponent(subjectValue)}&body=${encodeURIComponent(bodyValue)}`}
+              className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
             >
-              キャンセル
-            </button>
-            <button
-              type="button"
-              onClick={handleSend}
-              disabled={isPending || !toValue}
-              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-            >
-              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-              送信する
-            </button>
+              ↗ Gmail / Outlook で開く
+            </a>
           </DialogFooter>
         </DialogContent>
       </Dialog>
