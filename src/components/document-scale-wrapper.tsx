@@ -29,13 +29,14 @@ export default function DocumentScaleWrapper({
   }, []);
 
   return (
-    <div ref={wrapperRef} className="w-full overflow-hidden" style={height !== null ? { height } : undefined}>
+    <div ref={wrapperRef} className="w-full overflow-hidden flex justify-center" style={height !== null ? { height } : undefined}>
       <div
         ref={innerRef}
         style={{
           transform: `scale(${scale})`,
-          transformOrigin: "top left",
+          transformOrigin: "top center",
           width: TEMPLATE_WIDTH_PX,
+          flexShrink: 0,
         }}
       >
         {children}
