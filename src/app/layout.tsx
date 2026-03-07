@@ -1,23 +1,8 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { jaJP } from "@clerk/localizations";
-import { Plus_Jakarta_Sans, Noto_Sans_JP } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
-
-const plusJakartaSans = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-  weight: ["400", "500", "600", "700"],
-});
-
-const notoSansJp = Noto_Sans_JP({
-  subsets: ["latin"],
-  variable: "--font-noto-sans-jp",
-  display: "swap",
-  weight: ["400", "500", "600", "700"],
-});
 
 export const metadata: Metadata = {
   title: "Billia | 次世代クラウド請求管理プラットフォーム",
@@ -93,7 +78,7 @@ export default function RootLayout({
     <ClerkProvider localization={jaJP}>
       <html lang="ja" className="light" style={{ colorScheme: 'light' }} suppressHydrationWarning>
         <body
-          className={`${plusJakartaSans.variable} ${notoSansJp.variable} font-sans bg-billia-bg text-billia-text`}
+          className={`font-sans bg-billia-bg text-billia-text`}
         >
           <ThemeProvider attribute="class" forcedTheme="light" enableSystem={false}>
             {children}

@@ -1,7 +1,10 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
 
 @theme inline {
-  --font-sans: var(--font-inter), var(--font-noto-sans-jp), ui-sans-serif,
+  --font-inter: "Plus Jakarta Sans", ui-sans-serif, system-ui;
+  --font-noto-sans-jp: "Noto Sans JP", sans-serif;
+  --font-sans: "Plus Jakarta Sans", "Noto Sans JP", ui-sans-serif,
     system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans",
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 
