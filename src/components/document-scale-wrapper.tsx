@@ -29,9 +29,10 @@ export default function DocumentScaleWrapper({
   }, []);
 
   return (
-    <div ref={wrapperRef} className="w-full overflow-hidden flex justify-center" style={height !== null ? { height } : undefined}>
+    <div ref={wrapperRef} className="document-scale-wrapper w-full overflow-hidden flex justify-center" style={height !== null ? { height } : undefined}>
       <div
         ref={innerRef}
+        className="document-scale-inner"
         style={{
           transform: `scale(${scale})`,
           transformOrigin: "top center",

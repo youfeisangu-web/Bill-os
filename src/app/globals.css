@@ -146,8 +146,16 @@
 }
 
 @media print {
+  .document-scale-wrapper {
+    display: block !important;
+    overflow: visible !important;
+    height: auto !important;
+    width: 100% !important;
+  }
   .document-scale-inner {
-    zoom: 1 !important;
+    transform: none !important;
+    width: 100% !important;
+    flex-shrink: unset !important;
   }
   body {
     background-color: white !important;
@@ -171,7 +179,7 @@
     padding: 0 !important;
     width: 100% !important;
     max-width: 210mm !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     box-sizing: border-box !important;
   }
 }
