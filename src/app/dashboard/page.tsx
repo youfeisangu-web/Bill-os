@@ -93,7 +93,7 @@ export default async function DashboardPage() {
     })
     .reduce((sum, inv) => sum + inv.totalAmount, 0);
 
-  const [paid, unpaid] = await Promise.all([
+  const [paid, unpaid, pendingInvoices, pendingQuotes] = await Promise.all([
     prisma.invoice.aggregate({
       where: { ...scope, status: "支払済" },
       _sum: { totalAmount: true },
@@ -102,8 +102,11 @@ export default async function DashboardPage() {
       where: { ...scope, status: { in: ["未払い", "部分払い"] } },
       _sum: { totalAmount: true },
     }),
+    orgId ? prisma.invoice.count({ where: { orgId, approvalStatus: "PENDING" } }) : 0,
+    orgId ? prisma.quote.count({ where: { orgId, approvalStatus: "PENDING" } }) : 0,
   ]);
   const unpaidAmount = unpaid._sum.totalAmount ?? 0;
+  const pendingApprovalCount = (pendingInvoices as number) + (pendingQuotes as number);
 
   const monthlyData: Array<{
     month: string;
@@ -161,6 +164,7 @@ export default async function DashboardPage() {
         currentMonthYear,
       }}
       monthlyData={monthlyData}
+      pendingApprovalCount={pendingApprovalCount}
     />
   );
 }

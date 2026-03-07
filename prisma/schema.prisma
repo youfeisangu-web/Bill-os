@@ -158,7 +158,11 @@ model Quote {
   initialAmount Int? // 交渉前の金額
   password      String?
   folder        String?       // フォルダ（タグ）
-  acceptToken   String?       @unique // 承諾リンク用トークン（/accept/[token]）
+  acceptToken    String?       @unique // 承諾リンク用トークン（/accept/[token]）
+  approvalStatus String?       // チーム利用時: DRAFT | PENDING | APPROVED | REJECTED
+  approvedBy     String?       // 承認者のuserId
+  approvedAt     DateTime?
+  rejectionNote  String?       // 却下理由
   items         QuoteItem[]
   logs          ActivityLog[]
   createdAt     DateTime      @default(now())
@@ -199,6 +203,10 @@ model Invoice {
   folder              String?            // フォルダ（タグ）
   receiptIssuedAt     DateTime? // 領収書発行日時（電子帳簿保存法対応）
   receiptNumber       String?   // 領収書番号（REC-YYYYMM-NNN）
+  approvalStatus      String?   // チーム利用時: DRAFT | PENDING | APPROVED | REJECTED
+  approvedBy          String?   // 承認者のuserId
+  approvedAt          DateTime?
+  rejectionNote       String?   // 却下理由
   items               InvoiceItem[]
   parentInvoiceId     String? // 将来の分割請求用
   recurringTemplateId String? // どの定期請求テンプレートから生成されたか

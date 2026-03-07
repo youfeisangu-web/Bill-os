@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { InvoiceTemplate } from "@/components/invoice-template";
 import DocumentActionBar from "@/components/document-action-bar";
 import DocumentScaleWrapper from "@/components/document-scale-wrapper";
+import ApprovalActions from "@/components/approval-actions";
 
 export default async function InvoiceDetailPage({
   params,
@@ -15,6 +16,11 @@ export default async function InvoiceDetailPage({
     redirect("/");
   }
   const scope = orgId ? { orgId } : { userId };
+
+  const userProfile = orgId
+    ? await prisma.userProfile.findUnique({ where: { id: userId }, select: { role: true } })
+    : null;
+  const userRole = userProfile?.role ?? "USER";
 
   const { id } = await params;
 
@@ -108,6 +114,18 @@ export default async function InvoiceDetailPage({
 
   return (
     <div className="flex flex-col">
+      {orgId && (
+        <div className="no-print mb-4">
+          <ApprovalActions
+            type="invoice"
+            id={invoice.id}
+            approvalStatus={invoice.approvalStatus ?? "DRAFT"}
+            approvedAt={invoice.approvedAt ?? null}
+            rejectionNote={invoice.rejectionNote ?? null}
+            userRole={userRole}
+          />
+        </div>
+      )}
       <DocumentActionBar
         backUrl="/dashboard/invoices"
         editUrl={`/dashboard/invoices/${invoice.id}/edit`}

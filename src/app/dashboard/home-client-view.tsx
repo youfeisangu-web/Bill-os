@@ -34,12 +34,13 @@ type Props = {
   salesProps: SalesProps;
   summary: Summary;
   monthlyData: MonthlyData[];
+  pendingApprovalCount?: number;
 };
 
 const formatCurrency = (n: number) =>
   "¥" + new Intl.NumberFormat("ja-JP").format(n);
 
-export default function HomeClientView({ salesProps, summary, monthlyData }: Props) {
+export default function HomeClientView({ salesProps, summary, monthlyData, pendingApprovalCount = 0 }: Props) {
   const { kpi, recentInvoices, currentMonth } = salesProps;
   const [year, month] = currentMonth.split("-").map(Number);
 
@@ -56,6 +57,23 @@ export default function HomeClientView({ salesProps, summary, monthlyData }: Pro
         <p className="text-xs text-billia-text-muted">{year}年{month}月</p>
         <h1 className="text-xl font-semibold text-billia-text md:text-2xl">ダッシュボード</h1>
       </div>
+
+      {/* 承認待ちアラート（チーム利用時・件数がある場合のみ） */}
+      {pendingApprovalCount > 0 && (
+        <Link
+          href="/dashboard/invoices"
+          className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 hover:bg-amber-100 transition-colors"
+        >
+          <AlertCircle className="h-5 w-5 text-amber-500 shrink-0" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-amber-700">承認待ちがあります</p>
+            <p className="text-xs text-amber-500 mt-0.5">
+              {pendingApprovalCount}件 — タップして確認
+            </p>
+          </div>
+          <ArrowRight className="h-4 w-4 text-amber-400 shrink-0" />
+        </Link>
+      )}
 
       {/* 未入金アラート（金額がある場合のみ） */}
       {summary.unpaidAmount > 0 && (

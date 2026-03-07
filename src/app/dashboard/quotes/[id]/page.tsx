@@ -6,6 +6,7 @@ import DocumentActionBar from "@/components/document-action-bar";
 import DocumentScaleWrapper from "@/components/document-scale-wrapper";
 import ConvertToInvoiceButton from "./convert-button";
 import AcceptLinkButton from "./accept-link-button";
+import ApprovalActions from "@/components/approval-actions";
 
 export default async function QuoteDetailPage({
   params,
@@ -17,6 +18,11 @@ export default async function QuoteDetailPage({
     redirect("/");
   }
   const scope = orgId ? { orgId } : { userId };
+
+  const userProfile = orgId
+    ? await prisma.userProfile.findUnique({ where: { id: userId }, select: { role: true } })
+    : null;
+  const userRole = userProfile?.role ?? "USER";
 
   const { id } = await params;
 
@@ -94,6 +100,18 @@ export default async function QuoteDetailPage({
 
   return (
     <div className="flex flex-col">
+      {orgId && (
+        <div className="no-print mb-4">
+          <ApprovalActions
+            type="quote"
+            id={quote.id}
+            approvalStatus={quote.approvalStatus ?? "DRAFT"}
+            approvedAt={quote.approvedAt ?? null}
+            rejectionNote={quote.rejectionNote ?? null}
+            userRole={userRole}
+          />
+        </div>
+      )}
       <DocumentActionBar
         backUrl="/dashboard/quotes"
         editUrl={`/dashboard/quotes/${quote.id}/edit`}
