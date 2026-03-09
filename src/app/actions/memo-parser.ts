@@ -42,7 +42,14 @@ export async function parseMemoToInvoice(memoText: string): Promise<MemoParseRes
       return { success: false, message: "メモテキストが入力されていません" };
     }
 
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const nextMonthEnd = new Date(today.getFullYear(), today.getMonth() + 2, 0);
+    const nextMonthEndStr = `${nextMonthEnd.getFullYear()}-${String(nextMonthEnd.getMonth() + 1).padStart(2, "0")}-${String(nextMonthEnd.getDate()).padStart(2, "0")}`;
+
     const prompt = `以下のメモテキストから請求書の情報を抽出してください。話し言葉や自由な形式でも構いません。JSON形式のみで返してください（Markdown記法は不要）。
+
+今日の日付: ${todayStr}
 
 メモテキスト:
 ${memoText}
@@ -50,10 +57,10 @@ ${memoText}
 以下の形式でJSONを返してください:
 {
   "clientName": "取引先名（会社名・個人名）",
-  "clientEmail": "メールアドレス（あれば）",
-  "clientAddress": "住所（あれば）",
-  "issueDate": "発行日（YYYY-MM-DD形式、なければ今日の日付）",
-  "dueDate": "支払期限（YYYY-MM-DD形式、なければ翌月末）",
+  "clientEmail": "メールアドレス（あれば、なければnull）",
+  "clientAddress": "住所（あれば、なければnull）",
+  "issueDate": "発行日（YYYY-MM-DD形式、メモに明示されている場合のみ。なければnull）",
+  "dueDate": "支払期限（YYYY-MM-DD形式、メモに明示されている場合のみ。なければnull）",
   "items": [
     {
       "name": "項目名",
@@ -61,28 +68,30 @@ ${memoText}
       "unitPrice": 単価（数値、カンマは除去）
     }
   ],
-  "note": "備考・メモ（あれば）"
+  "note": "備考・メモ（あれば、なければnull）"
 }
 
 例:
-メモ: "株式会社ABC、システム開発費10万円、2025年2月15日発行、支払期限3月末"
+メモ: "株式会社ABC、システム開発費10万円、2月15日発行、支払期限3月末"
 → {
   "clientName": "株式会社ABC",
-  "issueDate": "2025-02-15",
-  "dueDate": "2025-03-31",
+  "issueDate": "${todayStr.slice(0, 4)}-02-15",
+  "dueDate": "${todayStr.slice(0, 4)}-03-31",
   "items": [{"name": "システム開発費", "quantity": 1, "unitPrice": 100000}]
 }
 
-メモ: "山田さんに、ホームページ制作50,000円と、SEO対策30,000円、合計8万円で請求して"
+メモ: "山田さんに、ホームページ制作50,000円と、SEO対策30,000円で請求して"
 → {
   "clientName": "山田",
+  "issueDate": null,
+  "dueDate": null,
   "items": [
     {"name": "ホームページ制作", "quantity": 1, "unitPrice": 50000},
     {"name": "SEO対策", "quantity": 1, "unitPrice": 30000}
   ]
 }
 
-日付が不明な場合は現在の日付を使用してください。金額は数値のみで返してください（カンマや「円」は除去）。`;
+日付はメモに明示的に書かれている場合のみ設定してください。書かれていない場合は必ずnullにしてください。金額は数値のみで返してください（カンマや「円」は除去）。`;
 
     const responseText = await generateText(prompt, { maxTokens: 2000 });
 
@@ -111,18 +120,12 @@ ${memoText}
       return { success: false, message: "取引先名と項目が必須です。メモに含まれているか確認してください。" };
     }
 
-    // 日付のデフォルト値設定
-    const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-    const nextMonthEnd = new Date(today.getFullYear(), today.getMonth() + 2, 0);
-    const nextMonthEndStr = `${nextMonthEnd.getFullYear()}-${String(nextMonthEnd.getMonth() + 1).padStart(2, "0")}-${String(nextMonthEnd.getDate()).padStart(2, "0")}`;
-
     const result: MemoParseResult["data"] = {
       clientName: String(parsed.clientName || "").trim(),
       clientEmail: parsed.clientEmail ? String(parsed.clientEmail).trim() : undefined,
       clientAddress: parsed.clientAddress ? String(parsed.clientAddress).trim() : undefined,
-      issueDate: parsed.issueDate || todayStr,
-      dueDate: parsed.dueDate || nextMonthEndStr,
+      issueDate: parsed.issueDate && parsed.issueDate !== "null" ? parsed.issueDate : undefined,
+      dueDate: parsed.dueDate && parsed.dueDate !== "null" ? parsed.dueDate : undefined,
       items: parsed.items.map((item: any) => ({
         name: String(item.name || "").trim(),
         quantity: Number(item.quantity) || 1,
@@ -230,7 +233,12 @@ export async function parseMemoToQuote(memoText: string): Promise<MemoParseResul
       return { success: false, message: "メモテキストが入力されていません" };
     }
 
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
     const prompt = `以下のメモテキストから見積書の情報を抽出してください。話し言葉や自由な形式でも構いません。JSON形式のみで返してください（Markdown記法は不要）。
+
+今日の日付: ${todayStr}
 
 メモテキスト:
 ${memoText}
@@ -238,10 +246,10 @@ ${memoText}
 以下の形式でJSONを返してください:
 {
   "clientName": "取引先名（会社名・個人名）",
-  "clientEmail": "メールアドレス（あれば）",
-  "clientAddress": "住所（あれば）",
-  "issueDate": "発行日（YYYY-MM-DD形式、なければ今日の日付）",
-  "validUntil": "有効期限（YYYY-MM-DD形式、なければ翌月末）",
+  "clientEmail": "メールアドレス（あれば、なければnull）",
+  "clientAddress": "住所（あれば、なければnull）",
+  "issueDate": "発行日（YYYY-MM-DD形式、メモに明示されている場合のみ。なければnull）",
+  "validUntil": "有効期限（YYYY-MM-DD形式、メモに明示されている場合のみ。なければnull）",
   "items": [
     {
       "name": "項目名",
@@ -249,27 +257,27 @@ ${memoText}
       "unitPrice": 単価（数値、カンマは除去）
     }
   ],
-  "note": "備考・メモ（あれば）"
+  "note": "備考・メモ（あれば、なければnull）"
 }
 
 例:
 メモ: "株式会社XYZに、ウェブサイト制作見積もり、50万円で提案して"
 → {
   "clientName": "株式会社XYZ",
-  "validUntil": "2025-03-31",
+  "issueDate": null,
+  "validUntil": null,
   "items": [{"name": "ウェブサイト制作", "quantity": 1, "unitPrice": 500000}]
 }
 
-メモ: "田中さん、アプリ開発の見積もり、開発費100万、保守費月5万、3ヶ月分"
+メモ: "田中さん、アプリ開発の見積もり、有効期限4月末、開発費100万"
 → {
   "clientName": "田中",
-  "items": [
-    {"name": "アプリ開発", "quantity": 1, "unitPrice": 1000000},
-    {"name": "保守費", "quantity": 3, "unitPrice": 50000}
-  ]
+  "issueDate": null,
+  "validUntil": "${todayStr.slice(0, 4)}-04-30",
+  "items": [{"name": "アプリ開発", "quantity": 1, "unitPrice": 1000000}]
 }
 
-日付が不明な場合は現在の日付を使用してください。金額は数値のみで返してください（カンマや「円」は除去）。`;
+日付はメモに明示的に書かれている場合のみ設定してください。書かれていない場合は必ずnullにしてください。金額は数値のみで返してください（カンマや「円」は除去）。`;
 
     const responseText = await generateText(prompt, { maxTokens: 2000 });
 
@@ -298,18 +306,12 @@ ${memoText}
       return { success: false, message: "取引先名と項目が必須です。メモに含まれているか確認してください。" };
     }
 
-    // 日付のデフォルト値設定
-    const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-    const nextMonthEnd = new Date(today.getFullYear(), today.getMonth() + 2, 0);
-    const nextMonthEndStr = `${nextMonthEnd.getFullYear()}-${String(nextMonthEnd.getMonth() + 1).padStart(2, "0")}-${String(nextMonthEnd.getDate()).padStart(2, "0")}`;
-
     const result: MemoParseResult["data"] = {
       clientName: String(parsed.clientName || "").trim(),
       clientEmail: parsed.clientEmail ? String(parsed.clientEmail).trim() : undefined,
       clientAddress: parsed.clientAddress ? String(parsed.clientAddress).trim() : undefined,
-      issueDate: parsed.issueDate || todayStr,
-      validUntil: parsed.validUntil || nextMonthEndStr,
+      issueDate: parsed.issueDate && parsed.issueDate !== "null" ? parsed.issueDate : undefined,
+      validUntil: parsed.validUntil && parsed.validUntil !== "null" ? parsed.validUntil : undefined,
       items: parsed.items.map((item: any) => ({
         name: String(item.name || "").trim(),
         quantity: Number(item.quantity) || 1,
