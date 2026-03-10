@@ -26,14 +26,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "ja_JP",
-    url: "https://billia.com",
+    url: "https://billia-inc.com",
     siteName: "Billia",
     title: "Billia | 次世代クラウド請求管理プラットフォーム",
     description:
       "組織の請求業務を統合管理するクラウドERP。インボイス制度・電帳法に完全対応。承認フロー標準化、ガバナンス強化、経理DXを推進。",
     images: [
       {
-        url: "/og-image.png",
+        url: "https://billia-inc.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "Billia - 次世代クラウド請求管理プラットフォーム",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     title: "Billia | 次世代クラウド請求管理プラットフォーム",
     description:
       "組織の請求業務を統合管理するクラウドERP。インボイス制度・電帳法に完全対応。承認フロー標準化、ガバナンス強化、経理DXを推進。",
-    images: ["/og-image.png"],
+    images: ["https://billia-inc.com/og-image.png"],
   },
   robots: {
     index: true,
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://billia.com",
+    canonical: "https://billia-inc.com",
   },
 };
 
