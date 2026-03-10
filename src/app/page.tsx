@@ -24,6 +24,7 @@ import {
   Building2,
   Briefcase,
   Home,
+  Mic,
 } from "lucide-react";
 
 /* ── coming soon badge ───────────────────────────────────── */
@@ -117,6 +118,12 @@ function MemoMockup() {
         <span className="font-semibold text-slate-700 text-[11px]">AIメモ読み取り</span>
       </div>
       <div className="rounded-lg bg-slate-50 border border-slate-200 p-2 mb-2">
+        <div className="flex items-center gap-1.5 mb-1">
+          <div className="flex items-center gap-1 bg-purple-100 text-purple-600 rounded-full px-1.5 py-0.5">
+            <Mic className="w-2.5 h-2.5" />
+            <span className="text-[9px] font-medium">音声入力</span>
+          </div>
+        </div>
         <p className="text-slate-500 text-[10px] italic">"山田商事に12月分 24万 請求、来月15日払い"</p>
       </div>
       <div className="flex items-center gap-1 text-[9px] text-slate-400 mb-2">
@@ -490,11 +497,20 @@ export default function LandingPage() {
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             <div className="rounded-2xl border border-purple-100 bg-gradient-to-b from-purple-50 to-white p-6">
-              <div className="inline-flex rounded-xl bg-purple-100 p-2.5 mb-4"><Brain className="w-5 h-5 text-purple-600" /></div>
-              <h3 className="font-bold text-slate-900 mb-2">メモから自動生成</h3>
-              <p className="text-sm text-slate-500 leading-relaxed mb-4">日本語の自然なメモを入力するだけで、請求書・見積書・経費を自動生成。取引先・金額・期日をAIが読み取ります。</p>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="inline-flex rounded-xl bg-purple-100 p-2.5"><Brain className="w-5 h-5 text-purple-600" /></div>
+                <span className="inline-flex items-center gap-1 bg-purple-600 text-white rounded-full px-2.5 py-1 text-[11px] font-semibold">
+                  <Mic className="w-3 h-3" />
+                  音声入力対応
+                </span>
+              </div>
+              <h3 className="font-bold text-slate-900 mb-2">メモ・音声から自動生成</h3>
+              <p className="text-sm text-slate-500 leading-relaxed mb-4">日本語で話しかけるか、テキストを入力するだけで請求書・見積書・経費を自動生成。取引先・金額・期日をAIが読み取ります。</p>
               <div className="rounded-lg bg-white border border-purple-100 px-3 py-2">
-                <p className="text-[11px] text-slate-400 italic mb-1">入力例</p>
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <Mic className="w-3 h-3 text-purple-400" />
+                  <p className="text-[11px] text-slate-400 italic">話しかける or 入力</p>
+                </div>
                 <p className="text-xs text-slate-600">"山田商事に12月分 24万 請求、来月15日払い"</p>
               </div>
             </div>
