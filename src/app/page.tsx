@@ -424,35 +424,33 @@ export default function LandingPage() {
               <div className="inline-flex rounded-2xl bg-purple-100 p-3 mb-5">
                 <Brain className="w-6 h-6 text-purple-600" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">話し言葉でそのまま作れる</h3>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">話しかけるだけで請求書ができる</h3>
               <p className="text-slate-500 text-sm leading-relaxed mb-6">
-                「山田商事に3月分50万、来月末払い」と話しかけるか入力するだけ。AIが請求書・見積書の明細を自動で組み立てます。定期請求の設定もスイッチひとつ。
+                「山田商事に3月分50万、来月末払い」と話すだけ。AIが取引先・金額・支払期日を読み取り、即座に請求書を作成します。
               </p>
-              <div className="space-y-3 mb-4">
-                <div className="flex justify-end">
-                  <div className="bg-purple-600 text-white text-xs rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-[85%] leading-relaxed">
-                    山田商事に3月分システム保守費 50万円、来月末払いで請求して
-                  </div>
-                </div>
-                <div className="flex justify-start">
-                  <div className="bg-white border border-purple-100 text-xs rounded-2xl rounded-tl-sm px-4 py-2.5 max-w-[85%] leading-relaxed text-slate-700 shadow-sm">
-                    ✓ 請求書を作成しました<br />
-                    <span className="text-slate-400">取引先: 山田商事 ／ ¥500,000 ／ 4/30 払い</span>
-                  </div>
-                </div>
-              </div>
               {/* 音声入力UIモックアップ */}
-              <div className="rounded-2xl overflow-hidden relative" style={{ background: "linear-gradient(135deg, #0f0a1e 0%, #1a0a2e 50%, #0a1628 100%)" }}>
+              <div className="rounded-2xl overflow-hidden relative mb-4" style={{ background: "linear-gradient(135deg, #0f0a1e 0%, #1a0a2e 50%, #0a1628 100%)" }}>
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                   <div className="w-48 h-48 rounded-full blur-3xl opacity-70" style={{ background: "radial-gradient(circle, rgba(139,92,246,0.7) 0%, rgba(59,130,246,0.5) 40%, transparent 70%)" }} />
                 </div>
-                <div className="relative flex flex-col items-center py-6 px-6 gap-2.5">
+                <div className="relative flex flex-col items-center py-6 px-6 gap-2">
                   <div className="w-14 h-14 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm flex items-center justify-center shadow-lg">
                     <Mic className="w-6 h-6 text-white" />
                   </div>
                   <p className="text-white font-semibold text-sm tracking-wide">聞いています...</p>
-                  <p className="text-white/45 text-xs">話してください</p>
-                  <div className="mt-1 bg-white/10 border border-white/20 rounded-full px-7 py-1.5 text-white/70 text-xs font-medium">完了</div>
+                  <p className="text-white/60 text-xs italic">"山田商事に3月分50万、来月末払いで"</p>
+                </div>
+              </div>
+              {/* 生成結果 */}
+              <div className="rounded-2xl border border-purple-100 bg-white p-4 shadow-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">✓ 請求書を作成しました</span>
+                </div>
+                <div className="space-y-1.5 text-xs text-slate-700">
+                  <div className="flex justify-between"><span className="text-slate-400">取引先</span><span className="font-medium">山田商事</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">件名</span><span className="font-medium">3月分システム保守費</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">金額</span><span className="font-bold text-slate-900">¥500,000</span></div>
+                  <div className="flex justify-between"><span className="text-slate-400">支払期日</span><span className="font-medium">2025/04/30</span></div>
                 </div>
               </div>
             </div>
