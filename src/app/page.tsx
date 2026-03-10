@@ -426,9 +426,9 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">話し言葉でそのまま作れる</h3>
               <p className="text-slate-500 text-sm leading-relaxed mb-6">
-                「山田商事に3月分50万、来月末払い」と入力するだけ。AIが請求書・見積書の明細を自動で組み立てます。定期請求の設定もスイッチひとつ。
+                「山田商事に3月分50万、来月末払い」と話しかけるか入力するだけ。AIが請求書・見積書の明細を自動で組み立てます。定期請求の設定もスイッチひとつ。
               </p>
-              <div className="space-y-3">
+              <div className="space-y-3 mb-4">
                 <div className="flex justify-end">
                   <div className="bg-purple-600 text-white text-xs rounded-2xl rounded-tr-sm px-4 py-2.5 max-w-[85%] leading-relaxed">
                     山田商事に3月分システム保守費 50万円、来月末払いで請求して
@@ -439,6 +439,20 @@ export default function LandingPage() {
                     ✓ 請求書を作成しました<br />
                     <span className="text-slate-400">取引先: 山田商事 ／ ¥500,000 ／ 4/30 払い</span>
                   </div>
+                </div>
+              </div>
+              {/* 音声入力UIモックアップ */}
+              <div className="rounded-2xl overflow-hidden relative" style={{ background: "linear-gradient(135deg, #0f0a1e 0%, #1a0a2e 50%, #0a1628 100%)" }}>
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <div className="w-48 h-48 rounded-full blur-3xl opacity-70" style={{ background: "radial-gradient(circle, rgba(139,92,246,0.7) 0%, rgba(59,130,246,0.5) 40%, transparent 70%)" }} />
+                </div>
+                <div className="relative flex flex-col items-center py-6 px-6 gap-2.5">
+                  <div className="w-14 h-14 rounded-full border border-white/25 bg-white/10 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                    <Mic className="w-6 h-6 text-white" />
+                  </div>
+                  <p className="text-white font-semibold text-sm tracking-wide">聞いています...</p>
+                  <p className="text-white/45 text-xs">話してください</p>
+                  <div className="mt-1 bg-white/10 border border-white/20 rounded-full px-7 py-1.5 text-white/70 text-xs font-medium">完了</div>
                 </div>
               </div>
             </div>
