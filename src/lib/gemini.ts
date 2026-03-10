@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 
 const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY || "";
+const defaultModel = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
 /** Gemini API クライアント（APIキー未設定時はnull） */
 let geminiClient: GoogleGenAI | null = null;
@@ -85,7 +86,7 @@ export async function generateText(prompt: string, options?: { maxTokens?: numbe
   return retryApiCall(async () => {
     const gemini = getGeminiClient();
     const response = await gemini.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: defaultModel,
       contents: prompt,
       config: {
         maxOutputTokens: options?.maxTokens ?? 500,
@@ -106,7 +107,7 @@ export async function generateContentWithImage(
     try {
       const gemini = getGeminiClient();
       const response = await gemini.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: defaultModel,
         contents: [
           { inlineData: { mimeType, data: imageBase64 } },
           { text: prompt },

@@ -429,6 +429,13 @@ export default function LandingPage() {
                 「山田商事に3月分50万、来月末払い」と話すだけ。AIが取引先・金額・支払期日を読み取り、即座に請求書を作成します。
               </p>
               {/* 音声入力UIモックアップ */}
+              <div className="flex items-center gap-2 mb-3">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full text-white" style={{ background: "linear-gradient(90deg, #7c3aed, #2563eb)" }}>
+                  <Mic className="w-3 h-3" />
+                  音声入力にも対応
+                </span>
+                <span className="text-xs text-purple-400 font-medium">— 話すだけでOK</span>
+              </div>
               <div className="rounded-2xl overflow-hidden relative mb-4" style={{ background: "linear-gradient(135deg, #0f0a1e 0%, #1a0a2e 50%, #0a1628 100%)" }}>
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                   <div className="w-48 h-48 rounded-full blur-3xl opacity-70" style={{ background: "radial-gradient(circle, rgba(139,92,246,0.7) 0%, rgba(59,130,246,0.5) 40%, transparent 70%)" }} />

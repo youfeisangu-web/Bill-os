@@ -262,7 +262,13 @@ export async function importDocument(
       .filter((x): x is { name: string; quantity: number; unitPrice: number; taxRate: number } => x !== null);
 
     if (items.length === 0) {
-      return { success: false, message: "明細が1件も抽出できませんでした" };
+      const fallbackTotal = Number(parsed.totalAmount) || 0;
+      if (fallbackTotal > 0) {
+        // 明細が読み取れなかった場合、合計金額から税抜き単価を逆算してフォールバック明細を作成
+        items.push({ name: "サービス利用料", quantity: 1, unitPrice: Math.round(fallbackTotal / 1.1), taxRate: 10 });
+      } else {
+        return { success: false, message: "明細が1件も抽出できませんでした" };
+      }
     }
 
     const result: DocumentImportData = {
