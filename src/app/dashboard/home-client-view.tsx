@@ -55,7 +55,7 @@ export default function HomeClientView({ salesProps, summary, monthlyData, pendi
       {/* ページヘッダー */}
       <div>
         <p className="text-xs text-billia-text-muted">{year}年{month}月</p>
-        <h1 className="text-xl font-semibold text-billia-text md:text-2xl">ダッシュボード</h1>
+        <h1 className="text-xl font-semibold text-billia-text md:text-2xl">ダッシュボード 🏠</h1>
       </div>
 
       {/* 承認待ちアラート（チーム利用時・件数がある場合のみ） */}
