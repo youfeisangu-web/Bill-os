@@ -382,15 +382,17 @@ export default function LandingPage() {
                 href="https://camp-fire.jp/projects/933297/preview?token=100zygut&utm_campaign=cp_po_share_c_msg_projects_show"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-3 text-sm transition-colors shadow-sm"
+                className="inline-flex rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-3 text-sm transition-colors shadow-sm"
               >
                 開始前プレビューはこちら
-                <ArrowRight className="w-4 h-4" />
               </a>
-              <div className="mt-6 inline-flex items-center gap-2 rounded-2xl border border-pink-200 bg-pink-50 px-5 py-3">
-                <span className="text-lg">❤️</span>
-                <span className="text-sm font-bold text-pink-600">ページのお気に入り登録もお願いします！</span>
-              </div>
+              <p className="mt-4 text-slate-500 text-sm leading-relaxed max-w-xl mx-auto">
+                クラウドファンディングは近日公開予定です。<br />
+                支援者の皆さまには、リリース時にご利用いただける特別プランをご用意しています。
+              </p>
+              <p className="mt-3 text-slate-500 text-sm md:text-base leading-relaxed">
+                ❤️ ページの<a href="https://camp-fire.jp/projects/933297/preview?token=100zygut&utm_campaign=cp_po_share_c_msg_projects_show" target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:underline">お気に入り登録</a>もお願いします！
+              </p>
             </div>
           </div>
         </div>
