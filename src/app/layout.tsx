@@ -84,9 +84,9 @@ export default function RootLayout({
           <ThemeProvider attribute="class" forcedTheme="light" enableSystem={false}>
             {children}
           </ThemeProvider>
+          <GoogleAnalytics gaId="G-MWCN8YX2RP" />
         </body>
       </html>
-      <GoogleAnalytics gaId="G-MWCN8YX2RP" />
     </ClerkProvider>
   );
 }
