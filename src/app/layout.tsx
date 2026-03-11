@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { jaJP } from "@clerk/localizations";
 import { ThemeProvider } from "@/components/theme-provider";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -85,6 +86,7 @@ export default function RootLayout({
           </ThemeProvider>
         </body>
       </html>
+      <GoogleAnalytics gaId="G-MWCN8YX2RP" />
     </ClerkProvider>
   );
 }
