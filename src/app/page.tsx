@@ -347,52 +347,79 @@ export default function LandingPage() {
       </section>
 
       {/* ── crowdfunding ── */}
-      <section id="crowdfunding" className="py-16 md:py-20">
+      <section id="crowdfunding" className="py-16 md:py-24 relative">
+        <div className="pointer-events-none absolute inset-x-0 -z-10 h-64 -translate-y-10 bg-gradient-to-b from-orange-50/80 via-white to-transparent" />
         <div className="mx-auto max-w-4xl px-5 md:px-8">
-          <div className="rounded-3xl border-2 border-dashed border-orange-200 bg-white p-10 md:p-14 text-center relative overflow-hidden">
-            <div className="pointer-events-none absolute -top-16 -right-16 w-64 h-64 rounded-full opacity-10" style={{ background: "radial-gradient(circle, #f97316 0%, transparent 70%)" }} />
-            <div className="pointer-events-none absolute -bottom-16 -left-16 w-64 h-64 rounded-full opacity-10" style={{ background: "radial-gradient(circle, #fb923c 0%, transparent 70%)" }} />
-            <div className="relative">
-              <div className="inline-flex items-center gap-2 rounded-full bg-orange-50 border border-orange-200 px-4 py-1.5 text-xs font-semibold text-orange-600 mb-4">
-                <Megaphone className="w-3.5 h-3.5" />クラウドファンディング
-              </div>
-              <div className="mb-4">
-                <ComingSoonBadge size="md" color="orange" />
-              </div>
-              <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight mb-4">
-                Billiaの成長を、<br className="md:hidden" />一緒に支えてください
-              </h2>
-              <p className="text-slate-500 text-sm md:text-base leading-relaxed max-w-xl mx-auto mb-8">
-                クラウドファンディングを近日公開予定です。<br />
-                支援者の方にはリリース時に特別プランをご提供します。
-              </p>
-              <div className="flex items-center justify-center gap-2 mb-5">
-                <div className="inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2">
-                  <div className="w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center shrink-0">
-                    <span className="text-white font-black text-[10px]">C</span>
-                  </div>
-                  <span className="font-bold text-orange-700 text-sm tracking-wide">CAMPFIRE</span>
+          <div className="relative group rounded-[2rem] border border-orange-200/70 bg-gradient-to-br from-orange-50/80 via-white to-amber-50/80 p-[1px] shadow-[0_18px_45px_rgba(248,113,22,0.25)] hover:shadow-[0_22px_70px_rgba(248,113,22,0.35)] transition-shadow duration-700">
+            {/* glow orbs */}
+            <div className="pointer-events-none absolute -top-10 -right-10 w-40 h-40 rounded-full bg-orange-400/40 blur-3xl opacity-40 group-hover:opacity-70 animate-pulse" />
+            <div className="pointer-events-none absolute -bottom-16 -left-6 w-52 h-52 rounded-full bg-amber-300/40 blur-3xl opacity-40 group-hover:opacity-70 animate-pulse" />
+            {/* inner card */}
+            <div className="relative rounded-[2rem] bg-white/90 backdrop-blur-sm p-8 md:p-14 text-center overflow-hidden">
+              {/* top shine */}
+              <div className="pointer-events-none absolute inset-x-10 -top-10 h-12 bg-gradient-to-b from-white/60 to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-700" />
+              <div className="relative">
+                <div className="inline-flex items-center gap-2 rounded-full bg-orange-50 border border-orange-200/80 px-4 py-1.5 text-xs font-semibold text-orange-600 mb-4 shadow-sm group-hover:shadow-md transition-shadow duration-500">
+                  <Megaphone className="w-3.5 h-3.5 text-orange-500 motion-safe:animate-bounce" />
+                  クラウドファンディング
                 </div>
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
-                  限定公開中
-                </span>
+                <div className="mb-4 flex justify-center">
+                  <div className="relative inline-flex items-center">
+                    <div className="absolute inset-0 rounded-full bg-orange-300/40 blur-md opacity-60 group-hover:opacity-90 animate-pulse" />
+                    <div className="relative">
+                      <ComingSoonBadge size="md" color="orange" />
+                    </div>
+                  </div>
+                </div>
+                <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight mb-4">
+                  Billiaの成長を、<br className="md:hidden" />一緒に支えてください
+                </h2>
+                <p className="text-slate-500 text-sm md:text-base leading-relaxed max-w-xl mx-auto mb-6">
+                  クラウドファンディングを近日公開予定です。<br />
+                  支援者の方にはリリース時に特別プランをご提供します。
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
+                  <div className="inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2 shadow-sm group-hover:shadow-md transition-shadow duration-500">
+                    <div className="w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center shrink-0">
+                      <span className="text-white font-black text-[10px]">C</span>
+                    </div>
+                    <span className="font-bold text-orange-700 text-sm tracking-wide">CAMPFIRE</span>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full shadow-sm">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
+                    限定公開中
+                  </span>
+                </div>
+                <div className="flex justify-center mb-5">
+                  <a
+                    href="https://camp-fire.jp/projects/933297/preview?token=100zygut&utm_campaign=cp_po_share_c_msg_projects_show"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="relative inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-orange-500 via-orange-400 to-amber-400 px-[2px] py-[2px] shadow-[0_12px_30px_rgba(248,113,22,0.45)] hover:shadow-[0_16px_40px_rgba(248,113,22,0.65)] transition-all duration-500 group/button"
+                  >
+                    <span className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 group-hover/button:opacity-100 transition-opacity duration-500" />
+                    <span className="relative flex items-center gap-2 rounded-[1rem] bg-orange-500 px-6 py-3 text-sm font-bold text-white">
+                      開始前プレビューはこちら
+                    </span>
+                  </a>
+                </div>
+                <p className="mt-2 text-slate-500 text-sm leading-relaxed max-w-xl mx-auto">
+                  クラウドファンディングは近日公開予定です。<br />
+                  支援者の皆さまには、リリース時にご利用いただける特別プランをご用意しています。
+                </p>
+                <p className="mt-3 text-slate-500 text-sm md:text-base leading-relaxed">
+                  ❤️ ページの
+                  <a
+                    href="https://camp-fire.jp/projects/933297/preview?token=100zygut&utm_campaign=cp_po_share_c_msg_projects_show"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-orange-600 hover:underline decoration-2 underline-offset-4"
+                  >
+                    お気に入り登録
+                  </a>
+                  もお願いします！
+                </p>
               </div>
-              <a
-                href="https://camp-fire.jp/projects/933297/preview?token=100zygut&utm_campaign=cp_po_share_c_msg_projects_show"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-3 text-sm transition-colors shadow-sm"
-              >
-                開始前プレビューはこちら
-              </a>
-              <p className="mt-4 text-slate-500 text-sm leading-relaxed max-w-xl mx-auto">
-                クラウドファンディングは近日公開予定です。<br />
-                支援者の皆さまには、リリース時にご利用いただける特別プランをご用意しています。
-              </p>
-              <p className="mt-3 text-slate-500 text-sm md:text-base leading-relaxed">
-                ❤️ ページの<a href="https://camp-fire.jp/projects/933297/preview?token=100zygut&utm_campaign=cp_po_share_c_msg_projects_show" target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:underline">お気に入り登録</a>もお願いします！
-              </p>
             </div>
           </div>
         </div>
