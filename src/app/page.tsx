@@ -25,6 +25,7 @@ import {
   Briefcase,
   Home,
   Mic,
+  Megaphone,
 } from "lucide-react";
 
 /* ── coming soon badge ───────────────────────────────────── */
@@ -258,6 +259,11 @@ export default function LandingPage() {
               <a href="#ai" className="hover:text-slate-900 transition-colors">AI機能</a>
               <a href="#pricing" className="hover:text-slate-900 transition-colors">料金</a>
               <a href="#faq" className="hover:text-slate-900 transition-colors">FAQ</a>
+              <a href="#crowdfunding" className="inline-flex items-center gap-1.5 hover:text-slate-900 transition-colors">
+                <Megaphone className="w-3.5 h-3.5 text-orange-500" />
+                <span>クラウドファンディング</span>
+                <span className="text-[10px] font-bold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded-full">Soon</span>
+              </a>
             </nav>
             <div className="hidden md:block">
               <ComingSoonBadge size="sm" />
@@ -273,6 +279,10 @@ export default function LandingPage() {
             <a href="#ai" className="block text-sm text-slate-600" onClick={() => setMenuOpen(false)}>AI機能</a>
             <a href="#pricing" className="block text-sm text-slate-600" onClick={() => setMenuOpen(false)}>料金</a>
             <a href="#faq" className="block text-sm text-slate-600" onClick={() => setMenuOpen(false)}>FAQ</a>
+            <a href="#crowdfunding" className="inline-flex items-center gap-1.5 text-sm text-slate-600" onClick={() => setMenuOpen(false)}>
+              <Megaphone className="w-3.5 h-3.5 text-orange-500" />クラウドファンディング
+              <span className="text-[10px] font-bold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded-full">Soon</span>
+            </a>
             <div className="pt-2"><ComingSoonBadge size="sm" /></div>
           </div>
         )}
@@ -794,6 +804,33 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <div className="flex justify-center"><ComingSoonBadge size="md" /></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── crowdfunding ── */}
+      <section id="crowdfunding" className="py-20 md:py-28 bg-slate-50">
+        <div className="mx-auto max-w-4xl px-5 md:px-8">
+          <div className="rounded-3xl border-2 border-dashed border-orange-200 bg-white p-10 md:p-14 text-center relative overflow-hidden">
+            <div className="pointer-events-none absolute -top-16 -right-16 w-64 h-64 rounded-full opacity-10" style={{ background: "radial-gradient(circle, #f97316 0%, transparent 70%)" }} />
+            <div className="pointer-events-none absolute -bottom-16 -left-16 w-64 h-64 rounded-full opacity-10" style={{ background: "radial-gradient(circle, #fb923c 0%, transparent 70%)" }} />
+            <div className="relative">
+              <div className="inline-flex items-center gap-2 rounded-full bg-orange-50 border border-orange-200 px-4 py-1.5 text-xs font-semibold text-orange-600 mb-6">
+                <Megaphone className="w-3.5 h-3.5" />クラウドファンディング
+              </div>
+              <ComingSoonBadge size="md" />
+              <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight mt-6 mb-4">
+                Billiaの成長を、<br className="md:hidden" />一緒に支えてください
+              </h2>
+              <p className="text-slate-500 text-sm md:text-base leading-relaxed max-w-xl mx-auto mb-8">
+                クラウドファンディングを近日公開予定です。<br />
+                支援者の方にはリリース時に特別プランをご提供します。
+              </p>
+              <div className="inline-flex items-center gap-2 rounded-full border-2 border-dashed border-orange-200 bg-orange-50 px-6 py-3 text-orange-600 font-semibold text-sm">
+                <Clock className="w-4 h-4" />
+                公開までしばらくお待ちください
               </div>
             </div>
           </div>
