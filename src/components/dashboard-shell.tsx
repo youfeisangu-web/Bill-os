@@ -3,7 +3,6 @@
 import { useState } from "react";
 import DashboardSidebar from "./dashboard-sidebar";
 import DashboardHeader from "./dashboard-header";
-import NavigationLoader from "./navigation-loader";
 import BottomNav from "./bottom-nav";
 
 export default function DashboardShell({
@@ -28,7 +27,6 @@ export default function DashboardShell({
         </main>
       </div>
       <BottomNav onMoreClick={() => setSidebarOpen(true)} />
-      <NavigationLoader />
     </div>
   );
 }

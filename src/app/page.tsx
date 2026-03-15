@@ -42,35 +42,40 @@ function ComingSoonBadge({ size = "md", color = "blue" }: { size?: "sm" | "md" |
   );
 }
 
-/* ── mockups ─────────────────────────────────────────────── */
+/* ── mockups (Neo-Futuristic Edition) ───────────────────────── */
+
+const glass = "rounded-[24px] border border-white/60 bg-white/40 backdrop-blur-3xl shadow-[0_30px_80px_-15px_rgba(0,0,0,0.1)] p-6 w-full text-xs transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] hover:bg-white/60 hover:-translate-y-2 hover:shadow-[0_45px_100px_-15px_rgba(0,0,0,0.2)]";
 
 function DashboardMockup() {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-lg p-4 w-full text-xs">
-      <div className="flex items-center gap-2 mb-3">
-        <div className="w-2 h-2 rounded-full bg-red-400" />
-        <div className="w-2 h-2 rounded-full bg-yellow-400" />
-        <div className="w-2 h-2 rounded-full bg-green-400" />
-        <span className="ml-2 text-slate-400 text-[10px]">Billia ダッシュボード</span>
+    <div className={glass}>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="flex gap-1.5">
+          <div className="w-2.5 h-2.5 rounded-full bg-red-500/80 shadow-[0_0_12px_rgba(239,68,68,0.4)]" />
+          <div className="w-2.5 h-2.5 rounded-full bg-amber-400/80 shadow-[0_0_12px_rgba(251,191,36,0.4)]" />
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 shadow-[0_0_12px_rgba(16,185,129,0.4)]" />
+        </div>
+        <span className="ml-1 font-bold tracking-widest uppercase text-[9px] text-black/40">システム要約</span>
       </div>
-      <div className="grid grid-cols-3 gap-2 mb-3">
+      <div className="grid grid-cols-3 gap-3 mb-5">
         {[
-          { label: "今月売上", value: "¥1,240,000", color: "text-blue-600" },
-          { label: "未回収", value: "¥320,000", color: "text-amber-600" },
-          { label: "経費合計", value: "¥89,500", color: "text-slate-600" },
-        ].map((k) => (
-          <div key={k.label} className="rounded-lg border border-slate-100 bg-slate-50 p-2">
-            <p className="text-[9px] text-slate-400">{k.label}</p>
-            <p className={`font-bold text-[11px] ${k.color}`}>{k.value}</p>
+          { label: "売上高", value: "¥1,240K" },
+          { label: "未回収", value: "¥320K" },
+          { label: "経費", value: "¥89.5K" },
+        ].map((k, i) => (
+          <div key={k.label} className="rounded-2xl border border-black/5 bg-white/50 shadow-sm p-4 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent translate-x-[-150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-out" />
+            <p className="text-[8px] font-bold tracking-[0.2em] text-black/40 mb-1.5">{k.label}</p>
+            <p className={`font-mono text-[15px] font-extrabold tracking-tight tabular-nums ${i === 1 ? 'text-amber-600' : 'text-black'}`}>{k.value}</p>
           </div>
         ))}
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         {["山田商事", "株式会社ABC", "田中工務店"].map((name, i) => (
-          <div key={name} className="flex items-center justify-between rounded-lg border border-slate-100 px-2 py-1.5">
-            <span className="text-slate-600">{name}</span>
-            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-              i === 0 ? "bg-green-100 text-green-700" : i === 1 ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
+          <div key={name} className="flex items-center justify-between rounded-2xl border border-black/5 bg-white/60 px-4 py-3 cursor-pointer hover:bg-white transition-colors">
+            <span className="font-bold text-black/80">{name}</span>
+            <span className={`text-[9px] font-bold tracking-wider px-2.5 py-1 rounded-lg uppercase shadow-sm ${
+              i === 0 ? "bg-black text-white" : i === 1 ? "bg-amber-100 text-amber-800" : "bg-black/5 text-black/60"
             }`}>
               {i === 0 ? "入金済" : i === 1 ? "未回収" : "送付済"}
             </span>
@@ -83,28 +88,28 @@ function DashboardMockup() {
 
 function InvoiceListMockup() {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-lg p-4 w-full text-xs">
-      <div className="flex items-center justify-between mb-3">
-        <span className="font-semibold text-slate-700 text-[11px]">請求書一覧</span>
-        <div className="flex gap-1">
-          <span className="bg-blue-100 text-blue-700 text-[9px] px-2 py-0.5 rounded-full">すべて</span>
-          <span className="bg-slate-100 text-slate-500 text-[9px] px-2 py-0.5 rounded-full">未回収</span>
+    <div className={glass}>
+      <div className="flex items-center justify-between mb-6">
+        <span className="font-extrabold text-black text-[14px] tracking-tight">請求状況</span>
+        <div className="flex gap-1.5 p-1 rounded-xl bg-black/5 backdrop-blur-md border border-black/5">
+          <span className="bg-white text-black text-[9px] font-bold px-3 py-1.5 rounded-lg shadow-sm cursor-pointer">すべて</span>
+          <span className="text-black/60 hover:text-black hover:bg-white/50 text-[9px] font-bold px-3 py-1.5 rounded-lg cursor-pointer transition-all">未回収</span>
         </div>
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-2.5">
         {[
-          { name: "株式会社山田商事", amount: "¥240,000", status: "入金済", color: "bg-emerald-100 text-emerald-700" },
-          { name: "田中製作所", amount: "¥180,000", status: "未回収", color: "bg-amber-100 text-amber-700" },
-          { name: "鈴木コンサルティング", amount: "¥95,000", status: "送付済", color: "bg-blue-100 text-blue-700" },
+          { name: "山田商事", amount: "¥240,000", status: "入金済", dark: true },
+          { name: "田中製作所", amount: "¥180,000", status: "未回収", dark: false },
+          { name: "鈴木コンサルティング", amount: "¥95,000", status: "送付済", dark: false },
         ].map((item) => (
-          <div key={item.name} className="flex items-center justify-between rounded-lg border border-slate-100 px-2 py-1.5">
+          <div key={item.name} className="flex items-center justify-between rounded-2xl border border-black/5 bg-white/50 px-4 py-3 group cursor-pointer hover:border-black/10 hover:bg-white hover:shadow-lg transition-all duration-300">
             <div>
-              <p className="text-slate-700 text-[10px]">{item.name}</p>
-              <p className="text-slate-400 text-[9px]">2026-03-15</p>
+              <p className="font-extrabold text-black text-[12px] mb-1">{item.name}</p>
+              <p className="font-mono text-black/40 text-[10px] tracking-widest tabular-nums font-semibold">2026.03.15</p>
             </div>
-            <div className="text-right">
-              <p className="font-bold text-slate-800 text-[11px]">{item.amount}</p>
-              <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${item.color}`}>{item.status}</span>
+            <div className="text-right flex flex-col items-end">
+              <p className="font-mono font-extrabold text-black text-[14px] tracking-tight tabular-nums mb-1.5">{item.amount}</p>
+              <span className={`text-[8px] px-2.5 py-0.5 rounded-md font-bold tracking-widest ${item.dark ? "bg-black text-white shadow-md" : "bg-black/10 text-black/60"}`}>{item.status}</span>
             </div>
           </div>
         ))}
@@ -115,38 +120,41 @@ function InvoiceListMockup() {
 
 function MemoMockup() {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-lg p-4 w-full text-xs">
-      <div className="flex items-center gap-2 mb-3">
-        <Sparkles className="w-3.5 h-3.5 text-purple-500" />
-        <span className="font-semibold text-slate-700 text-[11px]">AIメモ読み取り</span>
+    <div className={glass}>
+      <div className="flex items-center gap-2 mb-6">
+        <div className="w-6 h-6 rounded-lg bg-black flex items-center justify-center shadow-lg shadow-black/20">
+          <Sparkles className="w-3.5 h-3.5 text-white" />
+        </div>
+        <span className="font-extrabold text-black text-[14px] tracking-tight">AI アシスタント</span>
       </div>
-      <div className="rounded-lg bg-slate-50 border border-slate-200 p-2 mb-2">
-        <div className="flex items-center gap-1.5 mb-1">
-          <div className="flex items-center gap-1 bg-purple-100 text-purple-600 rounded-full px-1.5 py-0.5">
-            <Mic className="w-2.5 h-2.5" />
-            <span className="text-[9px] font-medium">音声入力</span>
+      <div className="rounded-2xl bg-black/5 border border-black/5 p-4 mb-4 relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-[1.5s] ease-in-out" />
+        <div className="flex items-center gap-2 mb-2 relative">
+          <div className="flex items-center gap-1.5 bg-black text-white rounded-lg px-2.5 py-1 shadow-md">
+            <Mic className="w-3 h-3" />
+            <span className="text-[8px] font-bold tracking-[0.2em] uppercase">音声入力</span>
           </div>
         </div>
-        <p className="text-slate-500 text-[10px] italic">"山田商事に12月分 24万 請求、来月15日払い"</p>
+        <p className="text-black/80 font-bold text-[12px] leading-relaxed italic relative">"山田商事に12月分 <span className="text-blue-600">24万</span> 請求、来月15日払い"</p>
       </div>
-      <div className="flex items-center gap-1 text-[9px] text-slate-400 mb-2">
-        <div className="w-3 h-3 rounded-full bg-purple-100 flex items-center justify-center">
-          <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+      <div className="flex items-center gap-2 text-[9px] font-bold tracking-[0.2em] uppercase text-black/40 mb-4 pl-1">
+        <div className="w-3.5 h-3.5 rounded-full bg-black/10 flex items-center justify-center">
+          <div className="w-1.5 h-1.5 rounded-full bg-black animate-ping" />
         </div>
-        AIが解析中...
+        Processing...
       </div>
-      <div className="rounded-lg border border-purple-200 bg-purple-50 p-2 space-y-1">
-        <div className="flex justify-between">
-          <span className="text-slate-500 text-[9px]">取引先</span>
-          <span className="font-medium text-slate-700 text-[9px]">山田商事</span>
+      <div className="rounded-2xl border border-black/10 bg-white/80 backdrop-blur-md p-4 space-y-3 shadow-lg shadow-black/5">
+        <div className="flex justify-between items-center border-b border-black/5 pb-2">
+          <span className="text-black/40 text-[9px] font-bold tracking-widest uppercase">取引先</span>
+          <span className="font-extrabold text-black text-[12px]">山田商事</span>
         </div>
-        <div className="flex justify-between">
-          <span className="text-slate-500 text-[9px]">金額</span>
-          <span className="font-medium text-slate-700 text-[9px]">¥240,000</span>
+        <div className="flex justify-between items-center border-b border-black/5 pb-2">
+          <span className="text-black/40 text-[9px] font-bold tracking-widest uppercase">ご請求額</span>
+          <span className="font-mono font-extrabold text-black text-[12px] tabular-nums">¥240,000</span>
         </div>
-        <div className="flex justify-between">
-          <span className="text-slate-500 text-[9px]">支払期限</span>
-          <span className="font-medium text-slate-700 text-[9px]">翌月15日</span>
+        <div className="flex justify-between items-center">
+          <span className="text-black/40 text-[9px] font-bold tracking-widest uppercase">期日</span>
+          <span className="font-extrabold text-black text-[12px]">翌月15日</span>
         </div>
       </div>
     </div>
@@ -155,31 +163,40 @@ function MemoMockup() {
 
 function FinanceMockup() {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-lg p-4 w-full text-xs">
-      <div className="flex items-center gap-2 mb-3">
-        <TrendingUp className="w-3.5 h-3.5 text-blue-500" />
-        <span className="font-semibold text-slate-700 text-[11px]">財務サマリー</span>
+    <div className={glass}>
+      <div className="flex items-center gap-2 mb-6">
+        <div className="w-6 h-6 rounded-lg bg-black flex items-center justify-center shadow-lg shadow-black/20">
+          <TrendingUp className="w-3.5 h-3.5 text-white" />
+        </div>
+        <span className="font-extrabold text-black text-[14px] tracking-tight">財務データ詳細</span>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-4">
         {[
           { month: "1月", amount: 820000, bar: "65%" },
           { month: "2月", amount: 1040000, bar: "82%" },
           { month: "3月", amount: 1280000, bar: "100%" },
         ].map((item) => (
-          <div key={item.month} className="flex items-center gap-2">
-            <span className="text-slate-400 text-[9px] w-5">{item.month}</span>
-            <div className="flex-1 h-2.5 rounded-full bg-slate-100 overflow-hidden">
-              <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-400" style={{ width: item.bar }} />
+          <div key={item.month} className="flex items-center gap-3">
+            <span className="text-black/40 font-bold tracking-[0.2em] text-[10px] w-8">{item.month}</span>
+            <div className="flex-1 h-2 rounded-full bg-black/5 overflow-hidden">
+              <div className="h-full rounded-full bg-black relative overflow-hidden" style={{ width: item.bar }}>
+                 <div className="absolute inset-0 w-[200%] bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[scroll_2s_linear_infinite] -translate-x-full" />
+              </div>
             </div>
-            <span className="text-slate-700 font-medium text-[9px] w-14 text-right">
-              ¥{(item.amount / 10000).toFixed(0)}万
+            <span className="font-mono font-black text-black text-[11px] w-14 text-right tabular-nums">
+              ¥{(item.amount / 10000).toFixed(0)}K
             </span>
           </div>
         ))}
       </div>
-      <div className="mt-3 pt-2.5 border-t border-slate-100 flex justify-between">
-        <span className="text-slate-400 text-[9px]">未回収率</span>
-        <span className="font-bold text-amber-600 text-[11px]">12.4%</span>
+      <div className="mt-5 pt-5 border-t border-black/10 flex justify-between items-end">
+        <div>
+          <span className="text-black/40 text-[9px] font-bold tracking-[0.2em] uppercase block mb-1">未回収率</span>
+          <span className="font-mono font-extrabold text-amber-600 text-2xl tabular-nums leading-none drop-shadow-sm">12.4%</span>
+        </div>
+        <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center text-white hover:bg-neutral-800 transition-transform hover:scale-110 cursor-pointer shadow-lg shadow-black/20">
+          <ArrowRight className="w-4 h-4" />
+        </div>
       </div>
     </div>
   );
@@ -187,31 +204,31 @@ function FinanceMockup() {
 
 function TeamMockup() {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-lg p-4 w-full text-xs">
-      <div className="flex items-center justify-between mb-3">
-        <span className="font-semibold text-slate-700 text-[11px]">チームメンバー</span>
-        <span className="bg-blue-100 text-blue-700 text-[9px] px-2 py-0.5 rounded-full">3名</span>
+    <div className={glass}>
+      <div className="flex items-center justify-between mb-6">
+        <span className="font-extrabold text-black text-[14px] tracking-tight">チームメンバー</span>
+        <span className="bg-black text-white text-[9px] font-bold px-3 py-1.5 rounded-lg shadow-sm">3名 稼働中</span>
       </div>
-      <div className="space-y-2 mb-3">
+      <div className="space-y-2 mb-4">
         {[
-          { name: "山田 太郎", role: "管理者", avatar: "山", color: "bg-blue-100 text-blue-700" },
-          { name: "鈴木 花子", role: "メンバー", avatar: "鈴", color: "bg-emerald-100 text-emerald-700" },
-          { name: "田中 一郎", role: "メンバー", avatar: "田", color: "bg-violet-100 text-violet-700" },
+          { name: "山田 太郎", role: "管理者", initial: "Y", dark: true },
+          { name: "鈴木 花子", role: "メンバー", initial: "S", dark: false },
+          { name: "田中 一郎", role: "メンバー", initial: "T", dark: false },
         ].map((member) => (
-          <div key={member.name} className="flex items-center justify-between rounded-lg border border-slate-100 px-2 py-1.5">
-            <div className="flex items-center gap-2">
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${member.color}`}>
-                {member.avatar}
+          <div key={member.name} className="flex items-center justify-between rounded-2xl border border-black/5 bg-white/50 px-4 py-3 group cursor-pointer hover:bg-white hover:shadow-md transition-all">
+            <div className="flex items-center gap-3">
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-[12px] font-black ${member.dark ? 'bg-black text-white' : 'bg-black/5 text-black'}`}>
+                {member.initial}
               </div>
-              <span className="text-slate-700 text-[10px]">{member.name}</span>
+              <span className="font-extrabold text-black/80 text-[12px]">{member.name}</span>
             </div>
-            <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium ${member.color}`}>{member.role}</span>
+            <span className={`text-[8px] px-2.5 py-0.5 rounded-md font-bold tracking-widest ${member.dark ? 'bg-black text-white' : 'bg-black/10 text-black/60'}`}>{member.role}</span>
           </div>
         ))}
       </div>
-      <div className="rounded-lg bg-blue-50 border border-blue-100 px-2 py-1.5 flex items-center justify-center gap-1.5 text-[10px] text-blue-600 font-medium">
-        <Users className="w-3 h-3" />
-        + メンバーを招待
+      <div className="rounded-2xl bg-black/5 border border-black/10 px-4 py-3 flex items-center justify-center gap-2 text-[10px] text-black font-extrabold tracking-widest uppercase cursor-pointer hover:bg-black hover:text-white transition-all shadow-sm">
+        <Users className="w-4 h-4" />
+        Invite Member
       </div>
     </div>
   );
@@ -263,84 +280,129 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-white text-slate-900 selection:bg-black selection:text-white font-sans overflow-x-hidden">
       {/* ── navbar ── */}
-      <header className="sticky top-0 z-50 border-b border-slate-100 bg-white/80 backdrop-blur-md">
-        <div className="mx-auto max-w-6xl px-5 md:px-8">
-          <div className="flex h-14 items-center justify-between">
-            <div className="flex items-center gap-2.5 shrink-0">
-              <Image src="/logo.png" alt="Billia" width={32} height={32} className="object-contain" />
-              <span className="font-bold text-[1.1rem] tracking-tight text-slate-900">Billia</span>
+      <header className="fixed top-0 inset-x-0 z-50 transition-all duration-300 border-b border-black/5 bg-white/30 backdrop-blur-2xl">
+        <div className="mx-auto max-w-7xl px-6 md:px-10">
+          <div className="flex h-20 items-center justify-between">
+            <div className="flex items-center gap-3 shrink-0 group cursor-pointer">
+              <Image src="/logo.png" alt="Billia" width={36} height={36} className="object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.15)] group-hover:scale-105 transition-transform duration-300" />
+              <span className="font-extrabold text-[22px] tracking-tighter text-black">Billia</span>
             </div>
-            <nav className="hidden md:flex items-center gap-6 text-sm text-slate-600">
-              <a href="#features" className="hover:text-slate-900 transition-colors">機能</a>
-              <a href="#ai" className="hover:text-slate-900 transition-colors">AI機能</a>
-              <a href="#pricing" className="hover:text-slate-900 transition-colors">料金</a>
-              <a href="#faq" className="hover:text-slate-900 transition-colors">FAQ</a>
-              <a href="#roadmap" className="hover:text-slate-900 transition-colors">今後の展開</a>
-              <a href="#crowdfunding" className="inline-flex items-center gap-1.5 hover:text-slate-900 transition-colors">
-                <Megaphone className="w-3.5 h-3.5 text-orange-500" />
-                <span>クラウドファンディング</span>
-                <span className="text-[10px] font-bold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded-full">Soon</span>
+            <nav className="hidden md:flex items-center gap-8 text-[13px] font-bold tracking-tight text-black/50">
+              <a href="#features" className="hover:text-black transition-colors duration-300">機能</a>
+              <a href="#ai" className="hover:text-black transition-colors duration-300">AI アシスタント</a>
+              <a href="#pricing" className="hover:text-black transition-colors duration-300">料金</a>
+              <a href="#roadmap" className="hover:text-black transition-colors duration-300">開発ロードマップ</a>
+              <a href="#crowdfunding" className="inline-flex items-center gap-2 hover:text-black transition-colors duration-300 group">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-black/40 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-black"></span>
+                </span>
+                クラウドファンディング
+                <span className="text-[9px] font-black text-white bg-black px-2 py-0.5 rounded-md shadow-md opacity-90 group-hover:scale-110 transition-transform">近日公開</span>
               </a>
             </nav>
             <div className="hidden md:block">
-              <ComingSoonBadge size="sm" />
+              <button className="h-11 px-6 rounded-xl bg-black text-white text-[13px] font-bold tracking-wide hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(0,0,0,0.25)] hover:bg-neutral-800 transition-all duration-300">
+                ウェイティングリスト登録
+              </button>
             </div>
-            <button className="md:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors" onClick={() => setMenuOpen(!menuOpen)}>
-              {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            <button className="md:hidden p-2 text-black hover:bg-black/5 rounded-xl transition-colors" onClick={() => setMenuOpen(!menuOpen)}>
+              {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
+        {/* Mobile menu handled below if needed, simplified for aesthetic */}
         {menuOpen && (
-          <div className="md:hidden border-t border-slate-100 bg-white px-5 py-4 space-y-3">
-            <a href="#features" className="block text-sm text-slate-600" onClick={() => setMenuOpen(false)}>機能</a>
-            <a href="#ai" className="block text-sm text-slate-600" onClick={() => setMenuOpen(false)}>AI機能</a>
-            <a href="#pricing" className="block text-sm text-slate-600" onClick={() => setMenuOpen(false)}>料金</a>
-            <a href="#faq" className="block text-sm text-slate-600" onClick={() => setMenuOpen(false)}>FAQ</a>
-            <a href="#crowdfunding" className="inline-flex items-center gap-1.5 text-sm text-slate-600" onClick={() => setMenuOpen(false)}>
-              <Megaphone className="w-3.5 h-3.5 text-orange-500" />クラウドファンディング
-              <span className="text-[10px] font-bold text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded-full">Soon</span>
-            </a>
-            <div className="pt-2"><ComingSoonBadge size="sm" /></div>
+          <div className="md:hidden absolute top-20 left-0 w-full border-b border-black/5 bg-white/90 backdrop-blur-3xl px-6 py-6 space-y-4 shadow-2xl animate-in slide-in-from-top-2">
+            <a href="#features" className="block text-base font-bold text-black/70 hover:text-black" onClick={() => setMenuOpen(false)}>機能</a>
+            <a href="#ai" className="block text-base font-bold text-black/70 hover:text-black" onClick={() => setMenuOpen(false)}>AI アシスタント</a>
+            <a href="#pricing" className="block text-base font-bold text-black/70 hover:text-black" onClick={() => setMenuOpen(false)}>料金</a>
+            <a href="#roadmap" className="block text-base font-bold text-black/70 hover:text-black" onClick={() => setMenuOpen(false)}>開発ロードマップ</a>
           </div>
         )}
       </header>
 
       {/* ── hero ── */}
-      <section className="relative overflow-hidden pt-16 pb-24 md:pt-24 md:pb-32">
-        <div className="pointer-events-none absolute inset-0 -z-10" style={{
-          background: `
-            radial-gradient(ellipse 80% 60% at 20% 10%, rgba(96,165,250,0.18) 0%, transparent 60%),
-            radial-gradient(ellipse 60% 50% at 80% 20%, rgba(99,102,241,0.14) 0%, transparent 55%),
-            radial-gradient(ellipse 70% 60% at 50% 100%, rgba(34,211,238,0.12) 0%, transparent 50%),
-            #ffffff
-          `,
-        }} />
-        <div className="mx-auto max-w-6xl px-5 md:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-12 md:mb-16">
-            <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-1.5 text-xs font-medium text-blue-700 mb-6">
-              <Sparkles className="w-3.5 h-3.5" />
-              AIで請求業務を自動化
+      <section className="relative w-full min-h-[100dvh] pt-20 flex items-center overflow-hidden">
+        {/* Background Image: using next/image or fallback pattern */}
+        <div className="absolute inset-0 -z-30">
+          <Image 
+            src="/hero-bg.jpg" 
+            alt="Neo-futuristic white space"
+            fill
+            className="object-cover object-center"
+            priority
+          />
+          {/* Fallback color/gradient behind image just in case */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white via-slate-50 to-neutral-200 -z-40" />
+        </div>
+        
+        {/* Gradient overlays to ensure text readability even on bright white */}
+        <div className="absolute inset-0 -z-20 bg-gradient-to-r from-white/90 via-white/50 to-transparent md:w-2/3" />
+        <div className="absolute inset-0 -z-20 bg-gradient-to-t from-white via-transparent to-transparent opacity-80" />
+
+        <div className="mx-auto max-w-7xl px-6 md:px-10 w-full relative z-10 py-12 lg:py-0">
+          <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-12">
+            
+            {/* Left Content */}
+            <div className="w-full lg:w-1/2 pt-10 lg:pt-0">
+              <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] fill-mode-both">
+                <div className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/60 backdrop-blur-xl px-4 py-1.5 text-[10px] font-bold tracking-[0.2em] uppercase text-black mb-8 shadow-sm">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  次世代の自動化ツール
+                </div>
+              </div>
+              
+              <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150 ease-[cubic-bezier(0.2,0.8,0.2,1)] fill-mode-both">
+                <h1 className="text-5xl sm:text-6xl lg:text-[60px] xl:text-[72px] font-extrabold tracking-tight leading-[1.15] text-black mb-6 drop-shadow-sm break-keep">
+                  経理を、もっと
+                  <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-br from-black via-black/80 to-neutral-400">
+                    シンプルに。
+                  </span>
+                </h1>
+              </div>
+              
+              <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] fill-mode-both">
+                <p className="text-base md:text-lg text-black/60 font-medium leading-relaxed max-w-lg mb-10 backdrop-blur-md bg-white/40 p-6 rounded-3xl border border-white/60 shadow-[0_12px_40px_rgba(0,0,0,0.06)] ring-1 ring-black/5 break-keep">
+                  面倒な入力作業はAIがスマートにアシスト。手入力に追われる日々は終わり、息を呑むほど美しいデザインであなたのビジネスを加速させます。
+                </p>
+              </div>
+              
+              <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] fill-mode-both flex flex-wrap items-center gap-4">
+                <button className="h-14 px-8 rounded-2xl bg-black text-white font-bold tracking-tight hover:-translate-y-1 hover:bg-neutral-800 transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] shadow-[0_12px_30px_rgba(0,0,0,0.3)]">
+                  無料で始める
+                </button>
+                <button className="h-14 px-8 rounded-2xl bg-white/60 backdrop-blur-xl border border-black/10 text-black font-bold tracking-tight hover:-translate-y-1 hover:bg-white hover:shadow-[0_12px_30px_rgba(0,0,0,0.1)] transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)]">
+                  デモを見る
+                </button>
+              </div>
             </div>
-            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight mb-5">
-              AIで、請求管理を
-              <br />
-              <span className="bg-clip-text text-transparent" style={{ backgroundImage: "linear-gradient(135deg, #2563eb 0%, #06b6d4 50%, #6366f1 100%)" }}>
-                もっとラクに。
-              </span>
-            </h1>
-            <p className="text-base md:text-lg text-slate-500 leading-relaxed mb-8 max-w-xl mx-auto">
-              請求書・見積書・経費・支払管理をひとつに。
-              AIがメモや書類を読み取り、入力の手間を限りなくゼロへ。
-            </p>
-            <ComingSoonBadge size="lg" />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto md:max-w-none md:grid-cols-4">
-            <DashboardMockup />
-            <InvoiceListMockup />
-            <MemoMockup />
-            <FinanceMockup />
+
+            {/* Right Mockups 3D Layering */}
+            <div className="w-full lg:w-1/2 relative h-[500px] lg:h-[700px] flex items-center justify-center lg:perspective-[2000px] mt-10 lg:mt-0">
+               {/* 3D layered glass mockups */}
+               {/* Dashboard mockup (Back) */}
+               <div className="absolute top-0 right-0 lg:-right-10 w-[95%] sm:w-[360px] transform lg:rotate-y-[-12deg] lg:rotate-x-[6deg] lg:translate-z-[-20px] transition-transform duration-1000 ease-out hover:rotate-0 hover:z-40 z-10 opacity-90 hover:opacity-100">
+                 <DashboardMockup />
+               </div>
+               
+               {/* Invoice mockup (Middle overlapping) */}
+               <div className="absolute top-44 left-0 lg:-left-10 w-[90%] sm:w-[340px] transform lg:rotate-y-[8deg] lg:rotate-x-[4deg] lg:translate-z-[40px] transition-transform duration-1000 ease-out hover:rotate-0 hover:z-40 z-20">
+                 <InvoiceListMockup />
+               </div>
+
+               {/* Analytics mockup (Front right bottom) */}
+               <div className="absolute bottom-[-20px] lg:bottom-10 right-10 w-[85%] sm:w-[320px] transform lg:rotate-y-[-18deg] lg:rotate-x-[-8deg] lg:translate-z-[80px] transition-transform duration-1000 ease-out hover:rotate-0 hover:z-40 z-30">
+                 <FinanceMockup />
+               </div>
+
+               {/* Ambient Glow */}
+               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-gradient-to-tr from-white/0 via-white/50 to-white/0 blur-[100px] pointer-events-none -z-10" />
+            </div>
+
           </div>
         </div>
       </section>
@@ -356,8 +418,8 @@ export default function LandingPage() {
               { value: "3分", label: "で請求書を作成", color: "text-cyan-600" },
             ].map((s) => (
               <div key={s.label}>
-                <p className={`text-3xl md:text-4xl font-black mb-1 ${s.color}`}>{s.value}</p>
-                <p className="text-sm text-slate-500">{s.label}</p>
+                <p className={`text-4xl md:text-5xl font-extrabold tracking-tighter tabular-nums mb-2 ${s.color}`}>{s.value}</p>
+                <p className="text-sm text-black/50">{s.label}</p>
               </div>
             ))}
           </div>
@@ -366,48 +428,35 @@ export default function LandingPage() {
 
       {/* ── crowdfunding ── */}
       <section id="crowdfunding" className="py-16 md:py-24 relative" ref={crowdfundingRef}>
-        <div className="pointer-events-none absolute inset-x-0 -z-10 h-64 -translate-y-10 bg-gradient-to-b from-orange-50/80 via-white to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 -z-10 h-64 -translate-y-10 bg-gradient-to-b from-black/5 via-white to-transparent" />
         <div className="mx-auto max-w-4xl px-5 md:px-8">
           <div
-            className={`relative group rounded-[2rem] border border-orange-200/70 bg-gradient-to-br from-orange-50/80 via-white to-amber-50/80 p-[1px] shadow-[0_18px_45px_rgba(248,113,22,0.25)] hover:shadow-[0_22px_70px_rgba(248,113,22,0.35)] transition-shadow duration-700 billia-fade-in-section overflow-visible ${crowdfundingInView ? "billia-fade-in-visible" : ""}`}
+            className={`relative group rounded-[2rem] border border-black/10 bg-gradient-to-br from-white/90 via-white/50 to-white/80 p-[1px] shadow-[0_18px_45px_rgba(0,0,0,0.05)] hover:shadow-[0_22px_70px_rgba(0,0,0,0.1)] transition-shadow duration-700 billia-fade-in-section overflow-visible ${crowdfundingInView ? "billia-fade-in-visible" : ""}`}
           >
-            {/* glow orbs */}
-            <div className="pointer-events-none absolute -top-10 -right-10 w-40 h-40 rounded-full bg-orange-400/40 blur-3xl opacity-40 group-hover:opacity-70 animate-pulse" />
-            <div className="pointer-events-none absolute -bottom-16 -left-6 w-52 h-52 rounded-full bg-amber-300/40 blur-3xl opacity-40 group-hover:opacity-70 animate-pulse" />
+            {/* outer glow */}
+            <div className="pointer-events-none absolute -top-10 -right-10 w-40 h-40 rounded-full bg-black/5 blur-3xl opacity-40 group-hover:opacity-70 transition-opacity duration-1000" />
+            <div className="pointer-events-none absolute -bottom-16 -left-6 w-52 h-52 rounded-full bg-black/5 blur-3xl opacity-40 group-hover:opacity-70 transition-opacity duration-1000" />
             {/* inner card */}
-            <div className="relative rounded-[2rem] bg-white/90 backdrop-blur-sm p-8 md:p-14 text-center overflow-hidden">
-              {/* top shine */}
-              <div className="pointer-events-none absolute inset-x-10 -top-10 h-12 bg-gradient-to-b from-white/60 to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-700" />
+            <div className="relative rounded-[2rem] bg-white/70 backdrop-blur-xl p-8 md:p-14 text-center overflow-hidden">
               <div className="relative">
-                <div className="inline-flex items-center gap-2 rounded-full bg-orange-50 border border-orange-200/80 px-4 py-1.5 text-xs font-semibold text-orange-600 mb-4 shadow-sm group-hover:shadow-md transition-shadow duration-500">
-                  <Megaphone className="w-3.5 h-3.5 text-orange-500 motion-safe:animate-bounce" />
-                  クラウドファンディング
+                <div className="inline-flex items-center gap-2 rounded-full bg-black text-white px-5 py-2 text-[10px] font-bold tracking-[0.2em] uppercase mb-8 shadow-xl shadow-black/10 group-hover:shadow-2xl group-hover:-translate-y-1 transition-all duration-500">
+                  <Megaphone className="w-3.5 h-3.5 text-white" />
+                  クラウドファンディング予告
                 </div>
-                <div className="mb-4 flex justify-center">
-                  <div className="relative inline-flex items-center">
-                    <div className="absolute inset-0 rounded-full bg-orange-300/40 blur-md opacity-60 group-hover:opacity-90 animate-pulse" />
-                    <div className="relative">
-                      <ComingSoonBadge size="md" color="orange" />
-                    </div>
-                  </div>
-                </div>
-                <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight mb-4">
-                  Billiaの成長を、<br className="md:hidden" />一緒に支えてください
+                
+                <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-black mb-6 drop-shadow-sm break-keep">
+                  共に創る、<br className="md:hidden" />新しい経理のカタチ。
                 </h2>
-                <p className="text-slate-500 text-sm md:text-base leading-relaxed max-w-xl mx-auto mb-6">
-                  クラウドファンディングを近日公開予定<span className="whitespace-nowrap">です。</span>
-                  <br />
-                  支援者の方にはリリース時に特別プランをご提供します。
+                <p className="text-black/50 text-base md:text-lg font-medium leading-relaxed max-w-xl mx-auto mb-8 break-keep">
+                  まもなくクラウドファンディングを開始します。<br />
+                  初期支援者の皆様には、特別なプランをご用意しております。
                 </p>
-                <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
-                  <div className="inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2 shadow-sm group-hover:shadow-md transition-shadow duration-500">
-                    <div className="w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center shrink-0">
-                      <span className="text-white font-black text-[10px]">C</span>
-                    </div>
-                    <span className="font-bold text-orange-700 text-sm tracking-wide">CAMPFIRE</span>
+                <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
+                  <div className="inline-flex items-center gap-2 rounded-xl border border-black/5 bg-white px-5 py-2.5 shadow-sm group-hover:shadow-md transition-shadow duration-500">
+                    <span className="font-extrabold text-black tracking-widest text-xs uppercase">Campfire</span>
                   </div>
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full shadow-sm">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
+                  <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-bold text-blue-600 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-full shadow-sm">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse inline-block" />
                     限定公開中
                   </span>
                 </div>
@@ -416,26 +465,26 @@ export default function LandingPage() {
                     href="https://camp-fire.jp/projects/933297/preview?token=100zygut&utm_campaign=cp_po_share_c_msg_projects_show"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="relative inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-orange-500 via-orange-400 to-amber-400 px-[2px] py-[2px] shadow-[0_12px_30px_rgba(248,113,22,0.45)] hover:shadow-[0_16px_40px_rgba(248,113,22,0.65)] transition-all duration-500 group/button"
+                    className="relative inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-black via-neutral-800 to-neutral-900 px-[2px] py-[2px] shadow-[0_12px_30px_rgba(0,0,0,0.25)] hover:shadow-[0_16px_40px_rgba(0,0,0,0.35)] transition-all duration-500 group/button"
                   >
-                    <span className="absolute inset-0 rounded-2xl bg-white/20 opacity-0 group-hover/button:opacity-100 transition-opacity duration-500" />
-                    <span className="relative flex items-center gap-2 rounded-[1rem] bg-orange-500 px-6 py-3 text-sm font-bold text-white">
+                    <span className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 group-hover/button:opacity-100 transition-opacity duration-500" />
+                    <span className="relative flex items-center gap-2 rounded-[1rem] bg-black px-6 py-3 text-sm font-bold tracking-widest text-white">
                       開始前プレビューはこちら
                     </span>
                   </a>
                 </div>
-                <p className="mt-2 text-slate-500 text-sm leading-relaxed max-w-xl mx-auto">
+                <p className="mt-2 text-black/50 text-sm leading-relaxed max-w-xl mx-auto">
                   クラウドファンディングは近日公開予定<span className="whitespace-nowrap">です。</span>
                   <br />
                   支援者の皆さまには、リリース時にご利用いただける特別プランをご用意しています。
                 </p>
-                <p className="mt-3 text-slate-500 text-sm md:text-base leading-relaxed">
+                <p className="mt-3 text-black/50 text-sm md:text-base leading-relaxed">
                   ❤️ ページの
                   <a
                     href="https://camp-fire.jp/projects/933297/preview?token=100zygut&utm_campaign=cp_po_share_c_msg_projects_show"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-orange-600 hover:underline decoration-2 underline-offset-4"
+                    className="text-black font-extrabold hover:underline decoration-2 underline-offset-4"
                   >
                     お気に入り登録
                   </a>
@@ -463,7 +512,7 @@ export default function LandingPage() {
                   <f.icon className="w-5 h-5" />
                 </div>
                 <h3 className="font-bold text-sm text-slate-900 mb-1">{f.title}</h3>
-                <p className="text-xs text-slate-500 leading-relaxed">{f.desc}</p>
+                <p className="text-xs text-black/50 leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -478,7 +527,7 @@ export default function LandingPage() {
             <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight text-slate-900">
               見積から領収書まで、<br className="md:hidden" />全部Billiaで完結
             </h2>
-            <p className="mt-4 text-slate-500 text-sm md:text-base max-w-xl mx-auto leading-relaxed">
+            <p className="mt-4 text-black/50 text-sm md:text-base max-w-xl mx-auto leading-relaxed">
               4種類の書類がひとつにつながる。ワンクリックで変換、二重入力なし。
             </p>
           </div>
@@ -498,7 +547,7 @@ export default function LandingPage() {
                     <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full ${dot} shadow`} />
                   </div>
                   <h3 className="font-bold text-slate-900 mb-1">{label}</h3>
-                  <p className="text-xs text-slate-500">{desc}</p>
+                  <p className="text-xs text-black/50">{desc}</p>
                 </div>
               ))}
             </div>
@@ -510,7 +559,7 @@ export default function LandingPage() {
                 <Upload className="w-6 h-6 text-blue-600" />
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">他社の書類もそのまま読み込める</h3>
-              <p className="text-slate-500 text-sm leading-relaxed mb-5">
+              <p className="text-black/50 text-sm leading-relaxed mb-5">
                 取引先から届いたPDFや画像をアップロードするだけ。AIが取引先・金額・明細を自動抽出してデータ入力を代行。複数ファイル同時対応でまとめて処理できます。
               </p>
               <div className="flex flex-wrap gap-2 mb-6">
@@ -537,7 +586,7 @@ export default function LandingPage() {
                 <Brain className="w-6 h-6 text-purple-600" />
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">話しかけるだけで請求書ができる</h3>
-              <p className="text-slate-500 text-sm leading-relaxed mb-6">
+              <p className="text-black/50 text-sm leading-relaxed mb-6">
                 「山田商事に3月分50万、来月末払い」と話すだけ。AIが取引先・金額・支払期日を読み取り、即座に請求書を作成します。
               </p>
               {/* 音声入力UIモックアップ */}
@@ -600,7 +649,7 @@ export default function LandingPage() {
                     <t.icon className="w-5 h-5" />
                   </div>
                   <h3 className="font-bold text-slate-900 mb-2">{t.title}</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed mb-4">{t.desc}</p>
+                  <p className="text-sm text-black/50 leading-relaxed mb-4">{t.desc}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {t.tags.map((tag) => (
                       <span key={tag} className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${iconBg} ${iconText}`}>{tag}</span>
@@ -622,7 +671,7 @@ export default function LandingPage() {
               入力の手間を、<br className="md:hidden" />
               <span className="text-purple-600">限りなくゼロへ</span>
             </h2>
-            <p className="text-slate-500 max-w-lg mx-auto text-sm md:text-base leading-relaxed">
+            <p className="text-black/50 max-w-lg mx-auto text-sm md:text-base leading-relaxed">
               3つのAI機能で、書類作成・データ入力のあらゆる手間を自動化します。
             </p>
           </div>
@@ -636,7 +685,7 @@ export default function LandingPage() {
                 </span>
               </div>
               <h3 className="font-bold text-slate-900 mb-2">メモ・音声から自動生成</h3>
-              <p className="text-sm text-slate-500 leading-relaxed mb-4">日本語で話しかけるか、テキストを入力するだけで請求書・見積書・経費を自動生成。取引先・金額・期日をAIが読み取ります。</p>
+              <p className="text-sm text-black/50 leading-relaxed mb-4">日本語で話しかけるか、テキストを入力するだけで請求書・見積書・経費を自動生成。取引先・金額・期日をAIが読み取ります。</p>
               <div className="rounded-lg bg-white border border-purple-100 px-3 py-2">
                 <div className="flex items-center gap-1.5 mb-1.5">
                   <Mic className="w-3 h-3 text-purple-400" />
@@ -648,7 +697,7 @@ export default function LandingPage() {
             <div className="rounded-2xl border border-blue-100 bg-gradient-to-b from-blue-50 to-white p-6">
               <div className="inline-flex rounded-xl bg-blue-100 p-2.5 mb-4"><Upload className="w-5 h-5 text-blue-600" /></div>
               <h3 className="font-bold text-slate-900 mb-2">書類をそのままインポート</h3>
-              <p className="text-sm text-slate-500 leading-relaxed mb-4">請求書・見積書・領収書のPDFや画像をアップロードすると、OCRで取引先・金額・日付・明細を自動抽出してデータ登録。</p>
+              <p className="text-sm text-black/50 leading-relaxed mb-4">請求書・見積書・領収書のPDFや画像をアップロードすると、OCRで取引先・金額・日付・明細を自動抽出してデータ登録。</p>
               <div className="flex flex-wrap gap-1.5">
                 {["PDF","JPEG","PNG","HEIC","WebP"].map((f) => (
                   <span key={f} className="text-[10px] font-medium bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{f}</span>
@@ -658,7 +707,7 @@ export default function LandingPage() {
             <div className="rounded-2xl border border-emerald-100 bg-gradient-to-b from-emerald-50 to-white p-6">
               <div className="inline-flex rounded-xl bg-emerald-100 p-2.5 mb-4"><BarChart3 className="w-5 h-5 text-emerald-600" /></div>
               <h3 className="font-bold text-slate-900 mb-2">経費を自動分類</h3>
-              <p className="text-sm text-slate-500 leading-relaxed mb-4">領収書のスキャンやメモ入力時に、通信費・外注費・旅費交通費などの経費カテゴリをAIが自動で判定して分類します。</p>
+              <p className="text-sm text-black/50 leading-relaxed mb-4">領収書のスキャンやメモ入力時に、通信費・外注費・旅費交通費などの経費カテゴリをAIが自動で判定して分類します。</p>
               <div className="flex flex-wrap gap-1.5">
                 {["通信費","外注費","旅費交通費","消耗品"].map((c) => (
                   <span key={c} className="text-[10px] font-medium bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">{c}</span>
@@ -736,7 +785,7 @@ export default function LandingPage() {
                 売上・経費・未回収を<br />
                 <span className="text-cyan-600">ひとつの画面で確認</span>
               </h2>
-              <p className="text-slate-500 leading-relaxed mb-6">今月の請求額・未入金・経費をダッシュボードにまとめて表示。払い忘れや未回収をすぐに把握できます。</p>
+              <p className="text-black/50 leading-relaxed mb-6">今月の請求額・未入金・経費をダッシュボードにまとめて表示。払い忘れや未回収をすぐに把握できます。</p>
               <ul className="space-y-3">
                 {["今月の請求額・未入金をひと目で確認","経費の月次合計を自動集計","支払期限が近い請求書をすぐ把握"].map((item) => (
                   <li key={item} className="flex items-start gap-2.5 text-sm text-slate-700">
@@ -759,7 +808,7 @@ export default function LandingPage() {
                 チームで使える、<br />
                 <span className="text-blue-600">請求書管理</span>
               </h2>
-              <p className="text-slate-500 leading-relaxed mb-6">
+              <p className="text-black/50 leading-relaxed mb-6">
                 メンバーをメールで招待するだけ。招待されたユーザーは即座にチームの請求書・取引先・経費データにアクセスできます。個人アカウントとの切り替えもスムーズ。
               </p>
               <ul className="space-y-3">
@@ -857,7 +906,7 @@ export default function LandingPage() {
               <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight mb-5">
                 スマホでも、<br /><span className="text-blue-600">サクサク動く</span>
               </h2>
-              <p className="text-slate-500 leading-relaxed mb-6">PCだけではありません。Billiaはスマートフォンにも完全対応。外出先でも移動中でも、急な請求書の発行や入金確認がその場ですぐにできます。</p>
+              <p className="text-black/50 leading-relaxed mb-6">PCだけではありません。Billiaはスマートフォンにも完全対応。外出先でも移動中でも、急な請求書の発行や入金確認がその場ですぐにできます。</p>
               <ul className="space-y-3">
                 {["スマートフォンに最適化されたUI","外出先からでも請求書を即発行","入金確認・ステータス更新もモバイルから"].map((item) => (
                   <li key={item} className="flex items-start gap-2.5 text-sm text-slate-700">
@@ -879,7 +928,7 @@ export default function LandingPage() {
             <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight text-slate-900 mb-4">
               Billiaは、もっと進化する。
             </h2>
-            <p className="text-slate-500 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-black/50 max-w-2xl mx-auto leading-relaxed">
               私たちは、単なる「ツール」で終わるつもりはありません。皆様のビジネス・事務作業の「当たり前」を根本から変えるための、今後の大型アップデート予定を公開します。
             </p>
           </div>
@@ -934,7 +983,7 @@ export default function LandingPage() {
                         {group.features.map((f, j) => (
                           <li key={j}>
                             <h4 className="font-bold text-slate-900 mb-1 text-sm">{f.t}</h4>
-                            <p className="text-slate-500 text-xs leading-relaxed">{f.d}</p>
+                            <p className="text-black/50 text-xs leading-relaxed">{f.d}</p>
                           </li>
                         ))}
                       </ul>
@@ -955,7 +1004,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-4xl px-5 md:px-8 text-center">
           <p className="billia-label mb-3">料金</p>
           <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight mb-4">シンプルな料金体系</h2>
-          <p className="text-slate-500 mb-12 max-w-md mx-auto">すべての機能が使える、月額定額プランのみ。隠れた費用は一切なし。</p>
+          <p className="text-black/50 mb-12 max-w-md mx-auto">すべての機能が使える、月額定額プランのみ。隠れた費用は一切なし。</p>
           <div className="max-w-sm mx-auto">
             <div className="rounded-3xl p-8 text-left relative overflow-hidden" style={{ background: "linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #06b6d4 100%)" }}>
               <div className="pointer-events-none absolute -top-20 -right-20 w-64 h-64 rounded-full opacity-20" style={{ background: "radial-gradient(circle, #ffffff 0%, transparent 70%)" }} />
@@ -1007,7 +1056,7 @@ export default function LandingPage() {
                 <div className="text-4xl font-black text-slate-100 mb-3">{s.step}</div>
                 <div className={`inline-flex rounded-2xl p-3 mb-4 ${s.color}`}><s.icon className="w-6 h-6" /></div>
                 <h3 className="font-bold text-base text-slate-900 mb-2">{s.title}</h3>
-                <p className="text-sm text-slate-500 leading-relaxed">{s.desc}</p>
+                <p className="text-sm text-black/50 leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -1033,7 +1082,7 @@ export default function LandingPage() {
                 </button>
                 {openFaq === i && (
                   <div className="px-6 pb-4">
-                    <p className="text-sm text-slate-500 leading-relaxed">{faq.a}</p>
+                    <p className="text-sm text-black/50 leading-relaxed">{faq.a}</p>
                   </div>
                 )}
               </div>
