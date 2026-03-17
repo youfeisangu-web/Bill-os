@@ -381,20 +381,20 @@ export default function LandingPage() {
 
             {/* Right Mockups 3D Layering */}
             <div className="w-full lg:w-1/2 relative h-auto lg:h-[700px] flex items-center justify-center lg:perspective-[2000px] mt-10 lg:mt-0 pb-10 lg:pb-0">
-               {/* Mobile: stacked, Desktop: 3D layered glass mockups with strong shadow to separate them */}
-               <div className="relative w-full flex flex-col items-center gap-6 lg:block lg:w-full lg:h-full">
+               {/* Mobile: stacked deck effect, Desktop: 3D layered glass mockups */}
+               <div className="relative w-full h-[580px] sm:h-[650px] flex flex-col items-center lg:block lg:w-full lg:h-full mt-4 lg:mt-0">
                  {/* Dashboard mockup (Back) */}
-                 <div className="relative w-[95%] sm:w-[360px] lg:absolute lg:top-0 lg:-right-10 lg:w-[360px] transform lg:rotate-y-[-12deg] lg:rotate-x-[6deg] lg:translate-z-[-20px] transition-transform duration-1000 ease-out hover:rotate-0 hover:z-40 lg:z-10 opacity-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.2)] rounded-3xl">
+                 <div className="absolute top-0 w-[85%] sm:w-[320px] lg:top-0 lg:-right-10 lg:w-[360px] transform lg:rotate-y-[-12deg] lg:rotate-x-[6deg] lg:translate-z-[-20px] transition-transform duration-1000 ease-out hover:rotate-0 hover:z-40 z-10 opacity-100 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] rounded-3xl scale-[0.98] lg:scale-100">
                    <DashboardMockup />
                  </div>
                  
                  {/* Invoice mockup (Middle overlapping) */}
-                 <div className="relative w-[95%] sm:w-[360px] lg:absolute lg:top-44 lg:-left-10 lg:w-[340px] transform lg:rotate-y-[8deg] lg:rotate-x-[4deg] lg:translate-z-[40px] transition-transform duration-1000 ease-out hover:rotate-0 hover:z-40 lg:z-20 opacity-100 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.25)] rounded-3xl">
+                 <div className="absolute top-[32%] sm:top-[30%] lg:top-44 w-[92%] sm:w-[340px] lg:-left-10 lg:w-[340px] transform lg:rotate-y-[8deg] lg:rotate-x-[4deg] lg:translate-z-[40px] transition-transform duration-1000 ease-out hover:rotate-0 hover:z-40 z-20 opacity-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.2)] rounded-3xl scale-100">
                    <InvoiceListMockup />
                  </div>
 
                  {/* Analytics mockup (Front right bottom) */}
-                 <div className="relative w-[95%] sm:w-[360px] lg:absolute lg:bottom-10 lg:right-10 lg:w-[320px] transform lg:rotate-y-[-18deg] lg:rotate-x-[-8deg] lg:translate-z-[80px] transition-transform duration-1000 ease-out hover:rotate-0 hover:z-40 lg:z-30 opacity-100 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] rounded-3xl">
+                 <div className="absolute top-[64%] sm:top-[60%] lg:bottom-10 lg:top-auto w-[100%] sm:w-[360px] lg:right-10 lg:w-[320px] transform lg:rotate-y-[-18deg] lg:rotate-x-[-8deg] lg:translate-z-[80px] transition-transform duration-1000 ease-out hover:rotate-0 hover:z-40 z-30 opacity-100 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.25)] rounded-3xl scale-[1.02] lg:scale-100">
                    <FinanceMockup />
                  </div>
                </div>
@@ -444,10 +444,10 @@ export default function LandingPage() {
                   クラウドファンディング予告
                 </div>
                 
-                <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-black mb-6 drop-shadow-sm break-keep">
+                <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-black mb-6 drop-shadow-sm">
                   共に創る、<br className="md:hidden" />新しい経理のカタチ。
                 </h2>
-                <p className="text-black/50 text-base md:text-lg font-medium leading-relaxed max-w-xl mx-auto mb-8 break-keep">
+                <p className="text-black/50 text-base md:text-lg font-medium leading-relaxed max-w-xl mx-auto mb-8">
                   まもなくクラウドファンディングを開始します。<br />
                   初期支援者の皆様には、特別なプランをご用意しております。
                 </p>
