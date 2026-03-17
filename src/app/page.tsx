@@ -356,7 +356,7 @@ export default function LandingPage() {
               </div>
               
               <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150 ease-[cubic-bezier(0.2,0.8,0.2,1)] fill-mode-both">
-                <h1 className="text-5xl sm:text-6xl lg:text-[60px] xl:text-[72px] font-extrabold tracking-tight leading-[1.15] text-black mb-6 drop-shadow-sm break-keep">
+                <h1 className="text-[42px] sm:text-5xl lg:text-[60px] xl:text-[72px] font-extrabold tracking-tight leading-[1.15] text-black mb-6 drop-shadow-sm">
                   経理を、もっと
                   <br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-br from-black via-black/80 to-neutral-400">
@@ -365,37 +365,34 @@ export default function LandingPage() {
                 </h1>
               </div>
               
-              <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] fill-mode-both">
-                <p className="text-base md:text-lg text-black/60 font-medium leading-relaxed max-w-lg mb-10 backdrop-blur-md bg-white/40 p-6 rounded-3xl border border-white/60 shadow-[0_12px_40px_rgba(0,0,0,0.06)] ring-1 ring-black/5 break-keep">
+              <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] fill-mode-both relative z-20">
+                <p className="text-base md:text-lg text-black/60 font-medium leading-relaxed max-w-lg mb-10 backdrop-blur-xl bg-white/70 p-6 rounded-3xl border border-black/5 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] ring-1 ring-black/5">
                   面倒な入力作業はAIがスマートにアシスト。手入力に追われる日々は終わり、息を呑むほど美しいデザインであなたのビジネスを加速させます。
                 </p>
               </div>
               
-              <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] fill-mode-both flex flex-wrap items-center gap-4">
-                <button className="h-14 px-8 rounded-2xl bg-black text-white font-bold tracking-tight hover:-translate-y-1 hover:bg-neutral-800 transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] shadow-[0_12px_30px_rgba(0,0,0,0.3)]">
+              <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] fill-mode-both flex flex-wrap items-center gap-4 relative z-20">
+                <button className="h-14 px-8 rounded-2xl bg-black text-white font-bold tracking-widest hover:-translate-y-1 hover:bg-neutral-800 hover:shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] shadow-xl shadow-black/20">
                   無料で始める
-                </button>
-                <button className="h-14 px-8 rounded-2xl bg-white/60 backdrop-blur-xl border border-black/10 text-black font-bold tracking-tight hover:-translate-y-1 hover:bg-white hover:shadow-[0_12px_30px_rgba(0,0,0,0.1)] transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)]">
-                  デモを見る
                 </button>
               </div>
             </div>
 
             {/* Right Mockups 3D Layering */}
             <div className="w-full lg:w-1/2 relative h-[500px] lg:h-[700px] flex items-center justify-center lg:perspective-[2000px] mt-10 lg:mt-0">
-               {/* 3D layered glass mockups */}
+               {/* 3D layered glass mockups with strong shadow to separate them on mobile */}
                {/* Dashboard mockup (Back) */}
-               <div className="absolute top-0 right-0 lg:-right-10 w-[95%] sm:w-[360px] transform lg:rotate-y-[-12deg] lg:rotate-x-[6deg] lg:translate-z-[-20px] transition-transform duration-1000 ease-out hover:rotate-0 hover:z-40 z-10 opacity-90 hover:opacity-100">
+               <div className="absolute top-0 right-0 lg:-right-10 w-[95%] sm:w-[360px] transform lg:rotate-y-[-12deg] lg:rotate-x-[6deg] lg:translate-z-[-20px] transition-transform duration-1000 ease-out hover:rotate-0 hover:z-40 z-10 opacity-90 hover:opacity-100 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.2)] rounded-3xl">
                  <DashboardMockup />
                </div>
                
                {/* Invoice mockup (Middle overlapping) */}
-               <div className="absolute top-44 left-0 lg:-left-10 w-[90%] sm:w-[340px] transform lg:rotate-y-[8deg] lg:rotate-x-[4deg] lg:translate-z-[40px] transition-transform duration-1000 ease-out hover:rotate-0 hover:z-40 z-20">
+               <div className="absolute top-44 left-0 lg:-left-10 w-[90%] sm:w-[340px] transform lg:rotate-y-[8deg] lg:rotate-x-[4deg] lg:translate-z-[40px] transition-transform duration-1000 ease-out hover:rotate-0 hover:z-40 z-20 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.25)] rounded-3xl">
                  <InvoiceListMockup />
                </div>
 
                {/* Analytics mockup (Front right bottom) */}
-               <div className="absolute bottom-[-20px] lg:bottom-10 right-10 w-[85%] sm:w-[320px] transform lg:rotate-y-[-18deg] lg:rotate-x-[-8deg] lg:translate-z-[80px] transition-transform duration-1000 ease-out hover:rotate-0 hover:z-40 z-30">
+               <div className="absolute bottom-[-20px] lg:bottom-10 right-10 w-[85%] sm:w-[320px] transform lg:rotate-y-[-18deg] lg:rotate-x-[-8deg] lg:translate-z-[80px] transition-transform duration-1000 ease-out hover:rotate-0 hover:z-40 z-30 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] rounded-3xl">
                  <FinanceMockup />
                </div>
 
