@@ -11,7 +11,7 @@ import {
   ArrowRight,
   AlertCircle,
 } from "lucide-react";
-import type SalesClientView from "./sales/sales-client-view";
+import type SalesClientView from "./analytics/sales/sales-client-view";
 
 type SalesProps = React.ComponentProps<typeof SalesClientView>;
 
@@ -279,7 +279,7 @@ export default function HomeClientView({ salesProps, summary, monthlyData, pendi
           <span className="text-[10px] text-billia-text-muted">
             最大: {formatCurrency(maxChart)}
           </span>
-          <Link href="/dashboard/sales" className="text-[11px] text-billia-blue hover:underline flex items-center gap-0.5">
+          <Link href="/dashboard/analytics" className="text-[11px] text-billia-blue hover:underline flex items-center gap-0.5">
             詳細分析 <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
