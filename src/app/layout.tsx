@@ -3,11 +3,12 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { jaJP } from "@clerk/localizations";
 import { ThemeProvider } from "@/components/theme-provider";
 import { GoogleAnalytics } from "@next/third-parties/google";
-import { Inter, Outfit } from "next/font/google";
+import { Inter, Outfit, Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
+const notoSansJP = Noto_Sans_JP({ subsets: ["latin"], variable: "--font-noto-sans-jp" });
 
 export const metadata: Metadata = {
   title: "Billia | 次世代クラウド請求管理プラットフォーム",
@@ -81,9 +82,9 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider localization={jaJP}>
-      <html lang="ja" className={`light ${inter.variable} ${outfit.variable}`} style={{ colorScheme: 'light' }} suppressHydrationWarning>
+      <html lang="ja" className={`light ${inter.variable} ${outfit.variable} ${notoSansJP.variable}`} style={{ colorScheme: 'light' }} suppressHydrationWarning>
         <body
-          className="font-sans antialiased bg-billia-bg text-billia-text"
+          className="font-[family-name:var(--font-noto-sans-jp)] antialiased bg-billia-bg text-billia-text"
         >
           <ThemeProvider attribute="class" forcedTheme="light" enableSystem={false}>
             {children}
