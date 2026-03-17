@@ -36,9 +36,7 @@ const navItems = [
   { href: "/dashboard/tenants", label: "月額・定期請求", icon: DollarSign },
   { href: "/dashboard/expenses", label: "経費", icon: Receipt },
   { href: "/dashboard/bills", label: "支払管理", icon: CreditCard },
-  { href: "/dashboard/sales", label: "売上分析", icon: LineChart },
-  { href: "/dashboard/finance", label: "財務", icon: TrendingUp },
-  { href: "/dashboard/aging", label: "エイジング", icon: BarChart3 },
+  { href: "/dashboard/analytics", label: "レポート", icon: TrendingUp },
   { href: "/reconcile", label: "入金消込", icon: Sparkles },
 ] as const;
 

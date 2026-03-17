@@ -30,16 +30,7 @@ export default async function AgingPage() {
   const grandTotal = rows.reduce((sum, r) => sum + r.totalAmount, 0);
 
   return (
-    <div className="flex flex-col gap-5 py-5 md:gap-8 md:py-8">
-      <header className="flex flex-col gap-1">
-        <p className="billia-label">未収管理</p>
-        <h1 className="text-xl font-semibold tracking-tight text-billia-text md:text-2xl">
-          エイジングレポート
-        </h1>
-        <p className="text-xs text-billia-text-muted hidden md:block">
-          未払い・部分払いの請求を支払期限経過日数で集計しています。
-        </p>
-      </header>
+    <div className="pb-8">
 
       <div className="billia-card overflow-hidden p-4 md:p-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 md:gap-4 md:mb-6">

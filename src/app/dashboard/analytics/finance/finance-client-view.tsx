@@ -209,13 +209,7 @@ export default function FinanceClientView({ monthly, categories, topClients, upc
   const filteredMonthly = monthly.slice(-periodMonths);
 
   return (
-    <div className="py-5 space-y-4 pb-12 md:py-8 md:space-y-5">
-
-      {/* ヘッダー */}
-      <div>
-        <p className="text-xs text-gray-400">{now.getFullYear()}年{now.getMonth() + 1}月</p>
-        <h1 className="text-xl font-semibold text-gray-900 md:text-2xl">財務サマリー</h1>
-      </div>
+    <div className="space-y-4 pb-12 md:space-y-5">
 
       {/* KPI カード */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">

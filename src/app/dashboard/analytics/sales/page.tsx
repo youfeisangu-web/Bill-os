@@ -58,17 +58,7 @@ export default async function SalesPage() {
   const growthRate = lastTotal > 0 ? ((currentTotal - lastTotal) / lastTotal) * 100 : 0;
 
   return (
-    <div className="flex flex-col gap-5 py-5 md:gap-8 md:py-8">
-      <header>
-        <p className="billia-label">売上管理</p>
-        <h1 className="text-xl font-semibold tracking-tight text-billia-text md:text-2xl">
-          売上分析
-        </h1>
-        <p className="text-xs text-billia-text-muted mt-1 hidden md:block">
-          カテゴリ別の売上を記録・分析できます。
-        </p>
-      </header>
-
+    <div className="pb-8">
       <SalesClientView
         initialCategories={categories}
         initialEntries={currentEntries}
