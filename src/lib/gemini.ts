@@ -9,7 +9,7 @@ let geminiClient: GoogleGenAI | null = null;
 function getGeminiClient(): GoogleGenAI {
   if (!geminiClient) {
     if (!apiKey) {
-      throw new Error("Gemini APIキーが設定されていません（GEMINI_API_KEY または GOOGLE_GENERATIVE_AI_API_KEY）");
+      throw new Error("AIのAPIキーが設定されていません（GEMINI_API_KEY または GOOGLE_GENERATIVE_AI_API_KEY）");
     }
     geminiClient = new GoogleGenAI({ apiKey });
   }
@@ -20,16 +20,16 @@ function getGeminiClient(): GoogleGenAI {
 function normalizeGeminiErrorMessage(raw: string): string {
   const s = raw || "";
   if (s.includes("API key expired") || (s.includes("APIキー") && s.includes("期限"))) {
-    return "Gemini APIキーの有効期限が切れています。.env の GEMINI_API_KEY を Google AI Studio（https://aistudio.google.com/apikey）で再発行したキーに更新してください。";
+    return "AI機能のAPIキーの有効期限が切れています。.env または Vercelの環境変数 を確認してください。";
   }
   if (s.includes("INVALID_ARGUMENT") || s.includes("API key not valid")) {
-    return "Gemini APIキーが無効です。Google AI Studio で正しいキーを発行し、.env の GEMINI_API_KEY を更新してください。";
+    return "AI機能のAPIキーが無効です。正しいキーを発行し、.env または Vercelの環境変数 を更新してください。";
   }
   if (s.includes("429") || s.includes("RESOURCE_EXHAUSTED")) {
     return "AIの利用制限に達しました。しばらく時間をおいて再度お試しください。";
   }
   if (s.includes("403") || s.includes("PERMISSION_DENIED")) {
-    return "Gemini API の利用権限がありません。APIキーと課金設定を確認してください。";
+    return "AIエンジン の利用権限がありません。APIキーと課金設定を確認してください。";
   }
   if (s.length > 200 || s.includes("type.googleapis.com") || s.startsWith("{")) {
     return "AIの解析でエラーが発生しました。しばらくして再度お試しください。問題が続く場合は管理者にご連絡ください。";
@@ -142,12 +142,12 @@ export async function generateContentWithImage(
       });
 
       if (!response || !response.text) {
-        throw new Error("Gemini APIからの応答が空です");
+        throw new Error("AIエンジンからの応答が空です");
       }
 
       return response.text;
     } catch (error: any) {
-      let errorMessage = "Gemini APIの呼び出しに失敗しました";
+      let errorMessage = "AIエンジンの呼び出しに失敗しました";
       if (error?.message) {
         errorMessage = String(error.message);
       } else if (typeof error === "string") {

@@ -227,7 +227,7 @@ export default function QuoteEditor({ clients, taxRate = 10, taxRounding = "floo
           <TabsContent value="memo" className="space-y-4">
             <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4">
               <p className="text-sm text-blue-800 mb-3">
-                <strong>メモ形式で入力してください。</strong> 話し言葉でもOKです。Gemini（AI）が解析してフォームに入力します。取引先に同じ名前があれば、その取引先宛の見積書として紐づきます。
+                <strong>メモ形式で入力してください。</strong> 話し言葉でもOKです。AIが解析してフォームに入力します。取引先に同じ名前があれば、その取引先宛の見積書として紐づきます。
               </p>
               <p className="text-xs text-blue-700 mb-4">
                 例: 「株式会社XYZに、ウェブサイト制作見積もり、50万円で提案して」<br />

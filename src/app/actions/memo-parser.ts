@@ -35,7 +35,7 @@ export async function parseMemoToInvoice(memoText: string): Promise<MemoParseRes
 
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
     if (!apiKey) {
-      return { success: false, message: "Gemini APIキーが設定されていません" };
+      return { success: false, message: "AIエンジンのAPIキーが設定されていません" };
     }
 
     if (!memoText || memoText.trim().length === 0) {
@@ -226,7 +226,7 @@ export async function parseMemoToQuote(memoText: string): Promise<MemoParseResul
 
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
     if (!apiKey) {
-      return { success: false, message: "Gemini APIキーが設定されていません" };
+      return { success: false, message: "AIエンジンのAPIキーが設定されていません" };
     }
 
     if (!memoText || memoText.trim().length === 0) {

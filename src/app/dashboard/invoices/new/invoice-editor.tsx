@@ -425,7 +425,7 @@ export default function InvoiceEditor({
           <TabsContent value="memo" className="space-y-4">
             <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4">
               <p className="text-sm text-blue-800 mb-3">
-                <strong>メモ形式で入力してください。</strong> 話し言葉でもOKです。Gemini（AI）が解析してフォームに入力します。取引先に同じ名前があれば、その取引先宛の請求書として紐づきます。
+                <strong>メモ形式で入力してください。</strong> 話し言葉でもOKです。AIが解析してフォームに入力します。取引先に同じ名前があれば、その取引先宛の請求書として紐づきます。
               </p>
               <p className="text-xs text-blue-700 mb-4">
                 例: 「株式会社ABC、システム開発費10万円、2025年2月15日発行、支払期限3月末」<br />

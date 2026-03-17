@@ -144,7 +144,7 @@ export async function categorizeInvoiceWithAI(invoiceId: string): Promise<Submit
     if (!userId) return { success: false, message: "認証が必要です" };
 
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-    if (!apiKey) return { success: false, message: "Gemini APIキーが設定されていません" };
+    if (!apiKey) return { success: false, message: "AIエンジンのAPIキーが設定されていません" };
 
     const [invoice, categories] = await Promise.all([
       prisma.invoice.findFirst({

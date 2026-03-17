@@ -11,7 +11,7 @@ function formatErrorMessage(error: unknown, defaultMessage: string): string {
   const errorCode = errorObj.code || errorObj.status || "";
 
   if (errorMessage.includes("API key") || errorMessage.includes("401") || errorCode === 401) {
-    return "Gemini APIキーが無効です。設定を確認してください。";
+    return "AIエンジンのAPIキーが無効です。設定を確認してください。";
   }
 
   if (
@@ -21,7 +21,7 @@ function formatErrorMessage(error: unknown, defaultMessage: string): string {
     errorCode === 429 ||
     errorMessage.includes("Resource exhausted")
   ) {
-    return "Gemini APIの利用制限に達しました。しばらく待ってから（数分〜数時間後）再試行してください。詳細: https://cloud.google.com/vertex-ai/generative-ai/docs/error-code-429";
+    return "AIの利用制限に達しました。しばらく待ってから（数分〜数時間後）再試行してください。";
   }
 
   if (
@@ -104,7 +104,7 @@ export async function readReceiptImage(formData: FormData): Promise<ReceiptOCRRe
 
     const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
     if (!geminiKey) {
-      return { success: false, message: "Gemini APIキーが設定されていません。管理者にお問い合わせください。" };
+      return { success: false, message: "AIエンジンのAPIキーが設定されていません。管理者にお問い合わせください。" };
     }
 
     const file = formData.get("file") as File | null;
